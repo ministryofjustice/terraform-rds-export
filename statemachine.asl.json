@@ -1,0 +1,148 @@
+{
+  "Comment": "Exports the latest RDS snapshot to S3, creating a new one if necessary",
+  "StartAt": "InitialiseDateTimeParams",
+  "States": {
+    "InitialiseDateTimeParams": {
+      "Type": "Pass",
+      "Parameters": {
+        "startOfDay.$": "States.Format('{}T00:00:00Z', States.ArrayGetItem(States.StringSplit($$.State.EnteredTime, 'T'), 0))",
+        "Date.$": "States.ArrayGetItem(States.StringSplit($$.State.EnteredTime, 'T'), 0)",
+        "Hour.$": "States.ArrayGetItem(States.StringSplit(States.ArrayGetItem(States.StringSplit($$.State.EnteredTime, 'T'), 1), ':'), 0)",
+        "Minute.$": "States.ArrayGetItem(States.StringSplit(States.ArrayGetItem(States.StringSplit($$.State.EnteredTime, 'T'), 1), ':'), 1)"
+      },
+      "ResultPath": "$.datetimeInfo",
+      "Next": "GetLatestSnapshot"
+    },
+    "GetLatestSnapshot": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:rds:describeDBSnapshots",
+      "Parameters": {
+        "DbInstanceIdentifier.$": "$.DBInstanceIdentifier",
+        "MaxRecords": 20
+      },
+      "ResultPath": "$.snapshotResult",
+      "Next": "CheckIfSnapshotsExist"
+    },
+    "CheckIfSnapshotsExist": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.snapshotResult.DbSnapshots[0]",
+          "IsPresent": false,
+          "Next": "CreateNewSnapshot"
+        }
+      ],
+      "Default": "CheckSnapshotAge"
+    },
+    "CheckSnapshotAge": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.snapshotResult.DbSnapshots[0].SnapshotCreateTime",
+          "TimestampGreaterThanEqualsPath": "$.datetimeInfo.startOfDay",
+          "Next": "StartExportTask"
+        }
+      ],
+      "Default": "CreateNewSnapshot"
+    },
+    "CreateNewSnapshot": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:rds:createDBSnapshot",
+      "Parameters": {
+        "DbInstanceIdentifier.$": "$.DBInstanceIdentifier",
+        "DbSnapshotIdentifier.$": "States.Format('{}-{}-{}-{}', $.DBInstanceIdentifier, $.datetimeInfo.Date, $.datetimeInfo.Hour, $.datetimeInfo.Minute)"
+      },
+      "ResultPath": "$.snapshotResult",
+      "Next": "WaitForSnapshotCompletion"
+    },
+    "WaitForSnapshotCompletion": {
+      "Type": "Wait",
+      "Seconds": 60,
+      "Next": "CheckSnapshotStatus"
+    },
+    "CheckSnapshotStatus": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:rds:describeDBSnapshots",
+      "Parameters": {
+        "DbSnapshotIdentifier.$": "$.snapshotResult.DbSnapshot.DbSnapshotIdentifier"
+      },
+      "ResultPath": "$.snapshotStatus",
+      "Next": "EvaluateSnapshotStatus"
+    },
+    "EvaluateSnapshotStatus": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.snapshotStatus.DbSnapshots[0].Status",
+          "StringEquals": "available",
+          "Next": "StartExportTask"
+        }
+      ],
+      "Default": "WaitForSnapshotCompletion"
+    },
+    "StartExportTask": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:rds:startExportTask",
+      "Parameters": {
+        "ExportTaskIdentifier.$": "States.Format('{}-{}-{}-{}', $.DBInstanceIdentifier, $.datetimeInfo.Date, $.datetimeInfo.Hour, $.datetimeInfo.Minute)",
+        "SourceArn.$": "$.snapshotResult.DbSnapshot.DbSnapshotArn",
+        "S3BucketName.$": "$.S3BucketName",
+        "S3Prefix.$": "$.DBInstanceIdentifier",
+        "IamRoleArn.$": "$.IamRoleArn",
+        "KmsKeyId.$": "$.KmsKeyId"
+      },
+      "Next": "Wait10Seconds"
+    },
+    "Wait10Seconds": {
+      "Type": "Wait",
+      "Seconds": 10,
+      "Next": "DescribeExportTask"
+    },
+    "DescribeExportTask": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:rds:describeExportTasks",
+      "Parameters": {
+        "ExportTaskIdentifier.$": "$.ExportTaskIdentifier"
+      },
+      "ResultPath": "$.describeExportTask",
+      "Next": "CheckExportTaskStatus"
+    },
+    "CheckExportTaskStatus": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.describeExportTask.ExportTasks[0].Status",
+          "StringEquals": "COMPLETE",
+          "Next": "SuccessState"
+        },
+        {
+          "Or": [
+            {
+              "Variable": "$.describeExportTask.ExportTasks[0].Status",
+              "StringEquals": "STARTING"
+            },
+            {
+              "Variable": "$.describeExportTask.ExportTasks[0].Status",
+              "StringEquals": "IN_PROGRESS"
+            }
+          ],
+          "Next": "Wait60Seconds"
+        }
+      ],
+      "Default": "FailState"
+    },
+    "Wait60Seconds": {
+      "Type": "Wait",
+      "Seconds": 60,
+      "Next": "DescribeExportTask"
+    },
+    "SuccessState": {
+      "Type": "Succeed"
+    },
+    "FailState": {
+      "Type": "Fail",
+      "Cause": "Export task failed or was canceled"
+    }
+  },
+  "TimeoutSeconds": 3600
+}
