@@ -1,4 +1,4 @@
-module github.com/ministryofjustice/modernisation-platform-terraform-module-template
+module github.com/ministryofjustice/terraform-rds-export
 
 go 1.23
 
