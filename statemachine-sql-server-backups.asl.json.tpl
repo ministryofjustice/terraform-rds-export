@@ -1,56 +1,64 @@
 {
   "Comment": "Exports the latest RDS snapshot to S3, creating a new one if necessary",
-  "StartAt": "InitialiseDateTimeParams",
+  "StartAt": "RunDatabaseRestoreLambda",
   "States": {
-    "InitialiseDateTimeParams": {
-      "Type": "Pass",
-      "Parameters": {
-        "startOfDay.$": "States.Format('{}T00:00:00Z', States.ArrayGetItem(States.StringSplit($$.State.EnteredTime, 'T'), 0))",
-        "Date.$": "States.ArrayGetItem(States.StringSplit($$.State.EnteredTime, 'T'), 0)",
-        "Hour.$": "States.ArrayGetItem(States.StringSplit(States.ArrayGetItem(States.StringSplit($$.State.EnteredTime, 'T'), 1), ':'), 0)",
-        "Minute.$": "States.ArrayGetItem(States.StringSplit(States.ArrayGetItem(States.StringSplit($$.State.EnteredTime, 'T'), 1), ':'), 1)"
-      },
-      "ResultPath": "$.datetimeInfo",
-      "Next": "GetLatestSnapshot"
-    },
-    "GetLatestSnapshot": {
+    "RunDatabaseRestoreLambda": {
       "Type": "Task",
-      "Resource": "arn:aws:states:::aws-sdk:rds:describeDBSnapshots",
-      "Parameters": {
-        "DbInstanceIdentifier.$": "$.DBInstanceIdentifier",
-        "MaxRecords": 20
-      },
-      "ResultPath": "$.snapshotResult",
-      "Next": "CheckIfSnapshotsExist"
+      "Resource": "arn:aws:lambda:eu-west-1:684969100054:function:dmet-sql-server-database-restore",
+      "ResultPath": "$.DatabaseRestoreLambdaResult",
+      "Next": "Run Restore Status Check"
     },
-    "CheckIfSnapshotsExist": {
-      "Type": "Choice",
-      "Choices": [
+    "Run Restore Status Check": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:eu-west-1:684969100054:function:dmet-sql-server-database-restore-status:$LATEST",
+        "Payload": {
+          "task_id.$": "$.DatabaseRestoreLambdaResult.task_id",
+          "db_name.$": "$.DatabaseRestoreLambdaResult.db_name"
+        }
+      },
+      "Retry": [
         {
-          "Variable": "$.snapshotResult.DbSnapshots[0]",
-          "IsPresent": false,
-          "Next": "CreateNewSnapshot"
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
         }
       ],
-      "Default": "CheckSnapshotAge"
+      "Next": "Choice",
+      "ResultPath": "$.DatabaseRestoreStatusLambdaResult"
     },
-    "CheckSnapshotAge": {
+    "Choice": {
       "Type": "Choice",
       "Choices": [
         {
-          "Variable": "$.snapshotResult.DbSnapshots[0].SnapshotCreateTime",
-          "TimestampGreaterThanEqualsPath": "$.datetimeInfo.startOfDay",
-          "Next": "StartExportTask"
+          "Not": {
+            "Variable": "$.DatabaseRestoreStatusLambdaResult.Payload.restore_status",
+            "StringEquals": "SUCCESS"
+          },
+          "Next": "Wait For Restore Completion"
         }
       ],
       "Default": "CreateNewSnapshot"
+    },
+    "Wait For Restore Completion": {
+      "Type": "Wait",
+      "Seconds": 10,
+      "Next": "Run Restore Status Check"
     },
     "CreateNewSnapshot": {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:createDBSnapshot",
       "Parameters": {
-        "DbInstanceIdentifier.$": "$.DBInstanceIdentifier",
-        "DbSnapshotIdentifier.$": "States.Format('{}-{}-{}-{}', $.DBInstanceIdentifier, $.datetimeInfo.Date, $.datetimeInfo.Hour, $.datetimeInfo.Minute)"
+        "DbInstanceIdentifier.$": "$.DatabaseRestoreLambdaResult.db_identifier",
+        "DbSnapshotIdentifier.$": "$.DatabaseRestoreLambdaResult.db_name"
       },
       "ResultPath": "$.snapshotResult",
       "Next": "WaitForSnapshotCompletion"
