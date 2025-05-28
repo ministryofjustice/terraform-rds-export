@@ -35,8 +35,7 @@ module "upload_checker" {
   memory_size     = 128
   timeout         = 10
   architectures   = ["x86_64"]
-  build_in_docker = true
-  docker_image    = "test-dms"
+  build_in_docker = false
 
   attach_policy_json = true
   policy_json        = data.aws_iam_policy_document.upload_checker_lambda_function.json
@@ -48,8 +47,6 @@ module "upload_checker" {
 
   source_path = [{
     path = "${path.module}/lambda-functions/upload-checker/main.py"
-    #pip_tmp_dir      = "${path.module}/lambda-functions/upload-checker/fixtures"
-    #pip_requirements = "${path.module}/lambda-functions/upload-checker/requirements.txt"
   }]
 
   tags = var.tags
@@ -93,8 +90,7 @@ module "database_restore" {
   memory_size     = 128
   timeout         = 10
   architectures   = ["x86_64"]
-  build_in_docker = true
-  docker_image    = "test-dms"
+  build_in_docker = false
 
   # VPC Config - Lambda function needs to be in the same VPC as the RDS instance
   vpc_subnet_ids         = var.database_subnet_ids
@@ -112,9 +108,11 @@ module "database_restore" {
   }
 
   source_path = [{
-    path             = "${path.module}/lambda-functions/database-restore/main.py"
-    pip_tmp_dir      = "${path.module}/lambda-functions/database-restore/fixtures"
-    pip_requirements = "${path.module}/lambda-functions/database-restore/requirements.txt"
+    path = "${path.module}/lambda-functions/database-restore/"
+    commands = [
+      "pip3.12 install --platform=manylinux2014_x86_64 --only-binary=:all: --no-compile --target=. -r requirements.txt",
+      ":zip",
+    ]
   }]
 
   tags = var.tags
@@ -131,8 +129,7 @@ module "database_restore_status" {
   memory_size     = 128
   timeout         = 10
   architectures   = ["x86_64"]
-  build_in_docker = true
-  docker_image    = "test-dms"
+  build_in_docker = false
 
   # VPC Config - Lambda function needs to be in the same VPC as the RDS instance
   vpc_subnet_ids         = var.database_subnet_ids
@@ -149,27 +146,28 @@ module "database_restore_status" {
   }
 
   source_path = [{
-    path             = "${path.module}/lambda-functions/database-restore-status/main.py"
-    pip_tmp_dir      = "${path.module}/lambda-functions/database-restore-status/fixtures"
-    pip_requirements = "${path.module}/lambda-functions/database-restore-status/requirements.txt"
+    path = "${path.module}/lambda-functions/database-restore-status/"
+    commands = [
+      "pip3.12 install --platform=manylinux2014_x86_64 --only-binary=:all: --no-compile --target=. -r requirements.txt",
+      ":zip",
+    ]
   }]
 
   tags = var.tags
 }
 
-module "database_export_scout" {
+module "database_export_scanner" {
   # Commit hash for v7.20.1
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
-  function_name   = "${var.name}-database-export-scout"
+  function_name   = "${var.name}-database-export-scanner"
   description     = "Lambda to gather info for db export ${var.name}"
   handler         = "main.handler"
   runtime         = "python3.12"
   memory_size     = 128
   timeout         = 10
   architectures   = ["x86_64"]
-  build_in_docker = true
-  docker_image    = "test-dms"
+  build_in_docker = false
 
   # VPC Config - Lambda function needs to be in the same VPC as the RDS instance
   vpc_subnet_ids         = var.database_subnet_ids
@@ -186,9 +184,11 @@ module "database_export_scout" {
   }
 
   source_path = [{
-    path             = "${path.module}/lambda-functions/database-export-scout/main.py"
-    pip_tmp_dir      = "${path.module}/lambda-functions/database-export-scout/fixtures"
-    pip_requirements = "${path.module}/lambda-functions/database-export-scout/requirements.txt"
+    path = "${path.module}/lambda-functions/database-export-scanner/"
+    commands = [
+      "pip3.12 install --platform=manylinux2014_x86_64 --only-binary=:all: --no-compile --target=. -r requirements.txt",
+      ":zip",
+    ]
   }]
 
   layers = [
@@ -198,7 +198,7 @@ module "database_export_scout" {
   tags = var.tags
 }
 
-module "database_export" {
+module "database_export_processor" {
   # Commit hash for v7.20.1
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
@@ -209,8 +209,7 @@ module "database_export" {
   memory_size     = 128
   timeout         = 10
   architectures   = ["x86_64"]
-  build_in_docker = true
-  docker_image    = "test-dms"
+  build_in_docker = false
 
   # VPC Config - Lambda function needs to be in the same VPC as the RDS instance
   vpc_subnet_ids         = var.database_subnet_ids
@@ -227,9 +226,11 @@ module "database_export" {
   }
 
   source_path = [{
-    path             = "${path.module}/lambda-functions/database-export/main.py"
-    pip_tmp_dir      = "${path.module}/lambda-functions/database-export/fixtures"
-    pip_requirements = "${path.module}/lambda-functions/database-export/requirements.txt"
+    path = "${path.module}/lambda-functions/database-export-scanner/"
+    commands = [
+      "pip3.12 install --platform=manylinux2014_x86_64 --only-binary=:all: --no-compile --target=. -r requirements.txt",
+      ":zip",
+    ]
   }]
 
   layers = [
