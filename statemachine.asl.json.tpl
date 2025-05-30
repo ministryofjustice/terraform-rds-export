@@ -4,7 +4,7 @@
   "States": {
     "RunDatabaseRestoreLambda": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:eu-west-1:684969100054:function:dmet-sql-server-database-restore",
+      "Resource": "${DatabaseRestoreLambdaArn}",
       "ResultPath": "$.DatabaseRestoreLambdaResult",
       "Next": "Run Restore Status Check"
     },
@@ -12,7 +12,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
-        "FunctionName": "arn:aws:lambda:eu-west-1:684969100054:function:dmet-sql-server-database-restore-status:$LATEST",
+        "FunctionName": "${DatabaseRestoreStatusLambdaArn}",
         "Payload": {
           "task_id.$": "$.DatabaseRestoreLambdaResult.task_id",
           "db_name.$": "$.DatabaseRestoreLambdaResult.db_name"
@@ -46,18 +46,18 @@
           "Next": "Wait For Restore Completion"
         }
       ],
-      "Default": "Run Scout Lambda"
+      "Default": "Run Scanner Lambda"
     },
     "Wait For Restore Completion": {
       "Type": "Wait",
       "Seconds": 10,
       "Next": "Run Restore Status Check"
     },
-    "Run Scout Lambda": {
+    "Run Export Scanner Lambda": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
-        "FunctionName": "arn:aws:lambda:eu-west-1:684969100054:function:dmet-sql-server-database-export-scout:$LATEST",
+        "FunctionName": "${DatabaseExportScannerLambdaArn}",
         "Payload": {
           "db_name.$": "$.DatabaseRestoreLambdaResult.db_name"
         }
@@ -77,7 +77,7 @@
         }
       ],
       "Next": "SuccessState",
-      "ResultPath": "$.DatabaseExportScoutLambdaResult"
+      "ResultPath": "$.DatabaseExportScannerLambdaResult"
     },
     "SuccessState": {
       "Type": "Succeed"
