@@ -46,7 +46,7 @@
           "Next": "Wait For Restore Completion"
         }
       ],
-      "Default": "Run Scanner Lambda"
+      "Default": "Run Export Scanner Lambda"
     },
     "Wait For Restore Completion": {
       "Type": "Wait",
