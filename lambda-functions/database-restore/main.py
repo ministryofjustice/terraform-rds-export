@@ -19,7 +19,8 @@ def handler(event, context):
     db_secret_arn = os.environ["DATABASE_SECRET_ARN"]
     db_name = os.environ.get("DATABASE_NAME", "master")
     uploads_bucket_name = os.environ["UPLOADS_BUCKET"]
-    s3_arn_to_restore_from = f"arn:aws:s3:::{uploads_bucket_name}/fake-database.bak"
+    backup_file_name_prefix = event["artefacts"]
+    s3_arn_to_restore_from = f"arn:aws:s3:::{uploads_bucket_name}/{backup_file_name_prefix}"
 
     # Fetch credentials from AWS Secrets Manager
     try:
