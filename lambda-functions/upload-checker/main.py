@@ -39,7 +39,7 @@ def handler(event, context):
     try:
         response = stepfunctions.start_execution(
             stateMachineArn=state_machine_arn,
-            input=json.dumps({"bucket": backup_uploads_bucket, "artefacts": f"{prefix}/*"})
+            input=json.dumps({"bucket": backup_uploads_bucket, "artefacts": f"{prefix}*"})
         )
         logger.info(f"Step function triggered: {response['executionArn']}")
     except Exception as e:
