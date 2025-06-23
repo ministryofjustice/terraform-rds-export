@@ -50,7 +50,7 @@
     },
     "Wait For Restore Completion": {
       "Type": "Wait",
-      "Seconds": 10,
+      "Seconds": 30,
       "Next": "Run Restore Status Check"
     },
     "Run Export Scanner Lambda": {
