@@ -63,6 +63,16 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
       aws_db_instance.database.master_user_secret[0].secret_arn
     ]
   }
+
+  statement {
+    actions = [
+      "s3:PutObject",
+    ]
+
+    resources = [
+      "${aws_s3_bucket.parquet_exports.arn}/*",
+    ]
+  }
 }
 
 # Security group for database restore lambda function
@@ -223,6 +233,7 @@ module "database_export_processor" {
   environment_variables = {
     DATABASE_SECRET_ARN = aws_db_instance.database.master_user_secret[0].secret_arn
     DATABASE_ENDPOINT   = aws_db_instance.database.address
+    OUTPUT_BUCKET       = aws_s3_bucket.parquet_exports.id
   }
 
   source_path = [{

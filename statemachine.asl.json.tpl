@@ -76,8 +76,48 @@
           "JitterStrategy": "FULL"
         }
       ],
-      "Next": "SuccessState",
+      "Next": "Export Data",
       "ResultPath": "$.DatabaseExportScannerLambdaResult"
+    },
+    "Export Data": {
+      "Type": "Map",
+      "InputPath": "$.DatabaseExportScannerLambdaResult.Payload",
+      "ItemsPath": "$.chunks",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "Invoke Export Processor",
+        "States": {
+          "Invoke Export Processor": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+              "FunctionName": "${DatabaseExportProcessorLambdaArn}",
+              "Payload": {
+                "chunk.$": "$"
+              }
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException",
+                  "Lambda.TooManyRequestsException"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 3,
+                "BackoffRate": 2,
+                "JitterStrategy": "FULL"
+              }
+            ],
+            "End": true
+          }
+        }
+      },
+      "Next": "SuccessState"
     },
     "SuccessState": {
       "Type": "Succeed"

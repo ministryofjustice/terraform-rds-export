@@ -1,40 +1,3 @@
-#resource "aws_iam_role" "eventbridge_sfn" {
-#  name = "${var.database_instance_identifier}-rds-s3-export"
-#
-#  assume_role_policy = jsonencode({
-#    Version = "2012-10-17"
-#    Statement = [
-#      {
-#        Action = "sts:AssumeRole"
-#        Effect = "Allow"
-#        Principal = {
-#          Service = "events.amazonaws.com"
-#        }
-#      }
-#    ]
-#  })
-#}
-#
-#resource "aws_iam_role_policy" "eventbridge_sfn" {
-#  name = "eventbridge-sfn-execution"
-#  role = aws_iam_role.eventbridge_sfn.id
-#
-#  policy = jsonencode({
-#    Version = "2012-10-17"
-#    Statement = [
-#      {
-#        Effect = "Allow"
-#        Action = [
-#          "states:StartExecution"
-#        ]
-#        Resource = [
-#          aws_sfn_state_machine.rds_export_tracker.arn
-#        ]
-#      }
-#    ]
-#  })
-#}
-
 resource "aws_iam_role" "state_machine" {
   name = "${var.name}-step-functions-database-export"
 
@@ -78,8 +41,8 @@ resource "aws_iam_role_policy" "state_machine" {
   })
 }
 
-resource "aws_iam_role" "database_export" {
-  name = "${var.name}-database-export"
+resource "aws_iam_role" "database_restore" {
+  name = "${var.name}-database-restore"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -96,9 +59,9 @@ resource "aws_iam_role" "database_export" {
 }
 
 // Update this role policy to allow usage of a kms key by the rds s3 export task and to allow the export task to write to the s3 bucket
-resource "aws_iam_role_policy" "database_export" {
-  name = "${var.name}-rds-export"
-  role = aws_iam_role.database_export.name
+resource "aws_iam_role_policy" "database_restore" {
+  name = "${var.name}-rds-restore"
+  role = aws_iam_role.database_restore.name
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -128,58 +91,6 @@ resource "aws_iam_role_policy" "database_export" {
         Resource = [
           aws_s3_bucket.parquet_exports.arn,
           "${aws_s3_bucket.parquet_exports.arn}/*"
-        ]
-      }
-    ]
-  })
-}
-
-# Role for RDS to assume to export to S3
-resource "aws_iam_role" "rds_export" {
-  name = "${var.name}-rds-export"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "rds.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "rds_export" {
-  name = "${var.name}-rds-export"
-  role = aws_iam_role.rds_export.name
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:ListBucket",
-          "s3:GetBucketLocation",
-        ]
-        Resource = [
-          aws_s3_bucket.backup_uploads.arn,
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:GetObjectAttributes",
-          "s3:PutObject",
-          "s3:ListMultipartUploadParts",
-          "s3:AbortMultipartUpload",
-        ]
-        Resource = [
-          "${aws_s3_bucket.backup_uploads.arn}/*",
         ]
       }
     ]

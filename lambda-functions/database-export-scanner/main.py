@@ -1,3 +1,5 @@
+
+
 import os
 import boto3
 import json
@@ -17,60 +19,7 @@ logger.setLevel(logging.INFO)
 
 secretmanager = boto3.client("secretsmanager")
 
-def calculate_row_limit(current_rows, current_size_kb, target_size_gb):
-    """
-    Calculate the number of rows required to reach a target file size.
 
-    Parameters:
-      current_rows (int): Number of rows in the current dataset.
-      current_size_kb (float): Total size of the current dataset in kilobytes (KB).
-      target_size_gb (float): Desired target file size in gigabytes (GB).
-
-    Returns:
-      int: Approximate number of rows required to reach the target file size.
-    """
-    # Calculate the size per row in KB
-    row_size_kb = current_size_kb / current_rows
-
-    # Convert target size from GB to KB (1GB = 1024*1024 KB)
-    target_size_kb = target_size_gb * 1024 * 1024
-
-    # Calculate the row count
-    row_limit = target_size_kb / row_size_kb
-    return int(row_limit)
-
-
-def split_table_tasks(schema, table, row_count, row_limit):
-    """
-    Splits a table extraction task into chunks based on row_count and row_limit.
-
-    Parameters:
-        schema (str): The schema name.
-        table (str): The table name.
-        row_count (int): Total number of rows in the table.
-        row_limit (int): The maximum number of rows per chunk.
-
-    Returns:
-        list: A list of dictionaries where each dictionary contains:
-              - schema: The schema name.
-              - table: The table name.
-              - row_start: The starting row index for the chunk.
-              - row_end: The ending row index for the chunk.
-    """
-    tasks = []
-    # Generate chunks: row_start begins at 0 and increases by row_limit each time.
-    for row_start in range(0, row_count, row_limit):
-        row_end = min(row_start + row_limit, row_count)
-        tasks.append({
-            "schema": schema,
-            "table": table,
-            "row_start": row_start,
-            "row_end": row_end
-        })
-    return tasks
-
-
-# NEW FUNCTIONS
 def get_all_primary_keys(cursor, schema="dbo"):
     query = """
     SELECT
@@ -158,10 +107,11 @@ def generate_chunk_query_by_rownum(schema, table, pk_columns, rows_per_chunk, ch
 
 
 def handler(event, context):
+    print(event)
     # Retrieve configuration from environment variables
     db_endpoint = os.environ["DATABASE_ENDPOINT"]
     db_secret_arn = os.environ["DATABASE_SECRET_ARN"]
-    db_name = event["DatabaseRestoreLambdaResult"]["db_name"]
+    db_name = event["db_name"]
 
     # Fetch credentials from AWS Secrets Manager
     try:
@@ -205,6 +155,7 @@ def handler(event, context):
                     schema, table, pk_columns, rows_for_limit_parquet, chunk_index
                 )
                 chunk_info = {
+                    "database": db_name,
                     "schema": schema,
                     "table": table,
                     "chunk_index": chunk_index,
@@ -222,13 +173,10 @@ def handler(event, context):
 
         print(f"{len(chunks)} chunks to be processed")
         return {
-            "chunks": chunks
+            "chunks": chunks[:3]
         }
 
         # Close the connection
         connection.close()
     except Exception as e:
         logger.error("Error connecting to the database: %s", e)
-    finally:
-        cursor.close()
-        conn.close()

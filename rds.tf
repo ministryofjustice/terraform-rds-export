@@ -37,7 +37,7 @@ resource "aws_db_option_group" "database" {
 
     option_settings {
       name  = "IAM_ROLE_ARN"
-      value = aws_iam_role.rds_export.arn
+      value = aws_iam_role.database_restore.arn
     }
   }
 }
