@@ -42,7 +42,7 @@ resource "aws_iam_role_policy" "state_machine" {
 }
 
 resource "aws_iam_role" "database_restore" {
-  name = "${var.name}-database-restore"
+  name = "${var.name}-rds-restore"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
