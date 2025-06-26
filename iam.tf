@@ -51,7 +51,7 @@ resource "aws_iam_role" "database_restore" {
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          Service = "export.rds.amazonaws.com"
+          Service = "rds.amazonaws.com"
         }
       }
     ]
