@@ -32,7 +32,7 @@ module "upload_checker" {
   description     = "Lambda to check if all files have been uploaded to the S3 bucket"
   handler         = "main.handler"
   runtime         = "python3.12"
-  memory_size     = 128
+  memory_size     = 1024
   timeout         = 10
   architectures   = ["x86_64"]
   build_in_docker = false
@@ -97,7 +97,7 @@ module "database_restore" {
   description     = "Lambda to restore the database from the backup files in the S3 bucket"
   handler         = "main.handler"
   runtime         = "python3.12"
-  memory_size     = 128
+  memory_size     = 1024
   timeout         = 10
   architectures   = ["x86_64"]
   build_in_docker = false
@@ -136,7 +136,7 @@ module "database_restore_status" {
   description     = "Lambda to check the status of the database restore from S3"
   handler         = "main.handler"
   runtime         = "python3.12"
-  memory_size     = 128
+  memory_size     = 1024
   timeout         = 10
   architectures   = ["x86_64"]
   build_in_docker = false
@@ -174,8 +174,8 @@ module "database_export_scanner" {
   description     = "Lambda to gather info for db export ${var.name}"
   handler         = "main.handler"
   runtime         = "python3.12"
-  memory_size     = 128
-  timeout         = 10
+  memory_size     = 2048
+  timeout         = 300
   architectures   = ["x86_64"]
   build_in_docker = false
 
@@ -216,8 +216,8 @@ module "database_export_processor" {
   description     = "Lambda to export data for ${var.name}"
   handler         = "main.handler"
   runtime         = "python3.12"
-  memory_size     = 128
-  timeout         = 10
+  memory_size     = 2048
+  timeout         = 300
   architectures   = ["x86_64"]
   build_in_docker = false
 

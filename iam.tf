@@ -82,6 +82,8 @@ resource "aws_iam_role_policy" "database_restore" {
       {
         Effect = "Allow"
         Action = [
+          "s3:GetBucketLocation",
+          "s3:ListBucket",
           "s3:GetObject",
           "s3:GetObjectAttributes",
           "s3:PutObject",
@@ -89,6 +91,7 @@ resource "aws_iam_role_policy" "database_restore" {
           "s3:AbortMultipartUpload",
         ]
         Resource = [
+          "${aws_s3_bucket.backup_uploads.arn}",
           "${aws_s3_bucket.backup_uploads.arn}/*"
         ]
       },

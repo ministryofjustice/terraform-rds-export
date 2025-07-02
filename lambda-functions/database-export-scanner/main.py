@@ -173,7 +173,7 @@ def handler(event, context):
 
         print(f"{len(chunks)} chunks to be processed")
         return {
-            "chunks": chunks[:3]
+            "chunks": chunks
         }
 
         # Close the connection
