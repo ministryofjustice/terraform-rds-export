@@ -20,12 +20,7 @@
       },
       "Retry": [
         {
-          "ErrorEquals": [
-            "Lambda.ServiceException",
-            "Lambda.AWSLambdaException",
-            "Lambda.SdkClientException",
-            "Lambda.TooManyRequestsException"
-          ],
+          "ErrorEquals": [ "States.ALL" ],
           "IntervalSeconds": 1,
           "MaxAttempts": 3,
           "BackoffRate": 2,
@@ -101,16 +96,11 @@
             },
             "Retry": [
               {
-                "ErrorEquals": [
-                  "Lambda.ServiceException",
-                  "Lambda.AWSLambdaException",
-                  "Lambda.SdkClientException",
-                  "Lambda.TooManyRequestsException"
-                ],
-                "IntervalSeconds": 1,
-                "MaxAttempts": 3,
+                "ErrorEquals": [ "States.ALL" ],
+                "IntervalSeconds": 5,
+                "MaxAttempts": 10,
                 "BackoffRate": 2,
-                "JitterStrategy": "FULL"
+                "JitterStrategy": "NONE"
               }
             ],
             "End": true
@@ -123,5 +113,5 @@
       "Type": "Succeed"
     }
   },
-  "TimeoutSeconds": 3600
+  "TimeoutSeconds": 7200
 }

@@ -18,9 +18,14 @@ def handler(event, context):
     db_endpoint = os.environ["DATABASE_ENDPOINT"]
     db_secret_arn = os.environ["DATABASE_SECRET_ARN"]
     db_name = os.environ.get("DATABASE_NAME", "master")
-    uploads_bucket_name = os.environ["UPLOADS_BUCKET"]
-    backup_file_name_prefix = event["artefacts"]
-    s3_arn_to_restore_from = f"arn:aws:s3:::{uploads_bucket_name}/{backup_file_name_prefix}"
+    bak_upload_bucket = event.get("bak_upload_bucket")
+    bak_upload_key = event.get("bak_upload_key")
+
+    if not bak_upload_bucket or not bak_upload_key:
+        logger.error("Missing 'bak_upload_bucket' or 'bak_upload_key' in the event")
+        return
+
+    s3_arn_to_restore_from = f"arn:aws:s3:::{bak_upload_bucket}/{bak_upload_key}"
 
     # Fetch credentials from AWS Secrets Manager
     try:
@@ -31,8 +36,6 @@ def handler(event, context):
     except Exception as e:
         logger.error("Error fetching secret: %s", e)
         return
-
-    time.sleep(0.5)
 
     try:
         # Connect to the MS SQL Server database using python-tds
@@ -60,13 +63,14 @@ def handler(event, context):
         cursor.execute(restore_command)
 
         # Loop through result sets until we find one with data.
+        result = None
         task_id = None
         while True:
             try:
                 result = cursor.fetchone()
                 if result:
-                    task_id = result[0]  # assuming task_id is the first column
-                    logger.info("Task ID found: %s", task_id)
+                    task_id = result[0]  # task_id is the first column in the result row.
+                    logger.info("Task ID returned: %s", task_id)
                     break
             except Exception as fetch_error:
                 # If the current result set has no rows, move to the next one.
@@ -75,17 +79,10 @@ def handler(event, context):
             # Move to the next result set; if there are none, exit the loop.
             if not cursor.nextset():
                 logger.error("No further result sets available; task_id not found.")
-                break
+                raise Exception("No result returned from restore command.")
 
         conn.commit()
         logger.info("Restore command executed successfully!")
-
-        if result:
-            task_id = result[0]  # task_id is the first column in the result row.
-            logger.info("Task ID returned: %s", task_id)
-        else:
-            logger.error("No result returned from restore command.")
-            raise Exception("No result returned from restore command.")
 
         # Information to return to the state machine
         return {
@@ -95,7 +92,13 @@ def handler(event, context):
             "db_identifier": db_endpoint.split(".")[0]
             }
     except Exception as e:
-        logger.error("Error connecting to MS SQL Server or executing command: %s", e)
+        logger.exception("Error connecting to MS SQL Server or executing command")
+        return {
+            "status": "FAILED",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "db_identifier": db_endpoint.split(".")[0]
+        }
     finally:
         try:
             if 'cursor' in locals():
