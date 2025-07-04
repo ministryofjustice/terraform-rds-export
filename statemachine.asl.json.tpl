@@ -78,6 +78,7 @@
       "Type": "Map",
       "InputPath": "$.DatabaseExportScannerLambdaResult.Payload",
       "ItemsPath": "$.chunks",
+      "MaxConcurrency": 5,
       "ItemProcessor": {
         "ProcessorConfig": {
           "Mode": "INLINE"
