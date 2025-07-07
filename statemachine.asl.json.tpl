@@ -99,8 +99,8 @@
               {
                 "ErrorEquals": [ "States.ALL" ],
                 "IntervalSeconds": 5,
-                "MaxAttempts": 10,
-                "BackoffRate": 2,
+                "MaxAttempts": 30,
+                "BackoffRate": 1,
                 "JitterStrategy": "NONE"
               }
             ],
