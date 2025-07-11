@@ -76,12 +76,14 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
 }
 
 # Security group for database restore lambda function
+#trivy:ignore:AVD-AWS-0104
 resource "aws_security_group" "database_restore" {
   name        = "${var.name}-database-restore"
   description = "Allow outbound traffic from database restore lambda function"
   vpc_id      = var.vpc_id
 
   egress {
+    description = "Allow all outbound traffic from database restore lambda function"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"

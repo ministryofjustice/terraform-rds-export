@@ -5,6 +5,7 @@ resource "aws_security_group" "database" {
   vpc_id      = data.aws_vpc.vpc.id
 
   ingress {
+    description = "Allow inbound traffic from VPC CIDR block"
     from_port   = 1433
     to_port     = 1433
     protocol    = "tcp"
@@ -43,9 +44,13 @@ resource "aws_db_option_group" "database" {
 }
 
 # Deploy RDS instance for MS SQL Server
+#trivy:ignore:AVD-AWS-0077 # Backups not required for an extended period
+#trivy:ignore:AVD-AWS-0133 # Performance insights not required
+#trivy:ignore:AVD-AWS-0177 # Deletion protection not required
 resource "aws_db_instance" "database" {
   allocated_storage           = 100
   storage_type                = "gp2"
+  storage_encrypted           = true
   engine                      = "sqlserver-se"
   engine_version              = "15.00.4420.2.v1"
   license_model               = "license-included"
