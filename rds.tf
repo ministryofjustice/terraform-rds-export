@@ -43,11 +43,18 @@ resource "aws_db_option_group" "database" {
   }
 }
 
+# TODO: RDS should be deployed when state machine is triggered and then deleted when the state machine completes
 # Deploy RDS instance for MS SQL Server
 #trivy:ignore:AVD-AWS-0077 # Backups not required for an extended period
 #trivy:ignore:AVD-AWS-0133 # Performance insights not required
 #trivy:ignore:AVD-AWS-0177 # Deletion protection not required
 resource "aws_db_instance" "database" {
+  # checkov:skip=CKV_AWS_353: Performance insights not required
+  # checkov:skip=CKV_AWS_293: Deletion protection not required
+  # checkov:skip=CKV_AWS_157: Multi-AZ not required
+  # checkov:skip=CKV_AWS_129: Logs not required
+  # checkov:skip=CKV_AWS_226: Updates not required
+  # checkov:skip=CKV_AWS_118: Enhanced monitoring not required
   allocated_storage           = 100
   storage_type                = "gp2"
   storage_encrypted           = true

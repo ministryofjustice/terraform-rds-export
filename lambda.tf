@@ -82,6 +82,7 @@ resource "aws_security_group" "database_restore" {
   description = "Allow outbound traffic from database restore lambda function"
   vpc_id      = var.vpc_id
 
+  # checkov:skip=CKV_AWS_382: Outbound traffic is required for the lambda to access the database and S3 bucket
   egress {
     description = "Allow all outbound traffic from database restore lambda function"
     from_port   = 0

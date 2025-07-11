@@ -1,4 +1,6 @@
 resource "aws_sfn_state_machine" "db_export" {
+  # checkov:skip=CKV_AWS_284: x-ray tracing not required for now
+  # checkov:skip=CKV_AWS_285: Logging not required for now. TODO: Add this in the future
   name     = "${var.name}-export"
   role_arn = aws_iam_role.state_machine.arn
 

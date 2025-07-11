@@ -1,4 +1,5 @@
 module "rds_export" {
+  #checkov:skip=CKV_TF_1,CKV_TF_2: branch name ok for example. Use hash in production
   source = "github.com/ministryofjustice/terraform-rds-export?ref=initial-version"
 
   cron_expression              = "0 0 * * ? *" # Run every day at midnight

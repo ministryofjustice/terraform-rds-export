@@ -13,6 +13,7 @@ locals {
 data "aws_caller_identity" "current" {}
 
 module "vpc" {
+  #checkov:skip=CKV_TF_1,CKV_TF_2: tag ok for example. Use hash in production
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.17.0"
 
