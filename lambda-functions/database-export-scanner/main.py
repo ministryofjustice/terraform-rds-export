@@ -175,8 +175,5 @@ def handler(event, context):
         return {
             "chunks": chunks
         }
-
-        # Close the connection
-        connection.close()
     except Exception as e:
         logger.error("Error connecting to the database: %s", e)

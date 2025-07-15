@@ -4,7 +4,6 @@ import json
 import pytds
 import time
 import logging
-from datetime import datetime
 
 # Configure logging
 logger = logging.getLogger()

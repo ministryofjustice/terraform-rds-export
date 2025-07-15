@@ -1,10 +1,8 @@
 import os
 import boto3
 import json
-import time
 import logging
 from datetime import datetime
-from sqlalchemy import create_engine, text
 import pymssql
 import pandas as pd
 import awswrangler as wr
