@@ -14,6 +14,25 @@ logger.setLevel(logging.INFO)
 secretmanager = boto3.client("secretsmanager")
 
 
+def decode_cp1252(val):
+    # Only try to decode raw bytes
+    if not isinstance(val, (bytes, bytearray)):
+        return val
+
+    try:
+        # first, strict decode to see if it really is valid
+        return val.decode("cp1252")
+    except UnicodeDecodeError as e:
+        # log the exact bytes and the error
+        logger.warning(
+            "Decoding error at bytes %s: %s",
+            val.hex(),            # hex string of the raw bytes
+            e                     # the exception message
+        )
+        # if strict decode fails, replace invalid characters
+        return val.decode("cp1252", errors="replace")
+
+
 def handler(event, context):
     # Retrieve configuration from environment variables
     db_endpoint = os.environ["DATABASE_ENDPOINT"]
@@ -27,7 +46,7 @@ def handler(event, context):
     db_table = chunk["table"]
     db_query = chunk["query"]
     chunk_index = chunk["chunk_index"]
-    now = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    extraction_timestamp = chunk["extraction_timestamp"]
 
     # Fetch credentials from AWS Secrets Manager
     try:
@@ -41,18 +60,32 @@ def handler(event, context):
 
     try:
         # Connect to the MS SQL Server database
-        print("Creating the SQLAlchemy engine")
+        logger.info("Creating the SQLAlchemy engine")
         conn = pymssql.connect(server=db_endpoint, user=db_username,
-                       password=db_password, database=db_name)
+                       password=db_password, database=db_name, charset='CP1252', tds_version="7.4")
 
         df = pd.read_sql_query(db_query, conn)
+        logger.info("Data fetched successfully!")
+
+        # TODO: Fix the issue with the column types (And do more thorough testing of decoding)
+        # TODO: Glue table definition needs to be fixed at the same time in the scanner lambda
+        # Convert all columns to string type
+        for col in df.select_dtypes(include=["object"]).columns:
+            df[col] = df[col].apply(decode_cp1252)
+
+        df = df.astype(str)
+        df["extraction_timestamp"] = extraction_timestamp
 
         wr.s3.to_parquet(
             df=df,
-            path=f"s3://{output_bucket}/{db_schema}/{db_table}/{now}_{chunk_index}.parquet",
+            dataset=True,
+            mode="append",
+            database=db_name,
+            table=db_table,
+            partition_cols=["extraction_timestamp"]
         )
 
-        print("Data exported to S3 successfully!")
+        logger.info("Data exported to S3 successfully!")
     except Exception as e:
         logger.error("Error connecting to the database: %s", e)
         raise Exception("Chunk export error")

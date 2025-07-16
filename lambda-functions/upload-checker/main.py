@@ -1,8 +1,8 @@
-
 import json
 import logging
 import os
 import boto3
+from datetime import datetime, timezone
 
 logger = logging.getLogger()
 logger.setLevel(os.getenv("LOG_LEVEL", "INFO"))
@@ -27,10 +27,14 @@ def handler(event, context):
 
         logger.info(f"File uploaded: s3://{bucket}/{key}")
 
+        extraction_timestamp = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%SZ')
+
         state_machine_input_payload = {
             "bak_upload_bucket": bucket,
             "bak_upload_key": key,
-            "db_name": db_name
+            "db_name": db_name,
+            "extraction_timestamp": extraction_timestamp,
+            "output_bucket": os.environ["OUTPUT_BUCKET"],
         }
 
         # Start Step Function with file info

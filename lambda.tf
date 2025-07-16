@@ -43,6 +43,7 @@ module "upload_checker" {
   environment_variables = {
     BACKUP_UPLOADS_BUCKET = aws_s3_bucket.backup_uploads.id
     STATE_MACHINE_ARN     = aws_sfn_state_machine.db_export.id
+    OUTPUT_BUCKET         = aws_s3_bucket.parquet_exports.id
   }
 
   source_path = [{
@@ -71,6 +72,18 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
 
     resources = [
       "${aws_s3_bucket.parquet_exports.arn}/*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "glue:*"
+    ]
+
+    resources = [
+      "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog",
+      "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:database/*",
+      "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/*/*"
     ]
   }
 }
@@ -205,7 +218,7 @@ module "database_export_scanner" {
   }]
 
   layers = [
-    "arn:aws:lambda:eu-west-1:336392948345:layer:AWSSDKPandas-Python312:16"
+    "arn:aws:lambda:eu-west-1:336392948345:layer:AWSSDKPandas-Python312:18"
   ]
 
   tags = var.tags
@@ -248,7 +261,7 @@ module "database_export_processor" {
   }]
 
   layers = [
-    "arn:aws:lambda:eu-west-1:336392948345:layer:AWSSDKPandas-Python312:16"
+    "arn:aws:lambda:eu-west-1:336392948345:layer:AWSSDKPandas-Python312:18"
   ]
 
   tags = var.tags

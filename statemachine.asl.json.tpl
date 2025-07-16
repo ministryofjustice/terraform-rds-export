@@ -53,9 +53,7 @@
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
         "FunctionName": "${DatabaseExportScannerLambdaArn}",
-        "Payload": {
-          "db_name.$": "$.DatabaseRestoreLambdaResult.db_name"
-        }
+        "Payload.$": "$"
       },
       "Retry": [
         {

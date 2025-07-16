@@ -1,3 +1,4 @@
+
 import os
 import boto3
 import json
@@ -16,7 +17,6 @@ def handler(event, context):
     # Retrieve configuration from environment variables
     db_endpoint = os.environ["DATABASE_ENDPOINT"]
     db_secret_arn = os.environ["DATABASE_SECRET_ARN"]
-    login_db_name = os.environ.get("DATABASE_NAME", "master")
     restore_db_name = event["db_name"]
     task_id = event["task_id"]
 
@@ -36,7 +36,7 @@ def handler(event, context):
         # Connect to the MS SQL Server database using python-tds
         conn = pytds.connect(
             server=db_endpoint,
-            database=login_db_name,
+            database="master",
             user=db_username,
             password=db_password,
             timeout=5

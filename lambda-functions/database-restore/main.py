@@ -1,3 +1,4 @@
+
 import os
 import boto3
 import json
@@ -16,13 +17,13 @@ def handler(event, context):
     # Retrieve configuration from environment variables
     db_endpoint = os.environ["DATABASE_ENDPOINT"]
     db_secret_arn = os.environ["DATABASE_SECRET_ARN"]
-    db_name = os.environ.get("DATABASE_NAME", "master")
     bak_upload_bucket = event.get("bak_upload_bucket")
     bak_upload_key = event.get("bak_upload_key")
+    db_name = event.get("db_name")
 
-    if not bak_upload_bucket or not bak_upload_key:
-        logger.error("Missing 'bak_upload_bucket' or 'bak_upload_key' in the event")
-        return
+    if not bak_upload_bucket or not bak_upload_key or not db_name:
+        logger.error("Missing 'bak_upload_bucket' or 'bak_upload_key' or 'db_name' in event.")
+        raise ValueError("Required parameters are missing in the event.")
 
     s3_arn_to_restore_from = f"arn:aws:s3:::{bak_upload_bucket}/{bak_upload_key}"
 
@@ -34,23 +35,34 @@ def handler(event, context):
         db_password = db_secret["password"]
     except Exception as e:
         logger.error("Error fetching secret: %s", e)
-        return
+        raise Exception("Error fetching database credentials from Secrets Manager.")
 
     try:
         # Connect to the MS SQL Server database using python-tds
         conn = pytds.connect(
             server=db_endpoint,
-            database=db_name,
+            database="master",
             user=db_username,
             password=db_password,
-            timeout=5
+            timeout=5,
+            autocommit=True
         )
         cursor = conn.cursor()
         logger.info("Connected to MS SQL Server successfully!")
 
+        drop_command = (
+            f"IF DB_ID(N'{db_name}') IS NOT NULL "
+            "BEGIN "
+            f"ALTER DATABASE [{db_name}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; "
+            f"DROP DATABASE [{db_name}]; "
+            "END"
+        )
+        logger.info("Executing drop-if-exists command: %s", drop_command)
+        cursor.execute(drop_command)
+        conn.commit()
+
         now = datetime.now()
         now = now.strftime("%Y%m%d%H%M%S")
-        db_name = f"restoredData{now}"
 
         # Run the restore command with the S3 ARN from the environment variable.
         restore_command = (
