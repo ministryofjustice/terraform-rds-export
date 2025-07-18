@@ -4,12 +4,13 @@
 #trivy:ignore:AVD-AWS-0132 # Bucket encrypted with AES-256
 resource "aws_s3_bucket" "backup_uploads" {
   bucket_prefix = "${var.name}-backup-uploads-"
+}
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"
-      }
+resource "aws_s3_bucket_server_side_encryption_configuration" "backup_uploads" {
+  bucket = aws_s3_bucket.backup_uploads.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
     }
   }
 }
@@ -29,12 +30,13 @@ resource "aws_s3_bucket_public_access_block" "backup_uploads" {
 #trivy:ignore:AVD-AWS-0132 # Bucket encrypted with AES-256
 resource "aws_s3_bucket" "parquet_exports" {
   bucket_prefix = "${var.name}-parquet-exports-"
+}
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"
-      }
+resource "aws_s3_bucket_server_side_encryption_configuration" "parquet_exports" {
+  bucket = aws_s3_bucket.parquet_exports.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
     }
   }
 }
