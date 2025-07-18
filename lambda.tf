@@ -218,7 +218,7 @@ module "database_export_scanner" {
   }]
 
   layers = [
-    "arn:aws:lambda:eu-west-1:336392948345:layer:AWSSDKPandas-Python312:18"
+    "arn:aws:lambda:${data.aws_region.current.region}:336392948345:layer:AWSSDKPandas-Python312:18"
   ]
 
   tags = var.tags
@@ -261,7 +261,7 @@ module "database_export_processor" {
   }]
 
   layers = [
-    "arn:aws:lambda:eu-west-1:336392948345:layer:AWSSDKPandas-Python312:18"
+    "arn:aws:lambda:${data.aws_region.current.region}:336392948345:layer:AWSSDKPandas-Python312:18"
   ]
 
   tags = var.tags
