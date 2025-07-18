@@ -32,7 +32,10 @@ resource "aws_iam_role_policy" "state_machine" {
           "lambda:InvokeFunction"
         ]
         Resource = [
-          module.database_restore.lambda_function_arn
+          module.database_restore.lambda_function_arn,
+          module.database_restore_status.lambda_function_arn,
+          module.database_export_scanner.lambda_function_arn,
+          module.database_export_processor.lambda_function_arn
         ]
       }
     ]
