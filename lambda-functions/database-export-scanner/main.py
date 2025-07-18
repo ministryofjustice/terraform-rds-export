@@ -184,7 +184,6 @@ def create_glue_table(db_name: str, schema: str, table: str, glue_db: str, bucke
     # TODO: Fix column types
     # columns = [{"Name": cn, "Type": map_sql_to_glue_type(dt)} for cn, dt in cols]
     columns = [{"Name": cn, "Type": "string"} for cn, dt in cols]
-    columns.append({"Name": "extraction_timestamp", "Type": "string"})
 
     s3_path = f"s3://{bucket}/{db_name}/{schema}/{table}/"
     table_input = {
