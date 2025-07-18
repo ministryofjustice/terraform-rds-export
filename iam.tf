@@ -27,17 +27,15 @@ resource "aws_iam_role_policy" "state_machine" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = ["*"]
-        Resource = ["*"]
-      },
-      {
         Effect = "Allow"
         Action = [
           "lambda:InvokeFunction"
         ]
         Resource = [
-          module.database_restore.lambda_function_arn
+          module.database_restore.lambda_function_arn,
+          module.database_restore_status.lambda_function_arn,
+          module.database_export_scanner.lambda_function_arn,
+          module.database_export_processor.lambda_function_arn
         ]
       }
     ]
