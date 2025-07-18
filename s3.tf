@@ -1,11 +1,11 @@
 # Create S3 Bucket for SQL Server backup files to be uploaded to
 #trivy:ignore:AVD-AWS-0089 # Bucket logging not required
 #trivy:ignore:AVD-AWS-0090 # Bucket versioning not required - TODO: May add later
-#trivy:ignore:AVD-AWS-0132 # Bucket encrypted with AES-256
 resource "aws_s3_bucket" "backup_uploads" {
   bucket_prefix = "${var.name}-backup-uploads-"
 }
 
+#trivy:ignore:AVD-AWS-0132 # Bucket encrypted with AES-256
 resource "aws_s3_bucket_server_side_encryption_configuration" "backup_uploads" {
   bucket = aws_s3_bucket.backup_uploads.id
   rule {
@@ -27,11 +27,11 @@ resource "aws_s3_bucket_public_access_block" "backup_uploads" {
 # Create bucket to store exported parquet files
 #trivy:ignore:AVD-AWS-0089 # Bucket logging not required
 #trivy:ignore:AVD-AWS-0090 # Bucket versioning not required
-#trivy:ignore:AVD-AWS-0132 # Bucket encrypted with AES-256
 resource "aws_s3_bucket" "parquet_exports" {
   bucket_prefix = "${var.name}-parquet-exports-"
 }
 
+#trivy:ignore:AVD-AWS-0132 # Bucket encrypted with AES-256
 resource "aws_s3_bucket_server_side_encryption_configuration" "parquet_exports" {
   bucket = aws_s3_bucket.parquet_exports.id
   rule {
