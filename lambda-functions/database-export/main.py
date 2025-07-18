@@ -35,10 +35,11 @@ def decode_cp1252(val):
 
 def handler(event, context):
     # Retrieve configuration from environment variables
-    db_endpoint = os.environ["DATABASE_ENDPOINT"]
-    db_secret_arn = os.environ["DATABASE_SECRET_ARN"]
+    db_endpoint = event["db_endpoint"]
+    db_pw_secret_arn = os.environ["DATABASE_PW_SECRET_ARN"]
     db_name = os.environ.get("DATABASE_NAME", "master")
     output_bucket = os.environ["OUTPUT_BUCKET"]
+    db_username = event["db_username"]
 
     chunk = event["chunk"]
     db_name = chunk["database"]
@@ -50,10 +51,8 @@ def handler(event, context):
 
     # Fetch credentials from AWS Secrets Manager
     try:
-        secret_response = secretmanager.get_secret_value(SecretId=db_secret_arn)
-        db_secret = json.loads(secret_response["SecretString"])
-        db_username = db_secret["username"]
-        db_password = db_secret["password"]
+        secret_response = secretmanager.get_secret_value(SecretId=db_pw_secret_arn)
+        db_password = secret_response["SecretString"]
     except Exception as e:
         logger.error("Error fetching secret: %s", e)
         return

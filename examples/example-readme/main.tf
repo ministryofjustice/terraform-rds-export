@@ -2,10 +2,11 @@ module "rds_export" {
   #checkov:skip=CKV_TF_1,CKV_TF_2: branch name ok for example. Use hash in production
   source = "github.com/ministryofjustice/terraform-rds-export?ref=initial-version"
 
-  cron_expression              = "0 0 * * ? *" # Run every day at midnight
-  output_s3_bucket             = "name-of-your-s3-bucket"
-  database_instance_identifier = "name-of-your-rds-instance"
-  kms_key_arn                  = "kms-key-arn"
+  name                  = "name-of-your-rds-database"
+  vpc_id                = "vpc-arn"
+  database_subnet_ids   = "vpc-subnet-ids"
+  kms_key_arn           = "kms-key-arn"
+  master_user_secret_id = "secret-arn-containing-master-user-password"
 
   tags = {
     business-unit = "HMPPS"

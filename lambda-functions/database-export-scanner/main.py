@@ -217,8 +217,9 @@ def create_glue_table(db_name: str, schema: str, table: str, glue_db: str, bucke
 
 def handler(event, context):
     # Retrieve configuration from environment variables
-    db_endpoint = os.environ["DATABASE_ENDPOINT"]
-    db_secret_arn = os.environ["DATABASE_SECRET_ARN"]
+    db_endpoint = event["DescribeDBResult"]["DbInstances"][0]["Endpoint"]["Address"]
+    db_pw_secret_arn = os.environ["DATABASE_PW_SECRET_ARN"]
+    db_username = event["DescribeDBResult"]["DbInstances"][0]["MasterUsername"]
     db_name = event["db_name"]
     output_bucket = event["output_bucket"]
     extraction_timestamp = event["extraction_timestamp"]
@@ -228,10 +229,8 @@ def handler(event, context):
 
     # Fetch credentials from AWS Secrets Manager
     try:
-        secret_response = secretmanager.get_secret_value(SecretId=db_secret_arn)
-        db_secret = json.loads(secret_response["SecretString"])
-        db_username = db_secret["username"]
-        db_password = db_secret["password"]
+        secret_response = secretmanager.get_secret_value(SecretId=db_pw_secret_arn)
+        db_password = secret_response["SecretString"]
     except Exception as e:
         logger.error("Error fetching secret: %s", e)
         return

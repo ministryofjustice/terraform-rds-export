@@ -9,5 +9,10 @@ resource "aws_sfn_state_machine" "db_export" {
     DatabaseRestoreStatusLambdaArn   = module.database_restore_status.lambda_function_arn
     DatabaseExportScannerLambdaArn   = module.database_export_scanner.lambda_function_arn
     DatabaseExportProcessorLambdaArn = module.database_export_processor.lambda_function_arn
+    MasterUserPassword               = data.aws_secretsmanager_secret_version.master_user_secret.secret_string
+    ParameterGroupName               = resource.aws_db_parameter_group.database.name
+    OptionGroupName                  = resource.aws_db_option_group.database.name
+    VpcSecurityGroupIds              = [resource.aws_security_group.database.id]
+    DbSubnetGroupName                = resource.aws_db_subnet_group.database.name
   })
 }

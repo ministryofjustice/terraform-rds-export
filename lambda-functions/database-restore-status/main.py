@@ -15,17 +15,16 @@ secretmanager = boto3.client("secretsmanager")
 
 def handler(event, context):
     # Retrieve configuration from environment variables
-    db_endpoint = os.environ["DATABASE_ENDPOINT"]
-    db_secret_arn = os.environ["DATABASE_SECRET_ARN"]
+    db_endpoint = event["db_endpoint"]
+    db_pw_secret_arn = os.environ["DATABASE_PW_SECRET_ARN"]
+    db_username = event["db_username"]
     restore_db_name = event["db_name"]
     task_id = event["task_id"]
 
     # Fetch credentials from AWS Secrets Manager
     try:
-        secret_response = secretmanager.get_secret_value(SecretId=db_secret_arn)
-        db_secret = json.loads(secret_response["SecretString"])
-        db_username = db_secret["username"]
-        db_password = db_secret["password"]
+        secret_response = secretmanager.get_secret_value(SecretId=db_pw_secret_arn)
+        db_password = secret_response["SecretString"]
     except Exception as e:
         logger.error("Error fetching secret: %s", e)
         return

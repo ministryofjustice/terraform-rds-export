@@ -42,32 +42,3 @@ resource "aws_db_option_group" "database" {
     }
   }
 }
-
-# TODO: RDS should be deployed when state machine is triggered and then deleted when the state machine completes
-# Deploy RDS instance for MS SQL Server
-#trivy:ignore:AVD-AWS-0077 # Backups not required for an extended period
-#trivy:ignore:AVD-AWS-0133 # Performance insights not required
-#trivy:ignore:AVD-AWS-0177 # Deletion protection not required
-resource "aws_db_instance" "database" {
-  # checkov:skip=CKV_AWS_353: Performance insights not required
-  # checkov:skip=CKV_AWS_293: Deletion protection not required
-  # checkov:skip=CKV_AWS_157: Multi-AZ not required
-  # checkov:skip=CKV_AWS_129: Logs not required
-  # checkov:skip=CKV_AWS_226: Updates not required
-  # checkov:skip=CKV_AWS_118: Enhanced monitoring not required
-  allocated_storage           = 100
-  storage_type                = "gp2"
-  storage_encrypted           = true
-  engine                      = "sqlserver-se"
-  engine_version              = "15.00.4420.2.v1"
-  license_model               = "license-included"
-  instance_class              = "db.m5.2xlarge"
-  identifier                  = "${var.name}-sql-server-backup-export"
-  username                    = "admin"
-  manage_master_user_password = true
-  parameter_group_name        = aws_db_parameter_group.database.name
-  option_group_name           = aws_db_option_group.database.name
-  skip_final_snapshot         = true
-  vpc_security_group_ids      = [aws_security_group.database.id]
-  db_subnet_group_name        = aws_db_subnet_group.database.name
-}

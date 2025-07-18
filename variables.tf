@@ -1,5 +1,5 @@
 variable "name" {
-  description = "The name of the database"
+  description = "The name of the database in RDS"
   type        = string
 }
 
@@ -16,6 +16,10 @@ variable "database_subnet_ids" {
 variable "kms_key_arn" {
   description = "The ARN of the KMS key to use for encrypting the exported snapshot"
   type        = string
+}
+
+variable "master_user_secret_id" {
+  description = "The ARN of the secret containing the master user password for the RDS database"
 }
 
 variable "tags" {

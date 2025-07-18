@@ -15,11 +15,12 @@ secretmanager = boto3.client("secretsmanager")
 
 def handler(event, context):
     # Retrieve configuration from environment variables
-    db_endpoint = os.environ["DATABASE_ENDPOINT"]
-    db_secret_arn = os.environ["DATABASE_SECRET_ARN"]
+    db_endpoint = event["DescribeDBResult"]["DbInstances"][0]["Endpoint"]["Address"]
+    db_pw_secret_arn = os.environ["DATABASE_PW_SECRET_ARN"]
     bak_upload_bucket = event.get("bak_upload_bucket")
     bak_upload_key = event.get("bak_upload_key")
     db_name = event.get("db_name")
+    db_username = event["DescribeDBResult"]["DbInstances"][0]["MasterUsername"]
 
     if not bak_upload_bucket or not bak_upload_key or not db_name:
         logger.error("Missing 'bak_upload_bucket' or 'bak_upload_key' or 'db_name' in event.")
@@ -29,10 +30,8 @@ def handler(event, context):
 
     # Fetch credentials from AWS Secrets Manager
     try:
-        secret_response = secretmanager.get_secret_value(SecretId=db_secret_arn)
-        db_secret = json.loads(secret_response["SecretString"])
-        db_username = db_secret["username"]
-        db_password = db_secret["password"]
+        secret_response = secretmanager.get_secret_value(SecretId=db_pw_secret_arn)
+        db_password = secret_response["SecretString"]
     except Exception as e:
         logger.error("Error fetching secret: %s", e)
         raise Exception("Error fetching database credentials from Secrets Manager.")

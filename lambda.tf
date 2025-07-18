@@ -44,6 +44,7 @@ module "upload_checker" {
     BACKUP_UPLOADS_BUCKET = aws_s3_bucket.backup_uploads.id
     STATE_MACHINE_ARN     = aws_sfn_state_machine.db_export.id
     OUTPUT_BUCKET         = aws_s3_bucket.parquet_exports.id
+    NAME                  = var.name
   }
 
   source_path = [{
@@ -61,7 +62,7 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
     ]
 
     resources = [
-      aws_db_instance.database.master_user_secret[0].secret_arn
+      data.aws_secretsmanager_secret_version.master_user_secret.arn
     ]
   }
 
@@ -126,11 +127,9 @@ module "database_restore" {
   attach_policy_json = true
   policy_json        = data.aws_iam_policy_document.data_restore_lambda_function.json
 
-  # TODO: 
   environment_variables = {
-    UPLOADS_BUCKET      = aws_s3_bucket.backup_uploads.id
-    DATABASE_SECRET_ARN = aws_db_instance.database.master_user_secret[0].secret_arn
-    DATABASE_ENDPOINT   = aws_db_instance.database.address
+    UPLOADS_BUCKET         = aws_s3_bucket.backup_uploads.id
+    DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
   }
 
   source_path = [{
@@ -165,10 +164,8 @@ module "database_restore_status" {
   attach_policy_json = true
   policy_json        = data.aws_iam_policy_document.data_restore_lambda_function.json
 
-  # TODO: 
   environment_variables = {
-    DATABASE_SECRET_ARN = aws_db_instance.database.master_user_secret[0].secret_arn
-    DATABASE_ENDPOINT   = aws_db_instance.database.address
+    DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
   }
 
   source_path = [{
@@ -203,10 +200,8 @@ module "database_export_scanner" {
   attach_policy_json = true
   policy_json        = data.aws_iam_policy_document.data_restore_lambda_function.json
 
-  # TODO: 
   environment_variables = {
-    DATABASE_SECRET_ARN = aws_db_instance.database.master_user_secret[0].secret_arn
-    DATABASE_ENDPOINT   = aws_db_instance.database.address
+    DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
   }
 
   source_path = [{
@@ -218,7 +213,7 @@ module "database_export_scanner" {
   }]
 
   layers = [
-    "arn:aws:lambda:eu-west-1:336392948345:layer:AWSSDKPandas-Python312:18"
+    "arn:aws:lambda:${data.aws_region.current.name}:336392948345:layer:AWSSDKPandas-Python312:18"
   ]
 
   tags = var.tags
@@ -245,11 +240,9 @@ module "database_export_processor" {
   attach_policy_json = true
   policy_json        = data.aws_iam_policy_document.data_restore_lambda_function.json
 
-  # TODO: 
   environment_variables = {
-    DATABASE_SECRET_ARN = aws_db_instance.database.master_user_secret[0].secret_arn
-    DATABASE_ENDPOINT   = aws_db_instance.database.address
-    OUTPUT_BUCKET       = aws_s3_bucket.parquet_exports.id
+    DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
+    OUTPUT_BUCKET          = aws_s3_bucket.parquet_exports.id
   }
 
   source_path = [{
@@ -261,7 +254,7 @@ module "database_export_processor" {
   }]
 
   layers = [
-    "arn:aws:lambda:eu-west-1:336392948345:layer:AWSSDKPandas-Python312:18"
+    "arn:aws:lambda:${data.aws_region.current.name}:336392948345:layer:AWSSDKPandas-Python312:18"
   ]
 
   tags = var.tags

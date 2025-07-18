@@ -1,8 +1,75 @@
 {
-  "Comment": "Exports the latest RDS snapshot to S3, creating a new one if necessary",
-  "StartAt": "RunDatabaseRestoreLambda",
+  "Comment": "Creates a RDS DB Instnace to restores a .bak file. Exports the data to S3 and writes to the Glue Catalog. Deletes the DB instance after running.",
+  "StartAt": "CreateDBInstance",
   "States": {
-    "RunDatabaseRestoreLambda": {
+    "CreateDBInstance": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:rds:createDBInstance",
+      "Parameters": {
+        "AllocatedStorage": 100,
+        "StorageType": "gp2",
+        "StorageEncrypted": true,
+        "Engine": "sqlserver-se",
+        "EngineVersion": "15.00.4420.2.v1",
+        "LicenseModel": "license-included",
+        "MasterUsername": "admin",
+        "ManageMasterUserPassword": false,
+        "MasterUserPassword": "${MasterUserPassword}",
+        "DbParameterGroupName": "${ParameterGroupName}",
+        "OptionGroupName": "${OptionGroupName}",
+        "VpcSecurityGroupIds": ${jsonencode(VpcSecurityGroupIds)},
+        "DbSubnetGroupName": "${DbSubnetGroupName}",
+        "DbInstanceClass": "db.m5.2xlarge",
+        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)"
+      },
+      "ResultPath": "$.CreateDBResult",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "Rds.DbInstanceAlreadyExistsException"
+          ],
+          "ResultPath": null,
+          "Next": "Describe DB Instances"
+        }
+      ],
+      "Next": "Wait For DB Instance"
+    },
+    "Wait For DB Instance": {
+      "Type": "Wait",
+      "Seconds": 300,
+      "Next": "Describe DB Instances"
+    },
+    "Describe DB Instances": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
+      "Parameters": {
+        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)"
+      },
+      "ResultPath": "$.DescribeDBResult",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "Rds.DbInstanceNotFoundException"
+          ],
+          "Next": "Wait For DB Instance"
+        }
+      ],
+      "Next": "Choice start"
+    },
+    "Choice start": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.DescribeDBResult.DbInstances[0].DbInstanceStatus",
+            "StringEquals": "available"
+          },
+          "Next": "Wait For DB Instance"
+        }
+      ],
+      "Default": "Run Database Restore Lambda"
+    },
+    "Run Database Restore Lambda": {
       "Type": "Task",
       "Resource": "${DatabaseRestoreLambdaArn}",
       "ResultPath": "$.DatabaseRestoreLambdaResult",
@@ -15,12 +82,16 @@
         "FunctionName": "${DatabaseRestoreStatusLambdaArn}",
         "Payload": {
           "task_id.$": "$.DatabaseRestoreLambdaResult.task_id",
-          "db_name.$": "$.DatabaseRestoreLambdaResult.db_name"
+          "db_name.$": "$.DatabaseRestoreLambdaResult.db_name",
+          "db_endpoint.$": "$.DescribeDBResult.DbInstances[0].Endpoint.Address",
+          "db_username.$": "$.DescribeDBResult.DbInstances[0].MasterUsername"
         }
       },
       "Retry": [
         {
-          "ErrorEquals": [ "States.ALL" ],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "IntervalSeconds": 1,
           "MaxAttempts": 3,
           "BackoffRate": 2,
@@ -74,8 +145,13 @@
     },
     "Export Data": {
       "Type": "Map",
-      "InputPath": "$.DatabaseExportScannerLambdaResult.Payload",
-      "ItemsPath": "$.chunks",
+      "ItemsPath": "$.DatabaseExportScannerLambdaResult.Payload.chunks",
+      "Parameters": {
+        "chunk.$": "$$.Map.Item.Value",
+        "db_endpoint.$": "$.DescribeDBResult.DbInstances[0].Endpoint.Address",
+        "db_username.$": "$.DescribeDBResult.DbInstances[0].MasterUsername",
+        "name.$": "$.name"
+      },
       "MaxConcurrency": 5,
       "ItemProcessor": {
         "ProcessorConfig": {
@@ -90,12 +166,16 @@
             "Parameters": {
               "FunctionName": "${DatabaseExportProcessorLambdaArn}",
               "Payload": {
-                "chunk.$": "$"
+                "chunk.$": "$.chunk",
+                "db_endpoint.$": "$.db_endpoint",
+                "db_username.$": "$.db_username"
               }
             },
             "Retry": [
               {
-                "ErrorEquals": [ "States.ALL" ],
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
                 "IntervalSeconds": 5,
                 "MaxAttempts": 30,
                 "BackoffRate": 1,
@@ -105,6 +185,16 @@
             "End": true
           }
         }
+      },
+      "ResultPath": null,
+      "Next": "Delete DB Instance"
+    },
+    "Delete DB Instance": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:rds:deleteDBInstance",
+      "Parameters": {
+        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)",
+        "SkipFinalSnapshot": true
       },
       "Next": "SuccessState"
     },

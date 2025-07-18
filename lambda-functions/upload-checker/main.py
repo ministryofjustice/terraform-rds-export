@@ -15,7 +15,7 @@ def handler(event, context):
         record = event["Records"][0]
         bucket = record["s3"]["bucket"]["name"]
         key = record["s3"]["object"]["key"]
-
+        
         # S3 key should be in the format 'db_name/bak_file.bak'
         parts = key.split('/')
         if len(parts) != 2:
@@ -35,6 +35,7 @@ def handler(event, context):
             "db_name": db_name,
             "extraction_timestamp": extraction_timestamp,
             "output_bucket": os.environ["OUTPUT_BUCKET"],
+            "name": os.environ["NAME"]
         }
 
         # Start Step Function with file info
