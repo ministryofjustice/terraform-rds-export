@@ -67,7 +67,6 @@ resource "aws_s3_bucket_notification" "backup_uploads" {
   lambda_function {
     lambda_function_arn = module.upload_checker.lambda_function_arn
     events              = ["s3:ObjectCreated:*"]
-    filter_suffix       = ".bak"
   }
 
   depends_on = [aws_lambda_permission.allow_bucket]
