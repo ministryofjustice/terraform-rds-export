@@ -14,6 +14,8 @@ resource "aws_iam_role" "state_machine" {
       }
     ]
   })
+
+  tags = var.tags
 }
 
 resource "aws_iam_role_policy" "state_machine" {
@@ -30,7 +32,8 @@ resource "aws_iam_role_policy" "state_machine" {
         Action = [
           "rds:CreateDBInstance",
           "rds:DescribeDBInstances",
-          "rds:DeleteDBInstance"
+          "rds:DeleteDBInstance",
+          "rds:AddTagsToResource"
         ]
         Resource = [
           "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:${var.name}-sql-server-backup-export",
@@ -72,6 +75,9 @@ resource "aws_iam_role" "database_restore" {
       }
     ]
   })
+
+  tags = var.tags
+
 }
 
 resource "aws_iam_role_policy" "database_restore" {
@@ -106,8 +112,8 @@ resource "aws_iam_role_policy" "database_restore" {
           "s3:AbortMultipartUpload",
         ]
         Resource = [
-          "${aws_s3_bucket.backup_uploads.arn}",
-          "${aws_s3_bucket.backup_uploads.arn}/*"
+          "${module.s3_bucket_backup_uploads.bucket.arn}",
+          "${module.s3_bucket_backup_uploads.bucket.arn}/*"
         ]
       },
       {
@@ -120,8 +126,8 @@ resource "aws_iam_role_policy" "database_restore" {
           "s3:DeleteObject"
         ]
         Resource = [
-          aws_s3_bucket.parquet_exports.arn,
-          "${aws_s3_bucket.parquet_exports.arn}/*"
+          module.s3_bucket_parquet_exports.bucket.arn,
+          "${module.s3_bucket_parquet_exports.bucket.arn}/*"
         ]
       }
     ]

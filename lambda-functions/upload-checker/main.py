@@ -17,7 +17,7 @@ def handler(event, context):
         key = record["s3"]["object"]["key"]
         
         # S3 key should be in the format 'db_name/bak_file.bak'
-        parts = key.split('/')
+        parts = key.strip("/").split("/")
         if len(parts) != 2:
             error_msg = f"Invalid S3 key format: {key}. Expected 'db_name/file_key'."
             logger.error(error_msg)

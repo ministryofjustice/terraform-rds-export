@@ -1,12 +1,13 @@
 {
-  "Comment": "Creates a RDS DB Instnace to restores a .bak file. Exports the data to S3 and writes to the Glue Catalog. Deletes the DB instance after running.",
-  "StartAt": "CreateDBInstance",
+  "Comment": "Creates a RDS DB Instance to restore a .bak file. Exports the data to S3 and writes to the Glue Catalog. Deletes the DB instance after running or if any errors.",
+  "StartAt": "Create DB Instance",
   "States": {
-    "CreateDBInstance": {
+    "Create DB Instance": {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:createDBInstance",
       "Parameters": {
-        "AllocatedStorage": 100,
+        "AllocatedStorage": 200,
+        "MaxAllocatedStorage": 300,
         "StorageType": "gp2",
         "StorageEncrypted": true,
         "Engine": "sqlserver-se",
@@ -20,7 +21,8 @@
         "VpcSecurityGroupIds": ${jsonencode(VpcSecurityGroupIds)},
         "DbSubnetGroupName": "${DbSubnetGroupName}",
         "DbInstanceClass": "db.m5.2xlarge",
-        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)"
+        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)",
+        "Tags": ${Tags}
       },
       "ResultPath": "$.CreateDBResult",
       "Catch": [
@@ -29,7 +31,7 @@
             "Rds.DbInstanceAlreadyExistsException"
           ],
           "ResultPath": null,
-          "Next": "Describe DB Instances"
+          "Next": "Describe DB Instance Creation"
         }
       ],
       "Next": "Wait For DB Instance"
@@ -37,9 +39,9 @@
     "Wait For DB Instance": {
       "Type": "Wait",
       "Seconds": 300,
-      "Next": "Describe DB Instances"
+      "Next": "Describe DB Instance Creation"
     },
-    "Describe DB Instances": {
+    "Describe DB Instance Creation": {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
       "Parameters": {
@@ -54,9 +56,9 @@
           "Next": "Wait For DB Instance"
         }
       ],
-      "Next": "Choice start"
+      "Next": "Choice Start Restore"
     },
-    "Choice start": {
+    "Choice Start Restore": {
       "Type": "Choice",
       "Choices": [
         {
@@ -73,7 +75,14 @@
       "Type": "Task",
       "Resource": "${DatabaseRestoreLambdaArn}",
       "ResultPath": "$.DatabaseRestoreLambdaResult",
-      "Next": "Run Restore Status Check"
+      "Next": "Run Restore Status Check",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": null,
+          "Next": "Delete DB Instance"
+        }
+      ]
     },
     "Run Restore Status Check": {
       "Type": "Task",
@@ -98,12 +107,24 @@
           "JitterStrategy": "FULL"
         }
       ],
-      "Next": "Choice",
-      "ResultPath": "$.DatabaseRestoreStatusLambdaResult"
+      "Next": "Choice Start Export",
+      "ResultPath": "$.DatabaseRestoreStatusLambdaResult",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": null,
+          "Next": "Delete DB Instance"
+        }
+      ]
     },
-    "Choice": {
+    "Choice Start Export": {
       "Type": "Choice",
       "Choices": [
+        {
+          "Variable": "$.DatabaseRestoreStatusLambdaResult.Payload.restore_status",
+          "StringEquals": "ERROR",
+          "Next": "Delete DB Instance"
+        },
         {
           "Not": {
             "Variable": "$.DatabaseRestoreStatusLambdaResult.Payload.restore_status",
@@ -141,7 +162,14 @@
         }
       ],
       "Next": "Export Data",
-      "ResultPath": "$.DatabaseExportScannerLambdaResult"
+      "ResultPath": "$.DatabaseExportScannerLambdaResult",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": null,
+          "Next": "Delete DB Instance"
+        }
+      ]
     },
     "Export Data": {
       "Type": "Map",
@@ -187,7 +215,14 @@
         }
       },
       "ResultPath": null,
-      "Next": "Delete DB Instance"
+      "Next": "Delete DB Instance",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": null,
+          "Next": "Delete DB Instance"
+        }
+      ]
     },
     "Delete DB Instance": {
       "Type": "Task",
@@ -196,11 +231,49 @@
         "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)",
         "SkipFinalSnapshot": true
       },
-      "Next": "SuccessState"
+      "ResultPath": "$.DeleteDBInstance",
+      "Next": "Wait For Delete DB Instance"
     },
-    "SuccessState": {
+    "Wait For Delete DB Instance": {
+      "Type": "Wait",
+      "Seconds": 180,
+      "Next": "Describe DB Instance Deletion"
+    },
+    "Describe DB Instance Deletion":{
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
+      "Parameters": {
+        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)"
+      },
+      "ResultPath": "$.DecribeDBDeleteResult",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "Rds.DbInstanceNotFoundException"
+          ],
+          "Next": "Success State"
+        }
+      ],
+      "Next": "Choice End State"
+    },
+    "Choice End State": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.DecribeDBDeleteResult.DbInstances[0].DbInstanceStatus",
+          "StringEquals": "deleting",
+          "Next": "Wait For Delete DB Instance"
+        }
+      ],
+      "Default": "Fail State"
+    },
+    "Fail State": {
+      "Type": "Fail",
+      "Cause": "RDS DB Instance not in status: 'deleting'. Check the status."
+    },
+    "Success State": {
       "Type": "Succeed"
     }
   },
-  "TimeoutSeconds": 7200
+  "TimeoutSeconds": 36000
 }

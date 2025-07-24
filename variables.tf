@@ -1,5 +1,5 @@
 variable "name" {
-  description = "The name of the database in RDS"
+  description = "Used to create the database name in RDS and name of the database in Glue"
   type        = string
 }
 
@@ -14,12 +14,12 @@ variable "database_subnet_ids" {
 }
 
 variable "kms_key_arn" {
-  description = "The ARN of the KMS key to use for encrypting the exported snapshot"
+  description = "The ARN of the KMS key to use for secretes and exported snapshot"
   type        = string
 }
 
 variable "master_user_secret_id" {
-  description = "The ARN of the secret containing the master user password for the RDS database"
+  description = "The ARN of the secret containing the master user password to use for the RDS DB database"
 }
 
 variable "tags" {

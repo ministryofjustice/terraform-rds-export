@@ -7,8 +7,8 @@ data "aws_iam_policy_document" "upload_checker_lambda_function" {
     ]
 
     resources = [
-      aws_s3_bucket.backup_uploads.arn,
-      "${aws_s3_bucket.backup_uploads.arn}/*",
+      module.s3_bucket_backup_uploads.bucket.arn,
+      "${module.s3_bucket_backup_uploads.bucket.arn}/*",
     ]
   }
 
@@ -29,7 +29,7 @@ module "upload_checker" {
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
   function_name   = "${var.name}-upload-checker"
-  description     = "Lambda to check if all files have been uploaded to the S3 bucket"
+  description     = "Lambda to check if a file have been uploaded to the S3 bucket"
   handler         = "main.handler"
   runtime         = "python3.12"
   memory_size     = 1024
@@ -41,9 +41,9 @@ module "upload_checker" {
   policy_json        = data.aws_iam_policy_document.upload_checker_lambda_function.json
 
   environment_variables = {
-    BACKUP_UPLOADS_BUCKET = aws_s3_bucket.backup_uploads.id
+    BACKUP_UPLOADS_BUCKET = module.s3_bucket_backup_uploads.bucket.id
     STATE_MACHINE_ARN     = aws_sfn_state_machine.db_export.id
-    OUTPUT_BUCKET         = aws_s3_bucket.parquet_exports.id
+    OUTPUT_BUCKET         = module.s3_bucket_parquet_exports.bucket.id
     NAME                  = var.name
   }
 
@@ -68,11 +68,24 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
 
   statement {
     actions = [
+      "kms:Encrypt*",
+      "kms:Decrypt*",
+      "kms:GenerateDataKey*",
+      "kms:Describe*"
+    ]
+
+    resources = [
+      "${var.kms_key_arn}"
+    ]
+  }
+
+  statement {
+    actions = [
       "s3:PutObject",
     ]
 
     resources = [
-      "${aws_s3_bucket.parquet_exports.arn}/*",
+      "${module.s3_bucket_parquet_exports.bucket.arn}/*",
     ]
   }
 
@@ -128,7 +141,7 @@ module "database_restore" {
   policy_json        = data.aws_iam_policy_document.data_restore_lambda_function.json
 
   environment_variables = {
-    UPLOADS_BUCKET         = aws_s3_bucket.backup_uploads.id
+    UPLOADS_BUCKET         = module.s3_bucket_backup_uploads.bucket.id
     DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
   }
 
@@ -188,7 +201,7 @@ module "database_export_scanner" {
   handler         = "main.handler"
   runtime         = "python3.12"
   memory_size     = 2048
-  timeout         = 300
+  timeout         = 900
   architectures   = ["x86_64"]
   build_in_docker = false
 
@@ -227,8 +240,8 @@ module "database_export_processor" {
   description     = "Lambda to export data for ${var.name}"
   handler         = "main.handler"
   runtime         = "python3.12"
-  memory_size     = 2048
-  timeout         = 300
+  memory_size     = 4096
+  timeout         = 900
   architectures   = ["x86_64"]
   build_in_docker = false
 
@@ -242,7 +255,7 @@ module "database_export_processor" {
 
   environment_variables = {
     DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
-    OUTPUT_BUCKET          = aws_s3_bucket.parquet_exports.id
+    OUTPUT_BUCKET          = module.s3_bucket_parquet_exports.bucket.id
   }
 
   source_path = [{
