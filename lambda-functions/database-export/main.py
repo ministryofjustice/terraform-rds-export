@@ -2,7 +2,6 @@ import os
 import boto3
 import json
 import logging
-from datetime import datetime
 import pymssql
 import pandas as pd
 import awswrangler as wr
@@ -14,24 +13,19 @@ logger.setLevel(logging.INFO)
 secretmanager = boto3.client("secretsmanager")
 
 
-def decode_cp1252(val):
-    # Only try to decode raw bytes
+def safe_decode(val):
+    """Attempt to decode bytes using UTF-8, then CP1252, then Latin-1 as fallback."""
     if not isinstance(val, (bytes, bytearray)):
         return val
 
-    try:
-        # first, strict decode to see if it really is valid
-        return val.decode("cp1252")
-    except UnicodeDecodeError as e:
-        # log the exact bytes and the error
-        logger.warning(
-            "Decoding error at bytes %s: %s",
-            val.hex(),            # hex string of the raw bytes
-            e                     # the exception message
-        )
-        # if strict decode fails, replace invalid characters
-        return val.decode("cp1252", errors="replace")
+    for encoding in ("utf-8", "cp1252", "latin1"):
+        try:
+            return val.decode(encoding)
+        except UnicodeDecodeError:
+            continue
 
+    logger.warning("Failed to decode bytes: %s", val.hex())
+    return val.decode("utf-8", errors="replace")
 
 def handler(event, context):
     # Retrieve configuration from environment variables
@@ -61,18 +55,24 @@ def handler(event, context):
         # Connect to the MS SQL Server database
         logger.info("Creating the SQLAlchemy engine")
         conn = pymssql.connect(server=db_endpoint, user=db_username,
-                       password=db_password, database=db_name, charset='CP1252', tds_version="7.4")
+                       password=db_password, database=db_name, tds_version="7.4")
 
         df = pd.read_sql_query(db_query, conn)
         logger.info("Data fetched successfully!")
 
-        # TODO: Fix the issue with the column types (And do more thorough testing of decoding)
-        # TODO: Glue table definition needs to be fixed at the same time in the scanner lambda
-        # Convert all columns to string type
-        for col in df.select_dtypes(include=["object"]).columns:
-            df[col] = df[col].apply(decode_cp1252)
+        # # TODO: Fix the issue with the column types (And do more thorough testing of decoding)
+        # # TODO: Glue table definition needs to be fixed at the same time in the scanner lambda
+        # # Convert all columns to string type
+        # for col in df.select_dtypes(include=["object"]).columns:
+        #     df[col] = df[col].apply(decode_cp1252)
+        
+        for col in df.columns:
+            non_nulls = df[col].dropna()
+            if not non_nulls.empty and isinstance(non_nulls.iloc[0], (bytes, bytearray)):
+                logger.info(f"Decoding column '{col}' with fallback decoding")
+                df[col] = df[col].apply(lambda x: safe_decode(x) if isinstance(x, (bytes, bytearray)) else x)
 
-        df = df.astype(str)
+        # df = df.astype(str)
         df["extraction_timestamp"] = extraction_timestamp
 
         wr.s3.to_parquet(
