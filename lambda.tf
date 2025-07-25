@@ -29,7 +29,7 @@ module "upload_checker" {
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
   function_name   = "${var.name}-upload-checker"
-  description     = "Lambda to check if all files have been uploaded to the S3 bucket"
+  description     = "Lambda to check if a file have been uploaded to the S3 bucket"
   handler         = "main.handler"
   runtime         = "python3.12"
   memory_size     = 1024
