@@ -28,7 +28,7 @@ resource "aws_s3_bucket_public_access_block" "backup_uploads" {
 # Creating folder to drop .bak files in
 resource "aws_s3_object" "backup_uploads_folder" {
   bucket = aws_s3_bucket.backup_uploads.id
-  key    = var.name
+  key    = "${var.name}/"
 }
 
 # Create bucket to store exported parquet files
