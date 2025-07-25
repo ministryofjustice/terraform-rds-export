@@ -216,7 +216,7 @@
           "ErrorEquals": [
             "Rds.DbInstanceNotFoundException"
           ],
-          "Next": "SuccessState"
+          "Next": "Success State"
         }
       ],
       "Next": "Choice End State"
@@ -230,9 +230,13 @@
           "Next": "Wait For Delete DB Instance"
         }
       ],
-      "Default": "SuccessState"
+      "Default": "Fail State"
     },
-    "SuccessState": {
+    "Fail State": {
+      "Type": "Fail",
+      "Cause": "RDS DB Instance not in status: 'deleting'. Check the status."
+    },
+    "Success State": {
       "Type": "Succeed"
     }
   },
