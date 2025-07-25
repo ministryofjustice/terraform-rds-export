@@ -18,14 +18,14 @@ def safe_decode(val):
     if not isinstance(val, (bytes, bytearray)):
         return val
 
-    for encoding in ("utf-8", "cp1252", "latin1"):
+    for encoding in ("cp1252", "utf-8", "latin1"):
         try:
             return val.decode(encoding)
         except UnicodeDecodeError:
             continue
 
     logger.warning("Failed to decode bytes: %s", val.hex())
-    return val.decode("utf-8", errors="replace")
+    return val.decode("cp1252", errors="replace")
 
 def handler(event, context):
     # Retrieve configuration from environment variables
