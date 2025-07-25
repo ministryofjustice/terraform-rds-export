@@ -219,7 +219,7 @@
           "Next": "SuccessState"
         }
       ],
-      "Next": "Choice End State",
+      "Next": "Choice End State"
     },
     "Choice End State": {
       "Type": "Choice",
