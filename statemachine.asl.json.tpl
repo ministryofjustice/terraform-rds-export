@@ -73,7 +73,14 @@
       "Type": "Task",
       "Resource": "${DatabaseRestoreLambdaArn}",
       "ResultPath": "$.DatabaseRestoreLambdaResult",
-      "Next": "Run Restore Status Check"
+      "Next": "Run Restore Status Check",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": null,
+          "Next": "Delete DB Instance"
+        }
+      ]
     },
     "Run Restore Status Check": {
       "Type": "Task",
@@ -99,7 +106,14 @@
         }
       ],
       "Next": "Choice Start Export",
-      "ResultPath": "$.DatabaseRestoreStatusLambdaResult"
+      "ResultPath": "$.DatabaseRestoreStatusLambdaResult",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": null,
+          "Next": "Delete DB Instance"
+        }
+      ]
     },
     "Choice Start Export": {
       "Type": "Choice",
@@ -141,7 +155,14 @@
         }
       ],
       "Next": "Export Data",
-      "ResultPath": "$.DatabaseExportScannerLambdaResult"
+      "ResultPath": "$.DatabaseExportScannerLambdaResult",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": null,
+          "Next": "Delete DB Instance"
+        }
+      ]
     },
     "Export Data": {
       "Type": "Map",
@@ -187,7 +208,14 @@
         }
       },
       "ResultPath": null,
-      "Next": "Delete DB Instance"
+      "Next": "Delete DB Instance",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": null,
+          "Next": "Delete DB Instance"
+        }
+      ]
     },
     "Delete DB Instance": {
       "Type": "Task",
