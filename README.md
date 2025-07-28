@@ -38,7 +38,7 @@ module "rds_export" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_database_subnet_ids"></a> [database\_subnet\_ids](#input\_database\_subnet\_ids) | The IDs of the subnets in the VPC where the database will be deployed | `list(string)` | n/a | yes |
-| <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | The ARN of the KMS key to use for encrypting the exported snapshot | `string` | n/a | yes |
+| <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | The ARN of the KMS key to use for secretes and exported snapshot | `string` | n/a | yes |
 | <a name="input_master_user_secret_id"></a> [master\_user\_secret\_id](#input\_master\_user\_secret\_id) | The ARN of the secret containing the master user password to use for the RDS DB database | `any` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Used to create the database name in RDS and name of the database in Glue | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Common tags to be used by all resources | `map(string)` | n/a | yes |
