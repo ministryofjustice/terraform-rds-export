@@ -13,9 +13,8 @@ variable "database_subnet_ids" {
   type        = list(string)
 }
 
-# TO DO: Is this variable being used?
 variable "kms_key_arn" {
-  description = "The ARN of the KMS key to use for encrypting the exported snapshot"
+  description = "The ARN of the KMS key to use for secretes and exported snapshot"
   type        = string
 }
 

@@ -14,7 +14,7 @@ secretmanager = boto3.client("secretsmanager")
 
 
 def safe_decode(val):
-    """Attempt to decode bytes using UTF-8, then CP1252, then Latin-1 as fallback."""
+    """Attempt to decode bytes using CP1252, then UTF-8, then Latin-1 as fallback."""
     if not isinstance(val, (bytes, bytearray)):
         return val
 

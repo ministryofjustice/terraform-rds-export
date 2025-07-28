@@ -68,6 +68,19 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
 
   statement {
     actions = [
+      "kms:Encrypt*",
+      "kms:Decrypt*",
+      "kms:GenerateDataKey*",
+      "kms:Describe*"
+    ]
+
+    resources = [
+      "${var.kms_key_arn}"
+    ]
+  }
+
+  statement {
+    actions = [
       "s3:PutObject",
     ]
 
