@@ -268,5 +268,5 @@
       "Type": "Succeed"
     }
   },
-  "TimeoutSeconds": 7200
+  "TimeoutSeconds": 36000
 }
