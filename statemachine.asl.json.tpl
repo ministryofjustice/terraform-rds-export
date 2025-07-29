@@ -120,6 +120,11 @@
       "Type": "Choice",
       "Choices": [
         {
+          "Variable": "$.DatabaseRestoreStatusLambdaResult.Payload.restore_status",
+          "StringEquals": "ERROR",
+          "Next": "Delete DB Instance"
+        },
+        {
           "Not": {
             "Variable": "$.DatabaseRestoreStatusLambdaResult.Payload.restore_status",
             "StringEquals": "SUCCESS"
