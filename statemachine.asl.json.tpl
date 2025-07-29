@@ -6,8 +6,8 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:createDBInstance",
       "Parameters": {
-        "AllocatedStorage": 100,
-        "MaxAllocatedStorage": 200,
+        "AllocatedStorage": 200,
+        "MaxAllocatedStorage": 300,
         "StorageType": "gp2",
         "StorageEncrypted": true,
         "Engine": "sqlserver-se",
