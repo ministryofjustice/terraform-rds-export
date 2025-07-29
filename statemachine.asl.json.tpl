@@ -7,6 +7,8 @@
       "Resource": "arn:aws:states:::aws-sdk:rds:createDBInstance",
       "Parameters": {
         "AllocatedStorage": 100,
+        "MaxAllocatedStorage": 200,
+        "EnableStorageAutoScaling": true,
         "StorageType": "gp2",
         "StorageEncrypted": true,
         "Engine": "sqlserver-se",
