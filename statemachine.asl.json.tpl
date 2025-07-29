@@ -8,7 +8,6 @@
       "Parameters": {
         "AllocatedStorage": 100,
         "MaxAllocatedStorage": 200,
-        "EnableStorageAutoScaling": true,
         "StorageType": "gp2",
         "StorageEncrypted": true,
         "Engine": "sqlserver-se",
