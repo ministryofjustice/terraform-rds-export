@@ -201,7 +201,7 @@ module "database_export_scanner" {
   handler         = "main.handler"
   runtime         = "python3.12"
   memory_size     = 2048
-  timeout         = 300
+  timeout         = 900
   architectures   = ["x86_64"]
   build_in_docker = false
 

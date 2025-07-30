@@ -149,7 +149,7 @@ def ensure_glue_database(glue_client, glue_db, description=None):
 
 def map_sql_to_glue_type(sql_type: str) -> str:
     t = sql_type.lower()
-    print(f"type: {t}")
+    logger.info(f"type: {t}")
     # map exact SQL bit → boolean
     if t == "bit":
         return "boolean"
@@ -244,8 +244,8 @@ def handler(event, context):
 
 
         pk_map = get_all_primary_keys(cursor, "dbo")
-        print(f"{'Table':<40} {'Rows':>10} {'Chunks':>8} {'SQL KB/Row':>12} {'Parquet KB/Row':>16}")
-        print("-" * 90)
+        logger.info(f"{'Table':<40} {'Rows':>10} {'Chunks':>8} {'SQL KB/Row':>12} {'Parquet KB/Row':>16}")
+        logger.info("-" * 90)
 
         # Create glue tables for each schema.table
         for full_table, pk_columns in pk_map.items():
@@ -264,6 +264,8 @@ def handler(event, context):
         for full_table, pk_columns in pk_map.items():
             schema, table = full_table.split(".")
             rows, size_kb = get_table_stats(cursor, schema, table)
+            logger.info(f"Table: {schema}.{table}, Rows: {rows}, Size: {size_kb:.2f} KB")
+
 
             if rows > 0 and not pk_columns:
                 query = f"SELECT * FROM [{schema}].[{table}]"
@@ -292,7 +294,7 @@ def handler(event, context):
 
             # Calculate the number of chunks
             num_chunks = (rows + rows_for_limit_parquet - 1) // rows_for_limit_parquet
-            print(f"{full_table:<40} {rows:>10} {num_chunks:>8} {row_size_kb:>12.4f} {parquet_row_kb:>16.4f}")
+            logger.info(f"{full_table:<40} {rows:>10} {num_chunks:>8} {row_size_kb:>12.4f} {parquet_row_kb:>16.4f}")
 
             for chunk_index in range(num_chunks):
                 query = generate_chunk_query_by_rownum(
