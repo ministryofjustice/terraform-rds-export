@@ -138,7 +138,7 @@ def ensure_glue_database(glue_client, glue_db, description=None):
         db_input["Description"] = description
 
     try:
-        glue_client.get_database(DatabaseInput=db_input)
+        glue_client.get_database(Name=glue_db)
         logger.info(f"Database '{glue_db}' already exists. Skipping creation.")
     except glue_client.exceptions.EntityNotFoundException:
         logger.info(f"Creating Glue database '{glue_db}'...")
