@@ -240,8 +240,8 @@ module "database_export_processor" {
   description     = "Lambda to export data for ${var.name}"
   handler         = "main.handler"
   runtime         = "python3.12"
-  memory_size     = 2048
-  timeout         = 300
+  memory_size     = 4096
+  timeout         = 900
   architectures   = ["x86_64"]
   build_in_docker = false
 

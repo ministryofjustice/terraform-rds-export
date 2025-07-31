@@ -240,6 +240,29 @@ def handler(event, context):
     try:
         conn = pymssql.connect(server=db_endpoint, user=db_username,
                        password=db_password, database=db_name)
+        query = """
+        SELECT 
+            s.name AS schema_name,
+            t.name AS table_name,
+            p.rows AS row_count,
+            CAST(SUM(a.total_pages) * 8.0 / 1024 AS DECIMAL(10,2)) AS total_size_mb,
+            CAST(SUM(a.used_pages) * 8.0 / 1024 AS DECIMAL(10,2)) AS used_size_mb,
+            CAST(SUM(a.data_pages) * 8.0 / 1024 AS DECIMAL(10,2)) AS data_size_mb
+        FROM sys.tables t
+        JOIN sys.indexes i ON t.object_id = i.object_id
+        JOIN sys.partitions p ON i.object_id = p.object_id AND i.index_id = p.index_id
+        JOIN sys.allocation_units a ON p.partition_id = a.container_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE i.index_id <= 1
+        GROUP BY s.name, t.name, p.rows
+        ORDER BY total_size_mb DESC
+        """
+
+        df = pd.read_sql_query(query, conn)
+
+        # Log or return result (you can also write to S3, etc.)
+        logger.info("Table stats:\n%s", df.to_string(index=False))
+
         cursor = conn.cursor()
 
 
@@ -264,7 +287,6 @@ def handler(event, context):
         for full_table, pk_columns in pk_map.items():
             schema, table = full_table.split(".")
             rows, size_kb = get_table_stats(cursor, schema, table)
-            logger.info(f"Table: {schema}.{table}, Rows: {rows}, Size: {size_kb:.2f} KB")
 
 
             if rows > 0 and not pk_columns:
