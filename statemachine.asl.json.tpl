@@ -166,7 +166,7 @@
         {
           "ErrorEquals": ["States.ALL"],
           "ResultPath": null,
-          "Next": "DeleteDatabase"
+          "Next": "Delete DB Instance"
         }
       ]
     },
@@ -177,8 +177,7 @@
         "chunk.$": "$$.Map.Item.Value",
         "db_endpoint.$": "$.DescribeDBResult.DbInstances[0].Endpoint.Address",
         "db_username.$": "$.DescribeDBResult.DbInstances[0].MasterUsername",
-        "name.$": "$.name",
-        "db_name.$": "$.db_name"
+        "name.$": "$.name"
       },
       "MaxConcurrency": 5,
       "ItemProcessor": {
@@ -196,8 +195,7 @@
               "Payload": {
                 "chunk.$": "$.chunk",
                 "db_endpoint.$": "$.db_endpoint",
-                "db_username.$": "$.db_username",
-                "db_name.$": "$.db_name"
+                "db_username.$": "$.db_username"
               }
             },
             "Retry": [
@@ -221,18 +219,9 @@
         {
           "ErrorEquals": ["States.ALL"],
           "ResultPath": null,
-          "Next": "DeleteDatabase"
+          "Next": "Delete DB Instance"
         }
       ]
-    },
-    "DeleteDatabase": {
-      "Type": "Task",
-      "Parameters": {
-        "Name.$": "$.db_name"
-      },
-      "Resource": "arn:aws:states:::aws-sdk:glue:deleteDatabase",
-      "ResultPath": null,
-      "Next": "Delete DB Instance"
     },
     "Delete DB Instance": {
       "Type": "Task",
