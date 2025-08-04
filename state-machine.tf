@@ -14,5 +14,6 @@ resource "aws_sfn_state_machine" "db_export" {
     OptionGroupName                  = resource.aws_db_option_group.database.name
     VpcSecurityGroupIds              = [resource.aws_security_group.database.id]
     DbSubnetGroupName                = resource.aws_db_subnet_group.database.name
+    Tags                             = var.tags
   })
 }

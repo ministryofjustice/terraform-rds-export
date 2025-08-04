@@ -21,7 +21,8 @@
         "VpcSecurityGroupIds": ${jsonencode(VpcSecurityGroupIds)},
         "DbSubnetGroupName": "${DbSubnetGroupName}",
         "DbInstanceClass": "db.m5.2xlarge",
-        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)"
+        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)",
+        "Tags.$": "$.Tags"
       },
       "ResultPath": "$.CreateDBResult",
       "Catch": [

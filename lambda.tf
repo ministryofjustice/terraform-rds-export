@@ -7,8 +7,8 @@ data "aws_iam_policy_document" "upload_checker_lambda_function" {
     ]
 
     resources = [
-      aws_s3_bucket.backup_uploads.arn,
-      "${aws_s3_bucket.backup_uploads.arn}/*",
+      module.s3_bucket_backup_uploads.bucket.arn,
+      "${module.s3_bucket_backup_uploads.bucket.arn}/*",
     ]
   }
 
@@ -41,9 +41,9 @@ module "upload_checker" {
   policy_json        = data.aws_iam_policy_document.upload_checker_lambda_function.json
 
   environment_variables = {
-    BACKUP_UPLOADS_BUCKET = aws_s3_bucket.backup_uploads.id
+    BACKUP_UPLOADS_BUCKET = module.s3_bucket_backup_uploads.bucket.id
     STATE_MACHINE_ARN     = aws_sfn_state_machine.db_export.id
-    OUTPUT_BUCKET         = aws_s3_bucket.parquet_exports.id
+    OUTPUT_BUCKET         = module.s3_bucket_parquet_exports.bucket.id
     NAME                  = var.name
   }
 
@@ -85,7 +85,7 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
     ]
 
     resources = [
-      "${aws_s3_bucket.parquet_exports.arn}/*",
+      "${module.s3_bucket_parquet_exports.bucket.arn}/*",
     ]
   }
 
@@ -141,7 +141,7 @@ module "database_restore" {
   policy_json        = data.aws_iam_policy_document.data_restore_lambda_function.json
 
   environment_variables = {
-    UPLOADS_BUCKET         = aws_s3_bucket.backup_uploads.id
+    UPLOADS_BUCKET         = module.s3_bucket_backup_uploads.bucket.id
     DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
   }
 
@@ -255,7 +255,7 @@ module "database_export_processor" {
 
   environment_variables = {
     DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
-    OUTPUT_BUCKET          = aws_s3_bucket.parquet_exports.id
+    OUTPUT_BUCKET          = module.s3_bucket_parquet_exports.bucket.id
   }
 
   source_path = [{
