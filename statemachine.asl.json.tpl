@@ -209,14 +209,7 @@
         }
       },
       "ResultPath": null,
-      "Next": "Delete DB Instance",
-      "Catch": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "ResultPath": null,
-          "Next": "Delete DB Instance"
-        }
-      ]
+      "Next": "Success State"
     },
     "Delete DB Instance": {
       "Type": "Task",
