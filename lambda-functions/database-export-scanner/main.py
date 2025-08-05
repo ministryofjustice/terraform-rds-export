@@ -272,6 +272,7 @@ def handler(event, context):
 
         # Create glue tables for each schema.table
         for full_table, pk_columns in pk_map.items():
+            logger.info(pk_map.items())
             logger.info(f"Creating glue table for {full_table}")
             schema, table = full_table.split(".")
             create_glue_table(
