@@ -1,6 +1,6 @@
 {
   "Comment": "Creates a RDS DB Instance to restore a .bak file. Exports the data to S3 and writes to the Glue Catalog. Deletes the DB instance after running or if any errors.",
-  "StartAt": "Create DB Instance",
+  "StartAt": "Delete DB Instance If Exists",
   "States": {
     "Delete DB Instance If Exists": {
       "Type": "Task",
