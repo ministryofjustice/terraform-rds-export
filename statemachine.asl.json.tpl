@@ -10,14 +10,38 @@
         "SkipFinalSnapshot": true
       },
       "ResultPath": "$.DeleteDBInstance",
-      "Next": "Create DB Instance",
+      "Next": "Wait For Delete DB Instance (1)",
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "ResultPath": null,
           "Next": "Create DB Instance"
         }
       ]
+    },
+    "Wait For Delete DB Instance (1)": {
+      "Type": "Wait",
+      "Seconds": 180,
+      "Next": "Describe DB Instance Deletion"
+    },
+    "Describe DB Instance Deletion": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
+      "Parameters": {
+        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)"
+      },
+      "ResultPath": "$.DecribeDBDeleteResult",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "Rds.DbInstanceNotFoundException"
+          ],
+          "Next": "Fail State"
+        }
+      ],
+      "Next": "Create DB Instance"
     },
     "Create DB Instance": {
       "Type": "Task",
