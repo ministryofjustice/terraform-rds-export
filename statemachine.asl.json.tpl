@@ -2,19 +2,19 @@
   "Comment": "Creates a RDS DB Instance to restore a .bak file. Exports the data to S3 and writes to the Glue Catalog. Deletes the DB instance after running or if any errors.",
   "StartAt": "Create DB Instance",
   "States": {
-    "Delete DB Instance If Exists" = {
-      Type       = "Task",
-      Resource   = "arn:aws:states:::aws-sdk:rds:deleteDBInstance",
-      Parameters = {
-        DbInstanceIdentifier.$ = "States.Format('{}-sql-server-backup-export',$.name)",
-        SkipFinalSnapshot      = true
+    "Delete DB Instance If Exists": {
+      Type: "Task",
+      Resource: "arn:aws:states:::aws-sdk:rds:deleteDBInstance",
+      Parameter: {
+        DbInstanceIdentifier.$: "States.Format('{}-sql-server-backup-export',$.name)",
+        SkipFinalSnapshot: true
       },
-      ResultPath = "$.DeleteDBInstance",
-      Next       = "Create DB Instance",
-      Catch = [{
-        ErrorEquals = ["States.ALL"],
-        ResultPath  = null,
-        Next        = "Create DB Instance"
+      ResultPath: "$.DeleteDBInstance",
+      Next: "Create DB Instance",
+      Catch: [{
+        ErrorEquals: ["States.ALL"],
+        ResultPath: null,
+        Next: "Create DB Instance"
       }]
     },
     "Create DB Instance": {
