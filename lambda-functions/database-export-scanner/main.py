@@ -266,7 +266,31 @@ def handler(event, context):
         cursor = conn.cursor()
 
 
-        pk_map = get_all_primary_keys(cursor, "dbo")
+        # Get primary keys from both schemas
+        pk_map_dbo = get_all_primary_keys(cursor, "dbo")
+        pk_map_fds = get_all_primary_keys(cursor, "FDS")
+
+        # Combine both schema maps
+        pk_map = {**pk_map_dbo, **pk_map_fds}
+
+        # Hardcoded list of tables to export
+        # Format: ["dbo.TableA", "FDS.TableB", ...]
+        tables_to_export = [
+            "dbo.PrisonLookup",
+            "FDS.Asset",
+            "FDS.ACMs",
+            "FDS.Location",
+            "FDS.ACMActionPlans"
+        ]
+
+        # Filter pk_map to include only those tables
+        pk_map = {
+            full_name: pk_map[full_name]
+            for full_name in pk_map
+            if full_name in tables_to_export
+        }
+
+        logger.info(f"Tables selected for export: {list(pk_map.keys())}")
         logger.info(f"{'Table':<40} {'Rows':>10} {'Chunks':>8} {'SQL KB/Row':>12} {'Parquet KB/Row':>16}")
         logger.info("-" * 90)
 
