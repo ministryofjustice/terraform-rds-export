@@ -3,19 +3,21 @@
   "StartAt": "Create DB Instance",
   "States": {
     "Delete DB Instance If Exists": {
-      Type: "Task",
-      Resource: "arn:aws:states:::aws-sdk:rds:deleteDBInstance",
-      Parameter: {
-        DbInstanceIdentifier.$: "States.Format('{}-sql-server-backup-export',$.name)",
-        SkipFinalSnapshot: true
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:rds:deleteDBInstance",
+      "Parameters": {
+        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)",
+        "SkipFinalSnapshot": true
       },
-      ResultPath: "$.DeleteDBInstance",
-      Next: "Create DB Instance",
-      Catch: [{
-        ErrorEquals: ["States.ALL"],
-        ResultPath: null,
-        Next: "Create DB Instance"
-      }]
+      "ResultPath": "$.DeleteDBInstance",
+      "Next": "Create DB Instance",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": null,
+          "Next": "Create DB Instance"
+        }
+      ]
     },
     "Create DB Instance": {
       "Type": "Task",
