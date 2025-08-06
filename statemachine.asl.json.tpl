@@ -10,20 +10,11 @@
         "SkipFinalSnapshot": true
       },
       "ResultPath": "$.DeleteDBInstance",
-      "Next": "Wait For Delete DB Instance (1)",
-      "Catch": [
-        {
-          "ErrorEquals": [
-            "States.ALL"
-          ],
-          "ResultPath": null,
-          "Next": "Create DB Instance"
-        }
-      ]
+      "Next": "Wait For Delete DB"
     },
-    "Wait For Delete DB Instance (1)": {
+    "Wait For Delete DB": {
       "Type": "Wait",
-      "Seconds": 180,
+      "Seconds": 300,
       "Next": "DB Instance Deletion"
     },
     "DB Instance Deletion": {
@@ -38,10 +29,10 @@
           "ErrorEquals": [
             "Rds.DbInstanceNotFoundException"
           ],
-          "Next": "Fail State"
+          "Next": "Create DB Instance"
         }
       ],
-      "Next": "Create DB Instance"
+      "Next": "Wait For Delete DB"
     },
     "Create DB Instance": {
       "Type": "Task",
@@ -56,11 +47,13 @@
         "LicenseModel": "license-included",
         "MasterUsername": "admin",
         "ManageMasterUserPassword": false,
-        "MasterUserPassword": "${MasterUserPassword}",
-        "DbParameterGroupName": "${ParameterGroupName}",
-        "OptionGroupName": "${OptionGroupName}",
-        "VpcSecurityGroupIds": ${jsonencode(VpcSecurityGroupIds)},
-        "DbSubnetGroupName": "${DbSubnetGroupName}",
+        "MasterUserPassword": "cafm-test",
+        "DbParameterGroupName": "cafm-backup-export",
+        "OptionGroupName": "cafm-backup-export",
+        "VpcSecurityGroupIds": [
+          "sg-05ae23df93c4c762c"
+        ],
+        "DbSubnetGroupName": "cafm-database-backup-export",
         "DbInstanceClass": "db.m5.2xlarge",
         "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)"
       },
@@ -104,12 +97,14 @@
     },
     "Run Database Restore Lambda": {
       "Type": "Task",
-      "Resource": "${DatabaseRestoreLambdaArn}",
+      "Resource": "arn:aws:lambda:eu-west-1:684969100054:function:cafm-database-restore",
       "ResultPath": "$.DatabaseRestoreLambdaResult",
       "Next": "Run Restore Status Check",
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "ResultPath": null,
           "Next": "Delete DB Instance"
         }
@@ -119,7 +114,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
-        "FunctionName": "${DatabaseRestoreStatusLambdaArn}",
+        "FunctionName": "arn:aws:lambda:eu-west-1:684969100054:function:cafm-database-restore-status",
         "Payload": {
           "task_id.$": "$.DatabaseRestoreLambdaResult.task_id",
           "db_name.$": "$.DatabaseRestoreLambdaResult.db_name",
@@ -142,7 +137,9 @@
       "ResultPath": "$.DatabaseRestoreStatusLambdaResult",
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "ResultPath": null,
           "Next": "Delete DB Instance"
         }
@@ -170,7 +167,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
-        "FunctionName": "${DatabaseExportScannerLambdaArn}",
+        "FunctionName": "arn:aws:lambda:eu-west-1:684969100054:function:cafm-database-export-scanner",
         "Payload.$": "$"
       },
       "Retry": [
@@ -211,7 +208,7 @@
             "Resource": "arn:aws:states:::lambda:invoke",
             "OutputPath": "$.Payload",
             "Parameters": {
-              "FunctionName": "${DatabaseExportProcessorLambdaArn}",
+              "FunctionName": "arn:aws:lambda:eu-west-1:684969100054:function:cafm-database-export-processor",
               "Payload": {
                 "chunk.$": "$.chunk",
                 "db_endpoint.$": "$.db_endpoint",
@@ -237,7 +234,9 @@
       "Next": "Delete DB Instance",
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "ResultPath": null,
           "Next": "Fail State"
         }
