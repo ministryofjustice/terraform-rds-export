@@ -65,15 +65,6 @@
         "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)"
       },
       "ResultPath": "$.CreateDBResult",
-      "Catch": [
-        {
-          "ErrorEquals": [
-            "Rds.DbInstanceAlreadyExistsException"
-          ],
-          "ResultPath": null,
-          "Next": "Describe DB Instance Creation"
-        }
-      ],
       "Next": "Wait For DB Instance"
     },
     "Wait For DB Instance": {
@@ -197,14 +188,7 @@
         }
       ],
       "Next": "Export Data",
-      "ResultPath": "$.DatabaseExportScannerLambdaResult",
-      "Catch": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "ResultPath": null,
-          "Next": "Delete DB Instance"
-        }
-      ]
+      "ResultPath": "$.DatabaseExportScannerLambdaResult"
     },
     "Export Data": {
       "Type": "Map",
@@ -255,7 +239,7 @@
         {
           "ErrorEquals": ["States.ALL"],
           "ResultPath": null,
-          "Next": "Delete DB Instance"
+          "Next": "Fail State"
         }
       ]
     },
@@ -274,7 +258,7 @@
       "Seconds": 180,
       "Next": "Describe DB Instance Deletion"
     },
-    "Describe DB Instance Deletion":{
+    "Describe DB Instance Deletion": {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
       "Parameters": {
