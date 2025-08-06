@@ -24,9 +24,9 @@
     "Wait For Delete DB Instance (1)": {
       "Type": "Wait",
       "Seconds": 180,
-      "Next": "Describe DB Instance Deletion"
+      "Next": "DB Instance Deletion"
     },
-    "Describe DB Instance Deletion": {
+    "DB Instance Deletion": {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
       "Parameters": {
