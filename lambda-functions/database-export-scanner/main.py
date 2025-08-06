@@ -173,7 +173,7 @@ def map_sql_to_glue_type(sql_type: str) -> str:
 
 
 
-def create_glue_table(db_name: str, schema: str, table: str, glue_db: str, bucket: str, cursor):
+def create_glue_table(db_name: str, schema: str, table: str, glue_db: str, bucket: str, table_properties: dict, cursor):
     # fetch column metadata
     cursor.execute("""
         SELECT column_name, data_type
@@ -204,7 +204,7 @@ def create_glue_table(db_name: str, schema: str, table: str, glue_db: str, bucke
             {"Name": "extraction_timestamp", "Type": "string"}
         ],
         "TableType": "EXTERNAL_TABLE",
-        "Parameters": {"classification": "parquet"}
+        "Parameters": table_properties
     }
     try:
         glue.create_table(DatabaseName=glue_db, TableInput=table_input)
@@ -265,13 +265,20 @@ def handler(event, context):
 
         cursor = conn.cursor()
 
-
         pk_map = get_all_primary_keys(cursor, "dbo")
+                
         logger.info(f"{'Table':<40} {'Rows':>10} {'Chunks':>8} {'SQL KB/Row':>12} {'Parquet KB/Row':>16}")
         logger.info("-" * 90)
 
         # Create glue tables for each schema.table
         for full_table, pk_columns in pk_map.items():
+            table_prop = {
+                "classification": "parquet",
+                "source_primary_key": ', '.join(pk_columns),
+                "extraction_key": extraction_timestamp,
+                "extraction_timestamp_column_name": "extraction_timestamp",
+                "extraction_timestamp_column_dtype": "str"
+            }
             logger.info(pk_map.items())
             logger.info(f"Creating glue table for {full_table}")
             schema, table = full_table.split(".")
@@ -281,6 +288,8 @@ def handler(event, context):
                 table,
                 glue_db=db_name,
                 bucket=output_bucket,
+                primary_key = pk_columns,
+                table_properties = table_prop
                 cursor=cursor
             )
 
