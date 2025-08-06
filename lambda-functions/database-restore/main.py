@@ -106,7 +106,7 @@ def handler(event, context):
         return {
             "status": "FAILED",
             "error": str(e),
-            "timestamp": datetime.now(datetime.timezone.utc).isoformat() + "Z",
+            "timestamp": datetime.now().replace(microsecond=0).isoformat(),
             "db_identifier": db_endpoint.split(".")[0]
         }
     finally:
