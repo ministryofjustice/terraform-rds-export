@@ -46,6 +46,7 @@
         "Engine": "sqlserver-se",
         "EngineVersion": "15.00.4420.2.v1",
         "LicenseModel": "license-included",
+        "MasterUsername": "admin",
         "MasterUserPassword": "${MasterUserPassword}",
         "DbParameterGroupName": "${ParameterGroupName}",
         "OptionGroupName": "${OptionGroupName}",
