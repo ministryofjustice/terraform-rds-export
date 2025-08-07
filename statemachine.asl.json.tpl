@@ -232,7 +232,7 @@
         "SkipFinalSnapshot": true
       },
       "End": true
-    },
+    }
   },
   "TimeoutSeconds": 36000
 }
