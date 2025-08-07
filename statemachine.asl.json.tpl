@@ -10,7 +10,16 @@
         "SkipFinalSnapshot": true
       },
       "ResultPath": "$.DeleteDBInstance",
-      "Next": "Wait For Delete DB"
+      "Next": "Wait For Delete DB",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "Rds.DbInstanceNotFoundException"
+          ],
+          "Next": "Create DB Instance",
+          "ResultPath": null
+        }
+      ]
     },
     "Wait For Delete DB": {
       "Type": "Wait",
@@ -29,7 +38,8 @@
           "ErrorEquals": [
             "Rds.DbInstanceNotFoundException"
           ],
-          "Next": "Create DB Instance"
+          "Next": "Create DB Instance",
+          "ResultPath": null
         }
       ],
       "Next": "Wait For Delete DB"

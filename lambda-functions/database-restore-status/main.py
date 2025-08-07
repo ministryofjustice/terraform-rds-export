@@ -1,7 +1,5 @@
-
 import os
 import boto3
-import json
 import pytds
 import time
 import logging
@@ -38,7 +36,7 @@ def handler(event, context):
             database="master",
             user=db_username,
             password=db_password,
-            timeout=5
+            timeout=5,
         )
         cursor = conn.cursor()
         logger.info("Connected to MS SQL Server successfully!")
@@ -66,7 +64,9 @@ def handler(event, context):
             except Exception as fetch_error:
                 logger.debug("Error fetching row: %s", fetch_error)
             if not cursor.nextset():
-                logger.error("No further result sets available; status could not be determined.")
+                logger.error(
+                    "No further result sets available; status could not be determined."
+                )
                 break
 
     except Exception as e:
@@ -77,6 +77,4 @@ def handler(event, context):
         cursor.close()
         conn.close()
 
-    return {
-        "restore_status": restore_status
-    }
+    return {"restore_status": restore_status}

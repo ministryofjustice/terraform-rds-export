@@ -1,6 +1,5 @@
 import os
 import boto3
-import json
 import logging
 import pymssql
 import pandas as pd
@@ -27,20 +26,18 @@ def safe_decode(val):
     logger.warning("Failed to decode bytes: %s", val.hex())
     return val.decode("cp1252", errors="replace")
 
+
 def handler(event, context):
     # Retrieve configuration from environment variables
     db_endpoint = event["db_endpoint"]
     db_pw_secret_arn = os.environ["DATABASE_PW_SECRET_ARN"]
     db_name = os.environ.get("DATABASE_NAME", "master")
-    output_bucket = os.environ["OUTPUT_BUCKET"]
     db_username = event["db_username"]
 
     chunk = event["chunk"]
     db_name = chunk["database"]
-    db_schema = chunk["schema"]
     db_table = chunk["table"]
     db_query = chunk["query"]
-    chunk_index = chunk["chunk_index"]
     extraction_timestamp = chunk["extraction_timestamp"]
 
     # Fetch credentials from AWS Secrets Manager
@@ -60,12 +57,9 @@ def handler(event, context):
         df = pd.read_sql_query(db_query, conn)
         logger.info("Data fetched successfully!")
 
-        # # TODO: Fix the issue with the column types (And do more thorough testing of decoding)
-        # # TODO: Glue table definition needs to be fixed at the same time in the scanner lambda
-        # # Convert all columns to string type
-        # for col in df.select_dtypes(include=["object"]).columns:
-        #     df[col] = df[col].apply(decode_cp1252)
-        
+        # # Done: Fix the issue with the column types (And do more thorough testing of decoding)
+        # # Done: Glue table definition needs to be fixed at the same time in the scanner lambda
+
         for col in df.columns:
             non_nulls = df[col].dropna()
             if not non_nulls.empty and isinstance(non_nulls.iloc[0], (bytes, bytearray)):

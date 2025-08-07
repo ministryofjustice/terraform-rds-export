@@ -1,7 +1,5 @@
-
 import os
 import boto3
-import json
 import pytds
 import logging
 from datetime import datetime
@@ -23,7 +21,9 @@ def handler(event, context):
     db_username = event["DescribeDBResult"]["DbInstances"][0]["MasterUsername"]
 
     if not bak_upload_bucket or not bak_upload_key or not db_name:
-        logger.error("Missing 'bak_upload_bucket' or 'bak_upload_key' or 'db_name' in event.")
+        logger.error(
+            "Missing 'bak_upload_bucket' or 'bak_upload_key' or 'db_name' in event."
+        )
         raise ValueError("Required parameters are missing in the event.")
 
     s3_arn_to_restore_from = f"arn:aws:s3:::{bak_upload_bucket}/{bak_upload_key}"
@@ -44,7 +44,7 @@ def handler(event, context):
             user=db_username,
             password=db_password,
             timeout=5,
-            autocommit=True
+            autocommit=True,
         )
         cursor = conn.cursor()
         logger.info("Connected to MS SQL Server successfully!")
@@ -79,7 +79,9 @@ def handler(event, context):
             try:
                 result = cursor.fetchone()
                 if result:
-                    task_id = result[0]  # task_id is the first column in the result row.
+                    task_id = result[
+                        0
+                    ]  # task_id is the first column in the result row.
                     logger.info("Task ID returned: %s", task_id)
                     break
             except Exception as fetch_error:
@@ -99,21 +101,21 @@ def handler(event, context):
             "task_id": task_id,
             "current_time": datetime.now().replace(microsecond=0).isoformat(),
             "db_name": db_name,
-            "db_identifier": db_endpoint.split(".")[0]
-            }
+            "db_identifier": db_endpoint.split(".")[0],
+        }
     except Exception as e:
         logger.exception("Error connecting to MS SQL Server or executing command")
         return {
             "status": "FAILED",
             "error": str(e),
             "timestamp": datetime.now(datetime.timezone.utc).isoformat() + "Z",
-            "db_identifier": db_endpoint.split(".")[0]
+            "db_identifier": db_endpoint.split(".")[0],
         }
     finally:
         try:
-            if 'cursor' in locals():
+            if "cursor" in locals():
                 cursor.close()
-            if 'conn' in locals():
+            if "conn" in locals():
                 conn.close()
         except Exception as cleanup_error:
             logger.warning("Error during cleanup: %s", cleanup_error)
