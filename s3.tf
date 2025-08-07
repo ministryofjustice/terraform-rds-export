@@ -1,6 +1,6 @@
 # Create S3 Bucket for SQL Server backup files to be uploaded to
 module "s3_bucket_backup_uploads" {
-  source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=v7.0.0"
+  source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=v9.0.0"
 
   bucket_prefix      = "${var.name}-backup-uploads-"
   versioning_enabled = false
@@ -70,7 +70,7 @@ resource "aws_s3_object" "backup_uploads_folder" {
 
 # Create bucket to store exported parquet files
 module "s3_bucket_parquet_exports" {
-  source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=v7.0.0"
+  source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=v9.0.0"
 
   bucket_prefix      = "${var.name}-parquet-exports-"
   versioning_enabled = false
