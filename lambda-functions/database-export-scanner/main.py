@@ -275,9 +275,9 @@ def handler(event, context):
             table_prop = {
                 "classification": "parquet",
                 "source_primary_key": ', '.join(pk_columns),
-                "extraction_key": extraction_timestamp,
+                "extraction_key": "extraction_timestamp",
                 "extraction_timestamp_column_name": "extraction_timestamp",
-                "extraction_timestamp_column_dtype": "str"
+                "extraction_timestamp_column_dtype": "string"
             }
             logger.info(pk_map.items())
             logger.info(f"Creating glue table for {full_table}")
@@ -288,8 +288,7 @@ def handler(event, context):
                 table,
                 glue_db=db_name,
                 bucket=output_bucket,
-                primary_key = pk_columns,
-                table_properties = table_prop
+                table_properties = table_prop,
                 cursor=cursor
             )
 
@@ -356,3 +355,4 @@ def handler(event, context):
         }
     except Exception as e:
         logger.error("Error connecting to the database: %s", e)
+        raise

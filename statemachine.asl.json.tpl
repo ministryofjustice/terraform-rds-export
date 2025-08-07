@@ -31,7 +31,7 @@
             "Rds.DbInstanceAlreadyExistsException"
           ],
           "ResultPath": null,
-          "Next": "Describe DB Instance Creation"
+          "Next": "Fail State"
         }
       ],
       "Next": "Wait For DB Instance"
@@ -205,7 +205,7 @@
                   "States.ALL"
                 ],
                 "IntervalSeconds": 5,
-                "MaxAttempts": 30,
+                "MaxAttempts": 3,
                 "BackoffRate": 1,
                 "JitterStrategy": "NONE"
               }
@@ -231,49 +231,8 @@
         "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)",
         "SkipFinalSnapshot": true
       },
-      "ResultPath": "$.DeleteDBInstance",
-      "Next": "Wait For Delete DB Instance"
+      "End": true
     },
-    "Wait For Delete DB Instance": {
-      "Type": "Wait",
-      "Seconds": 180,
-      "Next": "Describe DB Instance Deletion"
-    },
-    "Describe DB Instance Deletion":{
-      "Type": "Task",
-      "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
-      "Parameters": {
-        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)"
-      },
-      "ResultPath": "$.DecribeDBDeleteResult",
-      "Catch": [
-        {
-          "ErrorEquals": [
-            "Rds.DbInstanceNotFoundException"
-          ],
-          "Next": "Success State"
-        }
-      ],
-      "Next": "Choice End State"
-    },
-    "Choice End State": {
-      "Type": "Choice",
-      "Choices": [
-        {
-          "Variable": "$.DecribeDBDeleteResult.DbInstances[0].DbInstanceStatus",
-          "StringEquals": "deleting",
-          "Next": "Wait For Delete DB Instance"
-        }
-      ],
-      "Default": "Fail State"
-    },
-    "Fail State": {
-      "Type": "Fail",
-      "Cause": "RDS DB Instance not in status: 'deleting'. Check the status."
-    },
-    "Success State": {
-      "Type": "Succeed"
-    }
   },
   "TimeoutSeconds": 36000
 }
