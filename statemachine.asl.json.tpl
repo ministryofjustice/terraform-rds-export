@@ -10,20 +10,11 @@
         "SkipFinalSnapshot": true
       },
       "ResultPath": "$.DeleteDBInstance",
-      "Next": "Wait For Delete DB",
-      "Catch": [
-        {
-          "ErrorEquals": [
-            "Rds.DbInstanceNotFoundException"
-          ],
-          "Next": "Create DB Instance",
-          "ResultPath": null
-        }
-      ]
+      "Next": "Wait For Delete DB"
     },
     "Wait For Delete DB": {
       "Type": "Wait",
-      "Seconds": 300,
+      "Seconds": 180,
       "Next": "DB Instance Deletion"
     },
     "DB Instance Deletion": {
@@ -55,14 +46,11 @@
         "Engine": "sqlserver-se",
         "EngineVersion": "15.00.4420.2.v1",
         "LicenseModel": "license-included",
-        "MasterUsername": "admin",
-        "ManageMasterUserPassword": false,
-        "MasterUserPassword": "cafm-test",
-        "DbParameterGroupName": "cafm-backup-export",
-        "OptionGroupName": "cafm-backup-export",
-        "VpcSecurityGroupIds": [
-          "sg-05ae23df93c4c762c"
-        ],
+        "MasterUserPassword": "${MasterUserPassword}",
+        "DbParameterGroupName": "${ParameterGroupName}",
+        "OptionGroupName": "${OptionGroupName}",
+        "VpcSecurityGroupIds": ${jsonencode(VpcSecurityGroupIds)},
+        "DbSubnetGroupName": "${DbSubnetGroupName}",
         "DbSubnetGroupName": "cafm-database-backup-export",
         "DbInstanceClass": "db.m5.2xlarge",
         "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)"
@@ -107,7 +95,7 @@
     },
     "Run Database Restore Lambda": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:eu-west-1:684969100054:function:cafm-database-restore",
+      "Resource": "${DatabaseRestoreLambdaArn}",
       "ResultPath": "$.DatabaseRestoreLambdaResult",
       "Next": "Run Restore Status Check",
       "Catch": [
@@ -124,7 +112,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
-        "FunctionName": "arn:aws:lambda:eu-west-1:684969100054:function:cafm-database-restore-status",
+        "FunctionName": "${DatabaseRestoreStatusLambdaArn}",
         "Payload": {
           "task_id.$": "$.DatabaseRestoreLambdaResult.task_id",
           "db_name.$": "$.DatabaseRestoreLambdaResult.db_name",
@@ -177,7 +165,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
-        "FunctionName": "arn:aws:lambda:eu-west-1:684969100054:function:cafm-database-export-scanner",
+        "FunctionName": "${DatabaseExportScannerLambdaArn}",
         "Payload.$": "$"
       },
       "Retry": [
@@ -218,7 +206,7 @@
             "Resource": "arn:aws:states:::lambda:invoke",
             "OutputPath": "$.Payload",
             "Parameters": {
-              "FunctionName": "arn:aws:lambda:eu-west-1:684969100054:function:cafm-database-export-processor",
+              "FunctionName": "${DatabaseExportProcessorLambdaArn}",
               "Payload": {
                 "chunk.$": "$.chunk",
                 "db_endpoint.$": "$.db_endpoint",
