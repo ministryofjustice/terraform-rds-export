@@ -232,6 +232,9 @@
         "SkipFinalSnapshot": true
       },
       "End": true
+    },
+    "Fail State": {
+      "Type": "Fail"
     }
   },
   "TimeoutSeconds": 36000
