@@ -7,6 +7,15 @@
       "Resource": "arn:aws:states:::aws-sdk:rds:deleteDBInstance",
       "Parameters": {
         "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export', $.name)",
+        "MasterUsername": "admin",
+        "ManageMasterUserPassword": false,
+        "MasterUserPassword": "${MasterUserPassword}",
+        "DbParameterGroupName": "${ParameterGroupName}",
+        "OptionGroupName": "${OptionGroupName}",
+        "VpcSecurityGroupIds": ${jsonencode(VpcSecurityGroupIds)},
+        "DbSubnetGroupName": "${DbSubnetGroupName}",
+        "DbInstanceClass": "db.m5.2xlarge",
+        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)",
         "SkipFinalSnapshot": true
       },
       "ResultPath": "$.DeleteDBInstance",
