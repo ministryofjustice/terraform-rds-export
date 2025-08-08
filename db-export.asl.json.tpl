@@ -31,7 +31,7 @@
       "Type": "Map",
       "ItemsPath": "$.DatabaseExportScannerLambdaResult.Payload.chunks",
       "Parameters": {
-        "chunk.$": "$.chunk",
+        "chunk.$": "$",
         "db_endpoint.$": "$.DescribeDBResult.DbInstances[0].Endpoint.Address",
         "db_username.$": "$.DescribeDBResult.DbInstances[0].MasterUsername",
         "name.$": "$.name",
