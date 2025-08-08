@@ -7,10 +7,19 @@
       "Resource": "arn:aws:states:::aws-sdk:rds:deleteDBInstance",
       "Parameters": {
         "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)",
-        "SkipFinalSnapshot": true
+        "SkipFinalSnapshot": false
       },
       "ResultPath": "$.DeleteDBInstance",
-      "Next": "Wait For Delete DB"
+      "Next": "Wait For Delete DB",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": null,
+          "Next": "Create DB Instance"
+        }
+      ]
     },
     "Wait For Delete DB": {
       "Type": "Wait",
@@ -47,7 +56,7 @@
         "EngineVersion": "15.00.4420.2.v1",
         "LicenseModel": "license-included",
         "MasterUsername": "admin",
-        "MasterUserPassword": "${MasterUserPassword}",
+        " ": "${MasterUserPassword}",
         "DbParameterGroupName": "${ParameterGroupName}",
         "OptionGroupName": "${OptionGroupName}",
         "VpcSecurityGroupIds": ${jsonencode(VpcSecurityGroupIds)},

@@ -291,12 +291,6 @@ def handler(event, context):
             except Exception as e:
                 logger.warning(f"Failed to get PKs for schema {schema}: {e}")
 
-        logger.info("-" * 90)
-        logger.info(
-            f"{'Table':<40} {'Rows':>10} {'Chunks':>8} {'SQL KB/Row':>12} {'Parquet KB/Row':>16}"
-        )
-        logger.info("-" * 90)
-
         # Create glue tables for each schema.table
         for full_table, pk_columns in pk_map.items():
             logger.info(f"Creating glue table for {full_table}")
@@ -316,10 +310,17 @@ def handler(event, context):
             rows, size_kb = get_table_stats(cursor, schema, table)
 
             # Calculate the number of chunks
+            rows, size_kb = get_table_stats(cursor, schema, table)
+            parquet_row_kb, rows_for_limit_parquet = sample_parquet_size(conn, schema, table)
+
+            if rows == 0 or rows_for_limit_parquet == 0:
+                continue
+
             num_chunks = (rows + rows_for_limit_parquet - 1) // rows_for_limit_parquet
-            logger.info(
-                f"{full_table:<40} {rows:>10} {num_chunks:>8} {row_size_kb:>12.4f} {parquet_row_kb:>16.4f}"
-            )
+            logger.info("-" * 90)
+            logger.info(f"{'Table':<40} {'Rows':>10} {'Chunks':>8} {'SQL KB/Row':>12} {'Parquet KB/Row':>16}")
+            logger.info("-" * 90)
+
 
             if (rows > 0 or num_chunks == 1) and not pk_columns:
                 query = f"SELECT * FROM [{schema}].[{table}]"
@@ -332,14 +333,6 @@ def handler(event, context):
                     }
                 )
                 # skip the PK-based sampling/partitioning below
-                continue
-
-            row_size_kb = size_kb / rows if rows else 0
-            parquet_row_kb, rows_for_limit_parquet = sample_parquet_size(
-                conn, schema, table
-            )
-
-            if rows == 0 or rows_for_limit_parquet == 0:
                 continue
 
             if num_chunks > 1:
