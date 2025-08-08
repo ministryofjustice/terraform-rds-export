@@ -8,14 +8,6 @@
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
         "FunctionName": "${DatabaseExportScannerLambdaArn}",
-        "MasterUsername": "admin",
-        "ManageMasterUserPassword": false,
-        "MasterUserPassword": "${MasterUserPassword}",
-        "DbParameterGroupName": "${ParameterGroupName}",
-        "OptionGroupName": "${OptionGroupName}",
-        "VpcSecurityGroupIds": ${jsonencode(VpcSecurityGroupIds)},
-        "DbSubnetGroupName": "${DbSubnetGroupName}",
-        "DbInstanceClass": "db.m5.2xlarge",
         "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)",
         "Payload.$": "$"
       },
