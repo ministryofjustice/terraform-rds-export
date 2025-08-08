@@ -42,7 +42,7 @@ module "upload_checker" {
 
   environment_variables = {
     BACKUP_UPLOADS_BUCKET = aws_s3_bucket.backup_uploads.id
-    STATE_MACHINE_ARN     = aws_sfn_state_machine.db_export.id
+    STATE_MACHINE_ARN     = aws_sfn_state_machine.db_restore.id
     OUTPUT_BUCKET         = aws_s3_bucket.parquet_exports.id
     NAME                  = var.name
   }
