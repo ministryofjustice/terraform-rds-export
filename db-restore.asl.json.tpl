@@ -7,23 +7,23 @@
       "Resource": "arn:aws:states:::aws-sdk:rds:deleteDBInstance",
       "Parameters": {
         "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)",
-        "SkipFinalSnapshot": false
+        "SkipFinalSnapshot": true
       },
       "ResultPath": "$.DeleteDBInstance",
       "Next": "Wait For Delete DB",
       "Catch": [
         {
           "ErrorEquals": [
-            "States.ALL"
+            "Rds.DbInstanceNotFoundException"
           ],
-          "ResultPath": null,
-          "Next": "Create DB Instance"
+          "Next": "Create DB Instance",
+          "ResultPath": null
         }
       ]
     },
     "Wait For Delete DB": {
       "Type": "Wait",
-      "Seconds": 180,
+      "Seconds": 300,
       "Next": "DB Instance Deletion"
     },
     "DB Instance Deletion": {
@@ -32,7 +32,7 @@
       "Parameters": {
         "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)"
       },
-      "ResultPath": "$.DecribeDBDeleteResult",
+      "ResultPath": "$.DescribeDBDeleteResult",
       "Catch": [
         {
           "ErrorEquals": [
@@ -85,7 +85,8 @@
           "ErrorEquals": [
             "Rds.DbInstanceNotFoundException"
           ],
-          "Next": "Wait For DB Instance"
+          "Next": "Wait For DB Instance",
+          "ResultPath": null
         }
       ],
       "Next": "Choice Start Restore"
@@ -114,7 +115,7 @@
             "States.ALL"
           ],
           "ResultPath": null,
-          "Next": "Delete DB Instance"
+          "Next": "Fail State"
         }
       ]
     },
@@ -122,7 +123,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
-        "FunctionName": "${DatabaseRestoreStatusLambdaArn}",
+        "FunctionName":  "${DatabaseRestoreStatusLambdaArn}",
         "Payload": {
           "task_id.$": "$.DatabaseRestoreLambdaResult.task_id",
           "db_name.$": "$.DatabaseRestoreLambdaResult.db_name",
@@ -149,7 +150,7 @@
             "States.ALL"
           ],
           "ResultPath": null,
-          "Next": "Delete DB Instance"
+          "Next": "Fail State"
         }
       ]
     },
@@ -164,142 +165,20 @@
           "Next": "Wait For Restore Completion"
         }
       ],
-      "Default": "Run Export Scanner Lambda"
+      "Default": "Success State"
     },
     "Wait For Restore Completion": {
       "Type": "Wait",
       "Seconds": 30,
       "Next": "Run Restore Status Check"
     },
-    "Run Export Scanner Lambda": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::lambda:invoke",
-      "Parameters": {
-        "FunctionName": "${DatabaseExportScannerLambdaArn}",
-        "Payload.$": "$"
-      },
-      "Retry": [
-        {
-          "ErrorEquals": [
-            "Lambda.ServiceException",
-            "Lambda.AWSLambdaException",
-            "Lambda.SdkClientException",
-            "Lambda.TooManyRequestsException"
-          ],
-          "IntervalSeconds": 1,
-          "MaxAttempts": 3,
-          "BackoffRate": 2,
-          "JitterStrategy": "FULL"
-        }
-      ],
-      "Next": "Export Data",
-      "ResultPath": "$.DatabaseExportScannerLambdaResult"
-    },
-    "Export Data": {
-      "Type": "Map",
-      "ItemsPath": "$.DatabaseExportScannerLambdaResult.Payload.chunks",
-      "Parameters": {
-        "chunk.$": "$$.Map.Item.Value",
-        "db_endpoint.$": "$.DescribeDBResult.DbInstances[0].Endpoint.Address",
-        "db_username.$": "$.DescribeDBResult.DbInstances[0].MasterUsername",
-        "name.$": "$.name"
-      },
-      "MaxConcurrency": 5,
-      "ItemProcessor": {
-        "ProcessorConfig": {
-          "Mode": "INLINE"
-        },
-        "StartAt": "Invoke Export Processor",
-        "States": {
-          "Invoke Export Processor": {
-            "Type": "Task",
-            "Resource": "arn:aws:states:::lambda:invoke",
-            "OutputPath": "$.Payload",
-            "Parameters": {
-              "FunctionName": "${DatabaseExportProcessorLambdaArn}",
-              "Payload": {
-                "chunk.$": "$.chunk",
-                "db_endpoint.$": "$.db_endpoint",
-                "db_username.$": "$.db_username"
-              }
-            },
-            "Retry": [
-              {
-                "ErrorEquals": [
-                  "States.ALL"
-                ],
-                "IntervalSeconds": 5,
-                "MaxAttempts": 30,
-                "BackoffRate": 1,
-                "JitterStrategy": "NONE"
-              }
-            ],
-            "End": true
-          }
-        }
-      },
-      "ResultPath": null,
-      "Next": "Delete DB Instance",
-      "Catch": [
-        {
-          "ErrorEquals": [
-            "States.ALL"
-          ],
-          "ResultPath": null,
-          "Next": "Fail State"
-        }
-      ]
-    },
-    "Delete DB Instance": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::aws-sdk:rds:deleteDBInstance",
-      "Parameters": {
-        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)",
-        "SkipFinalSnapshot": true
-      },
-      "ResultPath": "$.DeleteDBInstance",
-      "Next": "Wait For Delete DB Instance"
-    },
-    "Wait For Delete DB Instance": {
-      "Type": "Wait",
-      "Seconds": 180,
-      "Next": "Describe DB Instance Deletion"
-    },
-    "Describe DB Instance Deletion": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
-      "Parameters": {
-        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)"
-      },
-      "ResultPath": "$.DecribeDBDeleteResult",
-      "Catch": [
-        {
-          "ErrorEquals": [
-            "Rds.DbInstanceNotFoundException"
-          ],
-          "Next": "Success State"
-        }
-      ],
-      "Next": "Choice End State"
-    },
-    "Choice End State": {
-      "Type": "Choice",
-      "Choices": [
-        {
-          "Variable": "$.DecribeDBDeleteResult.DbInstances[0].DbInstanceStatus",
-          "StringEquals": "deleting",
-          "Next": "Wait For Delete DB Instance"
-        }
-      ],
-      "Default": "Fail State"
-    },
     "Fail State": {
       "Type": "Fail",
-      "Cause": "RDS DB Instance not in status: 'deleting'. Check the status."
+      "Cause": "Database restore process failed. See previous state for details."
     },
     "Success State": {
       "Type": "Succeed"
     }
   },
-  "TimeoutSeconds": 36000
+  "TimeoutSeconds": 7200
 }
