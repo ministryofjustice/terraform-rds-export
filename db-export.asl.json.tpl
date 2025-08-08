@@ -8,7 +8,6 @@
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
         "FunctionName": "${DatabaseExportScannerLambdaArn}",
-        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export',$.name)",
         "Payload.$": "$"
       },
       "Retry": [
