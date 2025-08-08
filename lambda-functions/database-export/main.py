@@ -35,7 +35,7 @@ def handler(event, context):
     db_username = event["db_username"]
 
     chunk = event["chunk"]
-    db_name = chunk["database"]
+    db_name = chunk["db_name"]
     db_table = chunk["table"]
     db_query = chunk["query"]
     extraction_timestamp = chunk["extraction_timestamp"]

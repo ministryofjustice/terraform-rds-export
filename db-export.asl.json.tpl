@@ -86,7 +86,7 @@
     },
     "Fail State": {
       "Type": "Fail",
-      "Cause": "Export failed or RDS instance deletion not successful."
+      "Cause": "Export failed !!"
     },
     "Success State": {
       "Type": "Succeed"
