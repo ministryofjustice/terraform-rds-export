@@ -152,7 +152,7 @@ def ensure_glue_database(glue_client, glue_db, description=None):
 
 def map_sql_to_glue_type(sql_type: str) -> str:
     t = sql_type.lower()
-    logger.info(f"type: {t}")
+    # logger.info(f"type: {t}")
     # map exact SQL bit → boolean
     if t == "bit":
         return "boolean"

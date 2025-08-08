@@ -32,9 +32,11 @@
       "ItemsPath": "$.DatabaseExportScannerLambdaResult.Payload.chunks",
       "Parameters": {
         "chunk.$": "$$.Map.Item.Value",
-        "db_endpoint.$": "$.db_endpoint",
-        "db_username.$": "$.db_username",
-        "name.$": "$.name"
+        "DescribeDBResult.$": "$.DescribeDBResult",
+        "name.$": "$.name",
+        "db_name.$": "$.db_name",
+        "output_bucket.$": "$.output_bucket",
+        "extraction_timestamp.$": "$.extraction_timestamp"
       },
       "MaxConcurrency": 5,
       "ItemProcessor": {
