@@ -25,19 +25,16 @@
         }
       ],
       "Next": "Export Data",
-      "ResultPath": "$.DatabaseExportScannerLambdaResult"
+      "ResultPath": "$.ScannerLambdaResult"
     },
     "Export Data": {
       "Type": "Map",
-      "ItemsPath": "$.DatabaseExportScannerLambdaResult.Payload.chunks",
+      "ItemsPath": "$.ScannerLambdaResult.Payload.chunks",
       "Parameters": {
-        "chunk.$": "$",
+        "chunk.$": "$$.Map.Item.Value",
         "db_endpoint.$": "$.DescribeDBResult.DbInstances[0].Endpoint.Address",
         "db_username.$": "$.DescribeDBResult.DbInstances[0].MasterUsername",
-        "name.$": "$.name",
-        "db_name.$": "$.db_name",
-        "output_bucket.$": "$.output_bucket",
-        "extraction_timestamp.$": "$.extraction_timestamp"
+        "name.$": "$.name"
       },
       "MaxConcurrency": 5,
       "ItemProcessor": {
@@ -64,8 +61,9 @@
                   "States.ALL"
                 ],
                 "IntervalSeconds": 5,
-                "MaxAttempts": 30,
-                "BackoffRate": 1
+                "MaxAttempts": 3,
+                "BackoffRate": 1,
+                "JitterStrategy": "NONE"
               }
             ],
             "End": true
