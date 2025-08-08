@@ -19,7 +19,7 @@ data "aws_iam_policy_document" "upload_checker_lambda_function" {
     ]
 
     resources = [
-      aws_sfn_state_machine.db_export.arn
+      aws_sfn_state_machine.db_restore.arn
     ]
   }
 }
