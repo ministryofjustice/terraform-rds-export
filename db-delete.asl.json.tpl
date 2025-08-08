@@ -6,6 +6,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:deleteDBInstance",
       "Parameters": {
+        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export', $.name)",
         "SkipFinalSnapshot": true
       },
       "ResultPath": "$.DeleteDBInstance",
