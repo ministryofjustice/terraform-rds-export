@@ -31,12 +31,16 @@
       "Type": "Map",
       "ItemsPath": "$.ScannerLambdaResult.Payload.chunks",
       "Parameters": {
-        "chunk.$": "$$.Map.Item.Value",
+        "chunk": {
+          "table.$": "$$.Map.Item.Value.table",
+          "query.$": "$$.Map.Item.Value.query",
+          "database.$": "$$.Map.Item.Value.database",
+          "extraction_timestamp.$": "$.extraction_timestamp"
+        },
         "db_endpoint.$": "$.db_endpoint",
         "db_username.$": "$.db_username",
         "db_name.$": "$.db_name",
         "output_bucket.$": "$.output_bucket",
-        "extraction_timestamp.$": "$.extraction_timestamp",
         "name.$": "$.name"
       },
       "MaxConcurrency": 5,
