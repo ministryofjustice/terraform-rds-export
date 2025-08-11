@@ -72,7 +72,7 @@ def handler(event, context):
         wr.s3.to_parquet(
             df=df,
             dataset=True,
-            mode="append",
+            mode="overwrite",
             database=db_name,
             table=db_table,
             partition_cols=["extraction_timestamp"]
