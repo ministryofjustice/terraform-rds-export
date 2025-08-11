@@ -32,8 +32,11 @@
       "ItemsPath": "$.ScannerLambdaResult.Payload.chunks",
       "Parameters": {
         "chunk.$": "$$.Map.Item.Value",
-        "db_endpoint.$": "$.DescribeDBResult.DbInstances[0].Endpoint.Address",
-        "db_username.$": "$.DescribeDBResult.DbInstances[0].MasterUsername",
+        "db_endpoint.$": "$.db_endpoint",
+        "db_username.$": "$.db_username",
+        "db_name.$": "$.db_name",
+        "output_bucket.$": "$.output_bucket",
+        "extraction_timestamp.$": "$.extraction_timestamp",
         "name.$": "$.name"
       },
       "MaxConcurrency": 5,
@@ -70,7 +73,6 @@
           }
         }
       },
-      "ResultPath": null,
       "Next": "Success State",
       "Catch": [
         {

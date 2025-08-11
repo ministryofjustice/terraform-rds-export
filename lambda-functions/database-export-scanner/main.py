@@ -104,7 +104,7 @@ def sample_parquet_size(conn, schema, table, sample_rows=1000):
         os.unlink(tmp.name)
 
     avg_row_size_kb = parquet_size_kb / len(df)
-    rows_for_limit_parquet = int(1024 * 100 / avg_row_size_kb) if avg_row_size_kb else 0
+    rows_for_limit_parquet = int(1024 * 10 / avg_row_size_kb) if avg_row_size_kb else 0
     return avg_row_size_kb, rows_for_limit_parquet
 
 
@@ -222,12 +222,13 @@ def create_glue_table(
 
 def handler(event, context):
     # Retrieve configuration from environment variables
-    db_endpoint = event["DescribeDBResult"]["DbInstances"][0]["Endpoint"]["Address"]
+    db_endpoint = event["db_endpoint"]
     db_pw_secret_arn = os.environ["DATABASE_PW_SECRET_ARN"]
-    db_username = event["DescribeDBResult"]["DbInstances"][0]["MasterUsername"]
+    db_username = event["db_username"]
     db_name = event["db_name"]
     output_bucket = event["output_bucket"]
     extraction_timestamp = event["extraction_timestamp"]
+    tables_to_export = event["tables_to_export"]
 
     # Check that the glue db exists, if not create it
     ensure_glue_database(glue, db_name, description=f"Catalog for {db_name}")
@@ -287,9 +288,15 @@ def handler(event, context):
         for schema in schemas:
             try:
                 pk_map.update(get_all_primary_keys(cursor, schema))
-                logger.info(f"Primary keys loaded for schema: {schema}")
             except Exception as e:
                 logger.warning(f"Failed to get PKs for schema {schema}: {e}")
+
+        # Filter pk_map to supplied tables
+        filtered = {
+            table: value for table, value in pk_map.items() if table in tables_to_export
+        }
+
+        pk_map = filtered
 
         # Create glue tables for each schema.table
         for full_table, pk_columns in pk_map.items():
@@ -311,18 +318,25 @@ def handler(event, context):
 
             # Calculate the number of chunks
             rows, size_kb = get_table_stats(cursor, schema, table)
-            parquet_row_kb, rows_for_limit_parquet = sample_parquet_size(conn, schema, table)
+            row_size_kb = size_kb / rows if rows else 0
+            parquet_row_kb, rows_for_limit_parquet = sample_parquet_size(
+                conn, schema, table
+            )
+
+            num_chunks = (rows + rows_for_limit_parquet - 1) // rows_for_limit_parquet
+            logger.info("-" * 90)
+            logger.info(
+                f"{'Table':<40} {'Rows':>10} {'Chunks':>8} {'SQL KB/Row':>12} {'Parquet KB/Row':>16}"
+            )
+            logger.info(
+                f"{full_table:<40} {rows:>10} {num_chunks:>8} {row_size_kb:>12.4f} {parquet_row_kb:>16.4f}"
+            )
+            logger.info("-" * 90)
 
             if rows == 0 or rows_for_limit_parquet == 0:
                 continue
 
-            num_chunks = (rows + rows_for_limit_parquet - 1) // rows_for_limit_parquet
-            logger.info("-" * 90)
-            logger.info(f"{'Table':<40} {'Rows':>10} {'Chunks':>8} {'SQL KB/Row':>12} {'Parquet KB/Row':>16}")
-            logger.info("-" * 90)
-
-
-            if (rows > 0 or num_chunks == 1) and not pk_columns:
+            if rows > 0 and not pk_columns:
                 query = f"SELECT * FROM [{schema}].[{table}]"
                 chunks.append(
                     {
@@ -335,22 +349,23 @@ def handler(event, context):
                 # skip the PK-based sampling/partitioning below
                 continue
 
-            if num_chunks > 1:
-                for chunk_index in range(num_chunks):
-                    query = generate_chunk_query_by_rownum(
-                        schema, table, pk_columns, rows_for_limit_parquet, chunk_index
-                    )
-                    chunk_info = {
-                        "database": db_name,
-                        "table": table,
-                        "extraction_timestamp": extraction_timestamp,
-                        "query": query,
-                    }
-                    chunks.append(chunk_info)
+            if rows == 0 or rows_for_limit_parquet == 0:
+                continue
+
+            for chunk_index in range(num_chunks):
+                query = generate_chunk_query_by_rownum(
+                    schema, table, pk_columns, rows_for_limit_parquet, chunk_index
+                )
+                chunk_info = {
+                    "database": db_name,
+                    "table": table,
+                    "extraction_timestamp": extraction_timestamp,
+                    "query": query,
+                }
+                chunks.append(chunk_info)
 
         # Close the cursor and connection
         cursor.close()
-
         logger.info(f"{len(chunks)} chunks to be processed")
         return {"chunks": chunks}
     except Exception as e:
