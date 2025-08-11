@@ -59,7 +59,8 @@
               "Payload": {
                 "chunk.$": "$.chunk",
                 "db_endpoint.$": "$.db_endpoint",
-                "db_username.$": "$.db_username"
+                "db_username.$": "$.db_username",
+                "output_bucket.$": "$.output_bucket"
               }
             },
             "Retry": [
