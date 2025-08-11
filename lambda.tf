@@ -81,15 +81,21 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
 
   statement {
     actions = [
-      "s3:PutObject",
+      "s3:ListBucket"
+    ]
+    resources = [
+      aws_s3_bucket.parquet_exports.arn
+    ]
+  }
+
+  statement {
+    actions = [
       "s3:GetObject",
-      "s3:ListBucket",
+      "s3:PutObject",
       "s3:DeleteObject"
     ]
-    effect = "Allow"
     resources = [
-      "${aws_s3_bucket.parquet_exports.arn}",
-      "${aws_s3_bucket.parquet_exports.arn}/*",
+      "${aws_s3_bucket.parquet_exports.arn}/*"
     ]
   }
 
