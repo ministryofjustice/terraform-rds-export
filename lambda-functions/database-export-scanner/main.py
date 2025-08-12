@@ -7,6 +7,7 @@ import pandas as pd
 import tempfile
 import warnings
 import uuid
+import awswrangler as wr
 
 warnings.filterwarnings("ignore", message="pandas only supports SQLAlchemy connectable")
 
@@ -104,7 +105,7 @@ def sample_parquet_size(conn, schema, table, sample_rows=1000):
         os.unlink(tmp.name)
 
     avg_row_size_kb = parquet_size_kb / len(df)
-    rows_for_limit_parquet = int(1024 * 10 / avg_row_size_kb) if avg_row_size_kb else 0
+    rows_for_limit_parquet = int(1024 * 100 / avg_row_size_kb) if avg_row_size_kb else 0
     return avg_row_size_kb, rows_for_limit_parquet
 
 
@@ -128,7 +129,6 @@ def generate_chunk_query_by_rownum(
     SELECT *
     FROM Ordered
     WHERE rn BETWEEN {start_row} AND {end_row}
-    ORDER BY rn
     """
 
     # Normalize query to a flat one-liner
@@ -251,10 +251,9 @@ def handler(event, context):
         SELECT
             s.name AS schema_name,
             t.name AS table_name,
-            p.rows AS row_count,
-            CAST(SUM(a.total_pages) * 8.0 / 1024 AS DECIMAL(10,2)) AS total_size_mb,
-            CAST(SUM(a.used_pages) * 8.0 / 1024 AS DECIMAL(10,2)) AS used_size_mb,
-            CAST(SUM(a.data_pages) * 8.0 / 1024 AS DECIMAL(10,2)) AS data_size_mb
+            p.rows AS original_row_count,
+            '' AS exported_row_count,
+            '' AS exported_timestamp
         FROM sys.tables t
         JOIN sys.indexes i ON t.object_id = i.object_id
         JOIN sys.partitions p ON i.object_id = p.object_id AND i.index_id = p.index_id
@@ -262,7 +261,6 @@ def handler(event, context):
         JOIN sys.schemas s ON t.schema_id = s.schema_id
         WHERE i.index_id <= 1
         GROUP BY s.name, t.name, p.rows
-        ORDER BY total_size_mb DESC
         """
 
         df = pd.read_sql_query(query, conn)
@@ -292,11 +290,15 @@ def handler(event, context):
                 logger.warning(f"Failed to get PKs for schema {schema}: {e}")
 
         # Filter pk_map to supplied tables
-        filtered = {
-            table: value for table, value in pk_map.items() if table in tables_to_export
-        }
-
-        pk_map = filtered
+        if tables_to_export:
+            logger.info(f"Filtering pk_map for tables: {tables_to_export}")
+            pk_map = {
+                table: value
+                for table, value in pk_map.items()
+                if table in tables_to_export
+            }
+        else:
+            logger.info("No tables_to_export provided — using all pk_map entries")
 
         # Create glue tables for each schema.table
         for full_table, pk_columns in pk_map.items():
@@ -310,6 +312,26 @@ def handler(event, context):
                 bucket=output_bucket,
                 cursor=cursor,
             )
+        if extraction_timestamp:
+            df["extraction_timestamp"] = extraction_timestamp
+
+        s3_path = f"s3://{output_bucket}/cafm/table-stats/"
+
+        try:
+            wr.s3.to_parquet(
+                df=df,
+                path=s3_path,
+                dataset=True,
+                mode="overwrite",
+                database=db_name,
+                table="table_stats",
+                partition_cols=["extraction_timestamp"] if "extraction_timestamp" in df.columns else None,
+                catalog_versioning=True
+            )
+            logger.info("Table stats written to S3 and Glue successfully.")
+        except Exception as e:
+            logger.error("Failed to write to S3/Glue: %s", e)
+            raise
 
         chunks = []
         for full_table, pk_columns in pk_map.items():
@@ -318,12 +340,21 @@ def handler(event, context):
 
             # Calculate the number of chunks
             rows, size_kb = get_table_stats(cursor, schema, table)
-            row_size_kb = size_kb / rows if rows else 0
+            if not rows or rows == 0:
+                logger.info(f"Skipping row size calculation: rows={rows}, table={table}")
+                row_size_kb = 0
+            else:
+                row_size_kb = size_kb / rows
+
             parquet_row_kb, rows_for_limit_parquet = sample_parquet_size(
                 conn, schema, table
             )
+            num_chunks = (
+                (rows + rows_for_limit_parquet - 1) // rows_for_limit_parquet
+                if rows_for_limit_parquet
+                else 1
+            )
 
-            num_chunks = (rows + rows_for_limit_parquet - 1) // rows_for_limit_parquet
             logger.info("-" * 90)
             logger.info(
                 f"{'Table':<40} {'Rows':>10} {'Chunks':>8} {'SQL KB/Row':>12} {'Parquet KB/Row':>16}"
@@ -369,4 +400,4 @@ def handler(event, context):
         logger.info(f"{len(chunks)} chunks to be processed")
         return {"chunks": chunks}
     except Exception as e:
-        logger.error("Error connecting to the database: %s", e)
+        raise e

@@ -55,7 +55,7 @@ def handler(event, context):
                        password=db_password, database=db_name, tds_version="7.4")
 
         df = pd.read_sql_query(db_query, conn)
-        logger.info("Data fetched successfully!")
+        logger.info(f"Data fetched successfully for {db_name}.{db_table} !")
 
         # # Done: Fix the issue with the column types (And do more thorough testing of decoding)
         # # Done: Glue table definition needs to be fixed at the same time in the scanner lambda
@@ -66,7 +66,7 @@ def handler(event, context):
                 logger.info(f"Decoding column '{col}' with fallback decoding")
                 df[col] = df[col].apply(lambda x: safe_decode(x) if isinstance(x, (bytes, bytearray)) else x)
 
-        # df = df.astype(str)
+        df = df.astype(str)
         df["extraction_timestamp"] = extraction_timestamp
 
         wr.s3.to_parquet(
@@ -78,7 +78,7 @@ def handler(event, context):
             partition_cols=["extraction_timestamp"]
         )
 
-        logger.info("Data exported to S3 successfully!")
+        logger.info("Data exported to S3 successfully for {db_name}.{db_table} !")
     except Exception as e:
         logger.error("Error connecting to the database: %s", e)
         raise Exception("Chunk export error")
