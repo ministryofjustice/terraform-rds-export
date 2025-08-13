@@ -78,7 +78,7 @@ def handler(event, context):
             partition_cols=["extraction_timestamp"]
         )
 
-        logger.info("Data exported to S3 successfully for {db_name}.{db_table} !")
+        logger.info(f"Data exported to S3 successfully for {db_name}.{db_table} !")
     except Exception as e:
         logger.error("Error connecting to the database: %s", e)
         raise Exception("Chunk export error")
