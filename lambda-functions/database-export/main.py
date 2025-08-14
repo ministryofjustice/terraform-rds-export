@@ -51,8 +51,13 @@ def handler(event, context):
     try:
         # Connect to the MS SQL Server database
         logger.info("Creating the SQLAlchemy engine")
-        conn = pymssql.connect(server=db_endpoint, user=db_username,
-                       password=db_password, database=db_name, tds_version="7.4")
+        conn = pymssql.connect(
+            server=db_endpoint,
+            user=db_username,
+            password=db_password,
+            database=db_name,
+            tds_version="7.4",
+        )
 
         df = pd.read_sql_query(db_query, conn)
         logger.info(f"Data fetched successfully for {db_name}.{db_table} !")
@@ -62,9 +67,13 @@ def handler(event, context):
 
         for col in df.columns:
             non_nulls = df[col].dropna()
-            if not non_nulls.empty and isinstance(non_nulls.iloc[0], (bytes, bytearray)):
+            if not non_nulls.empty and isinstance(
+                non_nulls.iloc[0], (bytes, bytearray)
+            ):
                 logger.info(f"Decoding column '{col}' with fallback decoding")
-                df[col] = df[col].apply(lambda x: safe_decode(x) if isinstance(x, (bytes, bytearray)) else x)
+                df[col] = df[col].apply(
+                    lambda x: safe_decode(x) if isinstance(x, (bytes, bytearray)) else x
+                )
 
         df = df.astype(str)
         df["extraction_timestamp"] = extraction_timestamp
@@ -72,13 +81,12 @@ def handler(event, context):
         wr.s3.to_parquet(
             df=df,
             dataset=True,
-            mode="overwrite",
+            mode="append",
             database=db_name,
             table=db_table,
-            partition_cols=["extraction_timestamp"]
+            partition_cols=["extraction_timestamp"],
         )
 
         logger.info(f"Data exported to S3 successfully for {db_name}.{db_table} !")
     except Exception as e:
-        logger.error("Error connecting to the database: %s", e)
-        raise Exception("Chunk export error")
+        raise e

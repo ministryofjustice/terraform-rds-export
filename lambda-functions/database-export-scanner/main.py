@@ -8,6 +8,7 @@ import tempfile
 import warnings
 import uuid
 import awswrangler as wr
+from urllib.parse import urlparse
 
 warnings.filterwarnings("ignore", message="pandas only supports SQLAlchemy connectable")
 
@@ -17,6 +18,7 @@ logger.setLevel(logging.INFO)
 
 secretmanager = boto3.client("secretsmanager")
 glue = boto3.client("glue")
+s3 = boto3.client("s3")
 
 
 def get_all_primary_keys(cursor, schema="dbo"):
@@ -105,7 +107,7 @@ def sample_parquet_size(conn, schema, table, sample_rows=1000):
         os.unlink(tmp.name)
 
     avg_row_size_kb = parquet_size_kb / len(df)
-    rows_for_limit_parquet = int(1024 * 100 / avg_row_size_kb) if avg_row_size_kb else 0
+    rows_for_limit_parquet = int(1024 * 10 / avg_row_size_kb) if avg_row_size_kb else 0
     return avg_row_size_kb, rows_for_limit_parquet
 
 
@@ -129,6 +131,7 @@ def generate_chunk_query_by_rownum(
     SELECT *
     FROM Ordered
     WHERE rn BETWEEN {start_row} AND {end_row}
+    ORDER BY rn
     """
 
     # Normalize query to a flat one-liner
@@ -175,6 +178,55 @@ def map_sql_to_glue_type(sql_type: str) -> str:
     return "string"
 
 
+def delete_glue_table(glue_db: str, table_name: str):
+    try:
+        # 1. Get Glue table location
+        response = glue.get_table(DatabaseName=glue_db, Name=table_name)
+        s3_path = response["Table"]["StorageDescriptor"]["Location"]
+        logger.info(f"Table location: {s3_path}")
+
+        # 2. Parse S3 path
+        parsed = urlparse(s3_path)
+        bucket = parsed.netloc
+        prefix = parsed.path.lstrip('/')
+
+        # 3. Delete S3 data recursively
+        paginator = s3.get_paginator("list_objects_v2")
+        pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
+
+        deleted_files = 0
+        for page in pages:
+            if "Contents" in page:
+                objects = [{"Key": obj["Key"]} for obj in page["Contents"]]
+                s3.delete_objects(Bucket=bucket, Delete={"Objects": objects})
+                deleted_files += len(objects)
+
+        logger.info(f"Deleted {deleted_files} objects from s3://{bucket}/{prefix}")
+
+        # 4. Delete Glue table
+        glue.delete_table(DatabaseName=glue_db, Name=table_name)
+        logger.info(f"Deleted Glue table: {glue_db}.{table_name}")
+
+        return {
+            "status": "SUCCESS",
+            "message": f"Deleted Glue table and {deleted_files} files from {s3_path}"
+        }
+
+    except glue.exceptions.EntityNotFoundException:
+        logger.warning(f"Table not found: {glue_db}.{table_name}")
+        return {
+            "status": "NOT_FOUND",
+            "message": f"Glue table {glue_db}.{table_name} does not exist."
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to delete Glue table or S3 data: {e}")
+        return {
+            "status": "ERROR",
+            "message": str(e)
+        }
+
+
 def create_glue_table(
     db_name: str, schema: str, table: str, glue_db: str, bucket: str, cursor
 ):
@@ -189,8 +241,8 @@ def create_glue_table(
     )
     cols = cursor.fetchall()
     # DONE: Fix column types
-    # columns = [{"Name": cn, "Type": "string"} for cn, dt in cols]
-    columns = [{"Name": cn, "Type": map_sql_to_glue_type(dt)} for cn, dt in cols]
+    columns = [{"Name": cn, "Type": "string"} for cn, dt in cols]
+    # columns = [{"Name": cn, "Type": map_sql_to_glue_type(dt)} for cn, dt in cols]
 
     s3_path = f"s3://{bucket}/{db_name}/{schema}/{table}/"
     table_input = {
@@ -302,8 +354,10 @@ def handler(event, context):
 
         # Create glue tables for each schema.table
         for full_table, pk_columns in pk_map.items():
-            logger.info(f"Creating glue table for {full_table}")
             schema, table = full_table.split(".")
+            logger.info(f"Deleting glue table: {full_table}")
+            delete_glue_table(glue_db=db_name, table_name=table)
+            logger.info(f"Creating glue table: {full_table}")
             create_glue_table(
                 db_name,
                 schema,
