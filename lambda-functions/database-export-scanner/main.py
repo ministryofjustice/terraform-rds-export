@@ -87,12 +87,13 @@ def get_table_stats(cursor, schema, table):
     return 0, 0.0
 
 
-def calculate_rows_per_chunk(row_count, size_kb, target_mb=10):
-    if row_count == 0 or size_kb == 0:
-        return 0
-    row_size_kb = size_kb / row_count
+def calculate_rows_per_chunk(rows, size_kb, target_mb=10):
+    if rows == 0 or size_kb == 0:
+        return 0.0, 0
+    row_size_kb = size_kb / rows
     rows_per_chunk = int((target_mb * 1024) / row_size_kb)
-    return max(rows_per_chunk, 1)  # always return at least 1 row
+    return row_size_kb, rows_per_chunk
+
 
 
 def generate_chunk_query_by_rownum(
@@ -404,7 +405,7 @@ def handler(event, context):
                 row_size_kb = size_kb / rows
 
             parquet_row_kb, rows_for_limit_parquet = calculate_rows_per_chunk(
-                conn, schema, table
+                rows=rows, size_kb=size_kb, target_mb=10
             )
 
             num_chunks = (
