@@ -225,6 +225,7 @@ module "database_export_scanner" {
 
   environment_variables = {
     DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
+    DATABASE_REFRESH_MODE = var.database_refresh_mode
   }
 
   source_path = [{
@@ -266,6 +267,7 @@ module "database_export_processor" {
   environment_variables = {
     DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
     OUTPUT_BUCKET          = aws_s3_bucket.parquet_exports.id
+    DATABASE_REFRESH_MODE = var.database_refresh_mode
   }
 
   source_path = [{

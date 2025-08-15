@@ -31,6 +31,7 @@ def handler(event, context):
     # Retrieve configuration from environment variables
     db_endpoint = event["db_endpoint"]
     db_pw_secret_arn = os.environ["DATABASE_PW_SECRET_ARN"]
+    database_refresh_mode = os.environ["DATABASE_REFRESH_MODE"]
     db_name = os.environ.get("DATABASE_NAME", "master")
     db_username = event["db_username"]
 
@@ -76,7 +77,9 @@ def handler(event, context):
                 )
 
         df = df.astype(str)
-        df["extraction_timestamp"] = extraction_timestamp
+
+        if database_refresh_mode == "incremental":
+            df["extraction_timestamp"] = extraction_timestamp
 
         wr.s3.to_parquet(
             df=df,
@@ -84,7 +87,11 @@ def handler(event, context):
             mode="append",
             database=db_name,
             table=db_table,
-            partition_cols=["extraction_timestamp"],
+            partition_cols=(
+                ["extraction_timestamp"]
+                if database_refresh_mode == "incremental"
+                else None
+            ),
         )
 
         logger.info(f"Data exported to S3 successfully for {db_name}.{db_table} !")

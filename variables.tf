@@ -3,6 +3,11 @@ variable "name" {
   type        = string
 }
 
+variable "database_refresh_mode" {
+  description = "Specifies the type of database refresh: 'full' for complete refresh or 'incremental' for partial updates."
+  type        = string
+}
+
 variable "vpc_id" {
   description = "The ID of the VPC"
   type        = string

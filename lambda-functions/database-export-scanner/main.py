@@ -4,9 +4,7 @@ import time
 import logging
 import pymssql
 import pandas as pd
-import tempfile
 import warnings
-import uuid
 import awswrangler as wr
 from urllib.parse import urlparse
 
@@ -89,26 +87,12 @@ def get_table_stats(cursor, schema, table):
     return 0, 0.0
 
 
-def sample_parquet_size(conn, schema, table, sample_rows=1000):
-    query = f"SELECT TOP {sample_rows} * FROM [{schema}].[{table}]"
-    df = pd.read_sql(query, conn)
-
-    if df.empty:
-        return 0.0, 0
-
-    # Convert UUIDs to strings
-    for col in df.select_dtypes(include="object"):
-        if df[col].apply(lambda x: isinstance(x, uuid.UUID)).any():
-            df[col] = df[col].astype(str)
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".parquet") as tmp:
-        df.to_parquet(tmp.name, engine="pyarrow", compression="snappy", index=False)
-        parquet_size_kb = os.path.getsize(tmp.name) / 1024
-        os.unlink(tmp.name)
-
-    avg_row_size_kb = parquet_size_kb / len(df)
-    rows_for_limit_parquet = int(1024 * 10 / avg_row_size_kb) if avg_row_size_kb else 0
-    return avg_row_size_kb, rows_for_limit_parquet
+def calculate_rows_per_chunk(row_count, size_kb, target_mb=10):
+    if row_count == 0 or size_kb == 0:
+        return 0
+    row_size_kb = size_kb / row_count
+    rows_per_chunk = int((target_mb * 1024) / row_size_kb)
+    return max(rows_per_chunk, 1)  # always return at least 1 row
 
 
 def generate_chunk_query_by_rownum(
@@ -188,7 +172,7 @@ def delete_glue_table(glue_db: str, table_name: str):
         # 2. Parse S3 path
         parsed = urlparse(s3_path)
         bucket = parsed.netloc
-        prefix = parsed.path.lstrip('/')
+        prefix = parsed.path.lstrip("/")
 
         # 3. Delete S3 data recursively
         paginator = s3.get_paginator("list_objects_v2")
@@ -209,26 +193,23 @@ def delete_glue_table(glue_db: str, table_name: str):
 
         return {
             "status": "SUCCESS",
-            "message": f"Deleted Glue table and {deleted_files} files from {s3_path}"
+            "message": f"Deleted Glue table and {deleted_files} files from {s3_path}",
         }
 
     except glue.exceptions.EntityNotFoundException:
         logger.warning(f"Table not found: {glue_db}.{table_name}")
         return {
             "status": "NOT_FOUND",
-            "message": f"Glue table {glue_db}.{table_name} does not exist."
+            "message": f"Glue table {glue_db}.{table_name} does not exist.",
         }
 
     except Exception as e:
         logger.error(f"Failed to delete Glue table or S3 data: {e}")
-        return {
-            "status": "ERROR",
-            "message": str(e)
-        }
+        return {"status": "ERROR", "message": str(e)}
 
 
 def create_glue_table(
-    db_name: str, schema: str, table: str, glue_db: str, bucket: str, cursor
+    database_refresh_mode: str, db_name: str, schema: str, table: str, glue_db: str, bucket: str, cursor
 ):
     # fetch column metadata
     cursor.execute(
@@ -245,24 +226,44 @@ def create_glue_table(
     # columns = [{"Name": cn, "Type": map_sql_to_glue_type(dt)} for cn, dt in cols]
 
     s3_path = f"s3://{bucket}/{db_name}/{schema}/{table}/"
-    table_input = {
-        "Name": table,
-        "Description": f"Imported from {db_name}.{schema}.{table}",
-        "StorageDescriptor": {
-            "Columns": columns,
-            "Location": s3_path,
-            "InputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
-            "OutputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
-            "Compressed": False,
-            "SerdeInfo": {
-                "SerializationLibrary": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe",
-                "Parameters": {},
+    if database_refresh_mode == "incremental":
+        table_input = {
+            "Name": table,
+            "Description": f"Imported from {db_name}.{schema}.{table}",
+            "StorageDescriptor": {
+                "Columns": columns,
+                "Location": s3_path,
+                "InputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+                "OutputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+                "Compressed": False,
+                "SerdeInfo": {
+                    "SerializationLibrary": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe",
+                    "Parameters": {},
+                },
             },
-        },
-        "PartitionKeys": [{"Name": "extraction_timestamp", "Type": "string"}],
-        "TableType": "EXTERNAL_TABLE",
-        "Parameters": {"classification": "parquet"},
-    }
+            "PartitionKeys": [{"Name": "extraction_timestamp", "Type": "string"}],
+            "TableType": "EXTERNAL_TABLE",
+            "Parameters": {"classification": "parquet"},
+        }
+    else:
+        table_input = {
+            "Name": table,
+            "Description": f"Imported from {db_name}.{schema}.{table}",
+            "StorageDescriptor": {
+                "Columns": columns,
+                "Location": s3_path,
+                "InputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+                "OutputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+                "Compressed": False,
+                "SerdeInfo": {
+                    "SerializationLibrary": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe",
+                    "Parameters": {},
+                },
+            },
+            "TableType": "EXTERNAL_TABLE",
+            "Parameters": {"classification": "parquet"},
+        }
+
     try:
         glue.create_table(DatabaseName=glue_db, TableInput=table_input)
         logger.info("Created Glue table %s.%s", glue_db, table)
@@ -276,6 +277,7 @@ def handler(event, context):
     # Retrieve configuration from environment variables
     db_endpoint = event["db_endpoint"]
     db_pw_secret_arn = os.environ["DATABASE_PW_SECRET_ARN"]
+    database_refresh_mode = os.environ["DATABASE_REFRESH_MODE"]
     db_username = event["db_username"]
     db_name = event["db_name"]
     output_bucket = event["output_bucket"]
@@ -356,9 +358,11 @@ def handler(event, context):
         for full_table, pk_columns in pk_map.items():
             schema, table = full_table.split(".")
             logger.info(f"Deleting glue table: {full_table}")
-            delete_glue_table(glue_db=db_name, table_name=table)
+            if database_refresh_mode == "full":
+                delete_glue_table(glue_db=db_name, table_name=table)
             logger.info(f"Creating glue table: {full_table}")
             create_glue_table(
+                database_refresh_mode,
                 db_name,
                 schema,
                 table,
@@ -366,8 +370,6 @@ def handler(event, context):
                 bucket=output_bucket,
                 cursor=cursor,
             )
-        if extraction_timestamp:
-            df["extraction_timestamp"] = extraction_timestamp
 
         s3_path = f"s3://{output_bucket}/cafm/table-stats/"
 
@@ -379,8 +381,7 @@ def handler(event, context):
                 mode="overwrite",
                 database=db_name,
                 table="table_stats",
-                partition_cols=["extraction_timestamp"] if "extraction_timestamp" in df.columns else None,
-                catalog_versioning=True
+                catalog_versioning=True,
             )
             logger.info("Table stats written to S3 and Glue successfully.")
         except Exception as e:
@@ -395,14 +396,17 @@ def handler(event, context):
             # Calculate the number of chunks
             rows, size_kb = get_table_stats(cursor, schema, table)
             if not rows or rows == 0:
-                logger.info(f"Skipping row size calculation: rows={rows}, table={table}")
+                logger.info(
+                    f"Skipping row size calculation: rows={rows}, table={table}"
+                )
                 row_size_kb = 0
             else:
                 row_size_kb = size_kb / rows
 
-            parquet_row_kb, rows_for_limit_parquet = sample_parquet_size(
+            parquet_row_kb, rows_for_limit_parquet = calculate_rows_per_chunk(
                 conn, schema, table
             )
+
             num_chunks = (
                 (rows + rows_for_limit_parquet - 1) // rows_for_limit_parquet
                 if rows_for_limit_parquet
