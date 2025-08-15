@@ -87,13 +87,18 @@ def get_table_stats(cursor, schema, table):
     return 0, 0.0
 
 
-def calculate_rows_per_chunk(rows, size_kb, target_mb=10):
-    if rows == 0 or size_kb == 0:
+def calculate_rows_per_chunk(row_count, size_kb, target_mb=10):
+    try:
+        row_count = int(row_count)
+        size_kb = float(size_kb)
+        if row_count == 0 or size_kb == 0:
+            return 0.0, 0
+        row_size_kb = size_kb / row_count
+        rows_per_chunk = int((target_mb * 1024) / row_size_kb)
+        return row_size_kb, rows_per_chunk
+    except Exception as e:
+        logger.error(f"Error in row size calculation: {e}")
         return 0.0, 0
-    row_size_kb = size_kb / rows
-    rows_per_chunk = int((target_mb * 1024) / row_size_kb)
-    return row_size_kb, rows_per_chunk
-
 
 
 def generate_chunk_query_by_rownum(
@@ -210,7 +215,13 @@ def delete_glue_table(glue_db: str, table_name: str):
 
 
 def create_glue_table(
-    database_refresh_mode: str, db_name: str, schema: str, table: str, glue_db: str, bucket: str, cursor
+    database_refresh_mode: str,
+    db_name: str,
+    schema: str,
+    table: str,
+    glue_db: str,
+    bucket: str,
+    cursor,
 ):
     # fetch column metadata
     cursor.execute(
@@ -405,7 +416,7 @@ def handler(event, context):
                 row_size_kb = size_kb / rows
 
             parquet_row_kb, rows_for_limit_parquet = calculate_rows_per_chunk(
-                rows=rows, size_kb=size_kb, target_mb=10
+                row_count=rows, size_kb=size_kb, target_mb=10
             )
 
             num_chunks = (
