@@ -65,6 +65,26 @@ resource "aws_iam_role_policy" "state_machine" {
   })
 }
 
+resource "aws_iam_policy" "allow_start_export" {
+  name = "AllowStartExportStateMachine"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = "states:StartExecution",
+        Resource = ["${aaws_sfn_state_machine.db_export.arn}", "${aaws_sfn_state_machine.db_delete.arn}"]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_start_export" {
+  role       = aws_iam_role.state_machine.name
+  policy_arn = aws_iam_policy.allow_start_export.arn
+}
+
 resource "aws_iam_role" "database_restore" {
   # checkov:skip=CKV_AWS_61: See comment below
   name = "${var.name}-rds-restore"
