@@ -429,7 +429,14 @@ def handler(event, context):
             )
 
         s3_path = f"s3://{output_bucket}/{db_name}/table-stats/"
+        # Ensure partition column exists in DataFrame
+        if "extraction_timestamp" not in df.columns:
+            df["extraction_timestamp"] = extraction_timestamp
 
+        # Optional: ensure it’s string
+        df["extraction_timestamp"] = df["extraction_timestamp"].astype(str)
+
+        # Write to S3 partitioned by extraction_timestamp
         try:
             wr.s3.to_parquet(
                 df=df,
