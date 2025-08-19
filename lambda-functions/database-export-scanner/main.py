@@ -428,7 +428,7 @@ def handler(event, context):
                 cursor=cursor,
             )
 
-        s3_path = f"s3://{output_bucket}/cafm/table-stats/"
+        s3_path = f"s3://{output_bucket}/{db_name}/table-stats/"
 
         try:
             wr.s3.to_parquet(
@@ -438,6 +438,7 @@ def handler(event, context):
                 mode="overwrite",
                 database=db_name,
                 table="table_stats",
+                partition_cols=["extraction_timestamp"],
                 catalog_versioning=True,
             )
             logger.info("Table stats written to S3 and Glue successfully.")
