@@ -442,7 +442,7 @@ def handler(event, context):
                 df=df,
                 path=s3_path,
                 dataset=True,
-                mode="overwrite",
+                mode="append",
                 database=db_name,
                 table="table_stats",
                 partition_cols=["extraction_timestamp"],
