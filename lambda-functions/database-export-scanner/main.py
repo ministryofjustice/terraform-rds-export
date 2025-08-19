@@ -168,7 +168,12 @@ def map_sql_to_glue_type(sql_type: str) -> str:
     return "string"
 
 
-def delete_glue_table(glue_db: str, table_name: str):
+def delete_glue_table(
+    glue_db: str,
+    table_name: str,
+    database_refresh_mode: str,
+    extraction_timestamp: str = None,
+):
     try:
         # 1. Get Glue table location
         response = glue.get_table(DatabaseName=glue_db, Name=table_name)
@@ -180,26 +185,54 @@ def delete_glue_table(glue_db: str, table_name: str):
         bucket = parsed.netloc
         prefix = parsed.path.lstrip("/")
 
-        # 3. Delete S3 data recursively
-        paginator = s3.get_paginator("list_objects_v2")
-        pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
-
         deleted_files = 0
-        for page in pages:
-            if "Contents" in page:
-                objects = [{"Key": obj["Key"]} for obj in page["Contents"]]
-                s3.delete_objects(Bucket=bucket, Delete={"Objects": objects})
-                deleted_files += len(objects)
+
+        if database_refresh_mode == "full":
+            logger.info("Performing FULL refresh: deleting entire table S3 prefix")
+            paginator = s3.get_paginator("list_objects_v2")
+            pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
+
+            for page in pages:
+                if "Contents" in page:
+                    objects = [{"Key": obj["Key"]} for obj in page["Contents"]]
+                    s3.delete_objects(Bucket=bucket, Delete={"Objects": objects})
+                    deleted_files += len(objects)
+
+        elif database_refresh_mode == "incremental":
+            if not extraction_timestamp:
+                raise ValueError(
+                    "extraction_timestamp must be provided for incremental refresh."
+                )
+
+            partition_prefix = f"{prefix}/extraction_timestamp={extraction_timestamp}/"
+            logger.info(
+                f"Performing INCREMENTAL refresh: deleting partition folder {partition_prefix}"
+            )
+
+            paginator = s3.get_paginator("list_objects_v2")
+            pages = paginator.paginate(Bucket=bucket, Prefix=partition_prefix)
+
+            for page in pages:
+                if "Contents" in page:
+                    objects = [{"Key": obj["Key"]} for obj in page["Contents"]]
+                    s3.delete_objects(Bucket=bucket, Delete={"Objects": objects})
+                    deleted_files += len(objects)
+
+        else:
+            raise ValueError(
+                f"Invalid database_refresh_mode: '{database_refresh_mode}'"
+            )
 
         logger.info(f"Deleted {deleted_files} objects from s3://{bucket}/{prefix}")
 
-        # 4. Delete Glue table
-        glue.delete_table(DatabaseName=glue_db, Name=table_name)
-        logger.info(f"Deleted Glue table: {glue_db}.{table_name}")
+        # 3. Delete Glue table (only for full refresh)
+        if database_refresh_mode == "full":
+            glue.delete_table(DatabaseName=glue_db, Name=table_name)
+            logger.info(f"Deleted Glue table: {glue_db}.{table_name}")
 
         return {
             "status": "SUCCESS",
-            "message": f"Deleted Glue table and {deleted_files} files from {s3_path}",
+            "message": f"{'Deleted table and ' if database_refresh_mode == 'full' else ''}Deleted {deleted_files} files from {s3_path}",
         }
 
     except glue.exceptions.EntityNotFoundException:
@@ -221,6 +254,7 @@ def create_glue_table(
     table: str,
     glue_db: str,
     bucket: str,
+    table_properties: dict,
     cursor,
 ):
     # fetch column metadata
@@ -255,7 +289,7 @@ def create_glue_table(
             },
             "PartitionKeys": [{"Name": "extraction_timestamp", "Type": "string"}],
             "TableType": "EXTERNAL_TABLE",
-            "Parameters": {"classification": "parquet"},
+            "Parameters": table_properties,
         }
     else:
         table_input = {
@@ -273,7 +307,7 @@ def create_glue_table(
                 },
             },
             "TableType": "EXTERNAL_TABLE",
-            "Parameters": {"classification": "parquet"},
+            "Parameters": table_properties,
         }
 
     try:
@@ -368,10 +402,20 @@ def handler(event, context):
 
         # Create glue tables for each schema.table
         for full_table, pk_columns in pk_map.items():
+            table_prop = {
+                "classification": "parquet",
+                "source_primary_key": ", ".join(pk_columns),
+                "extraction_key": "extraction_timestamp",
+                "extraction_timestamp_column_name": "extraction_timestamp",
+                "extraction_timestamp_column_dtype": "string",
+            }
             schema, table = full_table.split(".")
             logger.info(f"Deleting glue table: {full_table}")
-            if database_refresh_mode == "full":
-                delete_glue_table(glue_db=db_name, table_name=table)
+            delete_glue_table(
+                glue_db=db_name,
+                table_name=table,
+                database_refresh_mode=database_refresh_mode,
+            )
             logger.info(f"Creating glue table: {full_table}")
             create_glue_table(
                 database_refresh_mode,
@@ -380,6 +424,7 @@ def handler(event, context):
                 table,
                 glue_db=db_name,
                 bucket=output_bucket,
+                table_properties=table_prop,
                 cursor=cursor,
             )
 

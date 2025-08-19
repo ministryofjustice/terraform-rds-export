@@ -51,7 +51,16 @@ resource "aws_iam_role_policy" "state_machine" {
           module.database_export_scanner.lambda_function_arn,
           module.database_export_processor.lambda_function_arn
         ]
-      }
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+            "events:PutRule",
+            "events:PutTargets",
+            "events:TagResource"
+        ],
+        "Resource": "*"
+    }     
     ]
   })
 }

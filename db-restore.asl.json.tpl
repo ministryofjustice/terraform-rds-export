@@ -165,7 +165,31 @@
           "Next": "Wait For Restore Completion"
         }
       ],
-      "Default": "Success State"
+      "Default": "Prepare Input for Export"
+    },
+    "Prepare Input for Export": {
+      "Type": "Pass",
+      "Parameters": {
+        "db_name.$": "$.db_name",
+        "extraction_timestamp.$": "$.extraction_timestamp",
+        "output_bucket.$": "$.output_bucket",
+        "name.$": "$.name",
+        "db_endpoint.$": "$.DescribeDBResult.DbInstances[0].Endpoint.Address",
+        "db_username.$": "$.DescribeDBResult.DbInstances[0].MasterUsername",
+        "tables_to_export": [],
+        "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+      },
+      "Next": "call database-export Step Functions"
+    },
+    "call database-export Step Functions": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters": {
+        "StateMachineArn": "${DatabaseExportStateMachineArn}",
+        "Input.$": "$"
+      },
+      "Next": "Success State",
+      "ResultPath": null
     },
     "Wait For Restore Completion": {
       "Type": "Wait",

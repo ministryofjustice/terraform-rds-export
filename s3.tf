@@ -38,6 +38,15 @@ resource "aws_s3_bucket" "parquet_exports" {
   bucket_prefix = "${var.name}-parquet-exports-"
 }
 
+# Block Public Access
+resource "aws_s3_bucket_public_access_block" "parquet_exports" {
+  bucket                  = aws_s3_bucket.parquet_exports.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 #trivy:ignore:AVD-AWS-0132 # Bucket encrypted with AES-256
 resource "aws_s3_bucket_server_side_encryption_configuration" "parquet_exports" {
   bucket = aws_s3_bucket.parquet_exports.id

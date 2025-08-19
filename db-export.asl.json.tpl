@@ -89,6 +89,19 @@
         }
       ]
     },
+    "call database-delete Step Functions": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters": {
+        "StateMachineArn": "${DatabaseDeleteStateMachineArn}",
+        "Input": {
+          "db_endpoint.$": "$.db_endpoint",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        }
+      },
+      "Next": "Success State",
+      "ResultPath": null
+    },
     "Fail State": {
       "Type": "Fail",
       "Cause": "Export failed !!"
