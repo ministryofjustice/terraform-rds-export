@@ -78,7 +78,8 @@
           }
         }
       },
-      "Next": "Success State",
+      "Next": "Prepare Input for Delete",
+      "ResultPath": "$.ExportResults",
       "Catch": [
         {
           "ErrorEquals": [
@@ -89,6 +90,18 @@
         }
       ]
     },
+    "Prepare Input for Delete": {
+      "Type": "Pass",
+      "Parameters": {
+        "db_endpoint.$": "$.db_endpoint",
+        "db_name.$": "$.db_name",
+        "output_bucket.$": "$.output_bucket",
+        "db_username.$": "$.db_username",
+        "name.$": "$.name",
+        "extraction_timestamp.$": "$.extraction_timestamp"
+      },
+      "Next": "call database-delete Step Functions"
+    },
     "call database-delete Step Functions": {
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
@@ -96,6 +109,11 @@
         "StateMachineArn": "${DatabaseDeleteStateMachineArn}",
         "Input": {
           "db_endpoint.$": "$.db_endpoint",
+          "db_name.$": "$.db_name",
+          "output_bucket.$": "$.output_bucket",
+          "db_username.$": "$.db_username",
+          "name.$": "$.name",
+          "extraction_timestamp.$": "$.extraction_timestamp",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         }
       },
