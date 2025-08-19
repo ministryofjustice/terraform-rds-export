@@ -73,7 +73,12 @@ resource "aws_iam_policy" "allow_start_execution" {
     Statement = [
       {
         Effect = "Allow",
-        Action = "states:StartExecution",
+        Action = [
+          "states:StartExecution",
+          "states:DescribeExecution",
+          "states:DescribeStateMachine",
+          "states:ListExecutions"
+        ],
         Resource = ["${aws_sfn_state_machine.db_export.arn}", "${aws_sfn_state_machine.db_delete.arn}"]
       }
     ]
