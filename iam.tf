@@ -65,7 +65,7 @@ resource "aws_iam_role_policy" "state_machine" {
   })
 }
 
-resource "aws_iam_policy" "allow_start_export" {
+resource "aws_iam_policy" "allow_start_execution" {
   name = "AllowStartExportStateMachine"
 
   policy = jsonencode({
@@ -74,7 +74,7 @@ resource "aws_iam_policy" "allow_start_export" {
       {
         Effect = "Allow",
         Action = "states:StartExecution",
-        Resource = ["${aaws_sfn_state_machine.db_export.arn}", "${aaws_sfn_state_machine.db_delete.arn}"]
+        Resource = ["${aws_sfn_state_machine.db_export.arn}", "${aws_sfn_state_machine.db_delete.arn}"]
       }
     ]
   })
@@ -82,7 +82,7 @@ resource "aws_iam_policy" "allow_start_export" {
 
 resource "aws_iam_role_policy_attachment" "attach_start_export" {
   role       = aws_iam_role.state_machine.name
-  policy_arn = aws_iam_policy.allow_start_export.arn
+  policy_arn = aws_iam_policy.allow_start_execution.arn
 }
 
 resource "aws_iam_role" "database_restore" {
