@@ -12,7 +12,6 @@ module "rds_export" {
   source = "github.com/ministryofjustice/terraform-rds-export?ref=initial-version"
 
   name                  = "name-of-your-rds-database"
-  database_refresh_mode = "database-refresh-type-full-or-incremental"
   vpc_id                = "vpc-arn"
   database_subnet_ids   = "vpc-subnet-ids"
   kms_key_arn           = "kms-key-arn"
