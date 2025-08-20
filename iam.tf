@@ -59,7 +59,7 @@ resource "aws_iam_role_policy" "state_machine" {
             "events:PutTargets",
             "events:TagResource"
         ],
-        "Resource": "*"
+        "Resource": ["${aws_sfn_state_machine.db_restore.arn}", "${aws_sfn_state_machine.db_export.arn}", "${aws_sfn_state_machine.db_delete.arn}"]
     }     
     ]
   })

@@ -104,7 +104,7 @@
     },
     "call database-delete Step Functions": {
       "Type": "Task",
-      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Resource": "arn:aws:states:::states:startExecution.sync",
       "Parameters": {
         "StateMachineArn": "${DatabaseDeleteStateMachineArn}",
         "Input": {
