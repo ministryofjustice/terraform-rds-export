@@ -78,13 +78,22 @@ resource "aws_iam_policy" "allow_start_execution" {
         Effect = "Allow",
         Action = [
           "states:StartExecution",
-          "states:DescribeExecution",
           "states:DescribeStateMachine",
           "states:ListExecutions"
         ],
         Resource = [
           "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-database-export",
           "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-database-delete"
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "states:DescribeExecution",
+        ],
+        Resource = [
+          "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-database-export",
+          "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-database-delete"
         ]
       }
     ]
