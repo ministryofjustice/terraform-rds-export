@@ -57,6 +57,7 @@ resource "aws_iam_role_policy" "state_machine" {
         Action = [
           "events:PutRule",
           "events:PutTargets",
+          "events:DescribeRule",
           "events:TagResource"
         ],
         Resource = [
