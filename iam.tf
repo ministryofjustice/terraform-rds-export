@@ -61,7 +61,7 @@ resource "aws_iam_role_policy" "state_machine" {
           "events:TagResource"
         ],
         Resource = [
-          "arn:aws:events:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:rule:StepFunctionsGetEventsForStepFunctionsExecutionRule"
+          "arn:aws:events:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:rule/StepFunctionsGetEventsForStepFunctionsExecutionRule"
         ]
       }
     ]
