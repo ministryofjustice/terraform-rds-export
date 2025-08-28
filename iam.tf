@@ -70,7 +70,7 @@ resource "aws_iam_role_policy" "state_machine" {
 }
 
 resource "aws_iam_policy" "allow_start_execution" {
-  name = "AllowStartExportStateMachine"
+  name = "AllowStartExportStateMachine-${var.name}"
 
   policy = jsonencode({
     Version = "2012-10-17",
