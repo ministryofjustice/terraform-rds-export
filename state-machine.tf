@@ -5,14 +5,14 @@ resource "aws_sfn_state_machine" "db_restore" {
   role_arn = aws_iam_role.state_machine.arn
 
   definition = templatefile("${path.module}/db-restore.asl.json.tpl", {
-    DatabaseRestoreLambdaArn         = module.database_restore.lambda_function_arn
-    DatabaseRestoreStatusLambdaArn   = module.database_restore_status.lambda_function_arn
-    MasterUserPassword               = data.aws_secretsmanager_secret_version.master_user_secret.secret_string
-    ParameterGroupName               = resource.aws_db_parameter_group.database.name
-    OptionGroupName                  = resource.aws_db_option_group.database.name
-    VpcSecurityGroupIds              = [resource.aws_security_group.database.id]
-    DbSubnetGroupName                = resource.aws_db_subnet_group.database.name
-    DatabaseExportStateMachineArn    = resource.aws_sfn_state_machine.db_export.arn
+    DatabaseRestoreLambdaArn       = module.database_restore.lambda_function_arn
+    DatabaseRestoreStatusLambdaArn = module.database_restore_status.lambda_function_arn
+    MasterUserPassword             = data.aws_secretsmanager_secret_version.master_user_secret.secret_string
+    ParameterGroupName             = resource.aws_db_parameter_group.database.name
+    OptionGroupName                = resource.aws_db_option_group.database.name
+    VpcSecurityGroupIds            = [resource.aws_security_group.database.id]
+    DbSubnetGroupName              = resource.aws_db_subnet_group.database.name
+    DatabaseExportStateMachineArn  = resource.aws_sfn_state_machine.db_export.arn
   })
 }
 
@@ -41,10 +41,10 @@ resource "aws_sfn_state_machine" "db_delete" {
   role_arn = aws_iam_role.state_machine.arn
 
   definition = templatefile("${path.module}/db-delete.asl.json.tpl", {
-    MasterUserPassword               = data.aws_secretsmanager_secret_version.master_user_secret.secret_string
-    ParameterGroupName               = resource.aws_db_parameter_group.database.name
-    OptionGroupName                  = resource.aws_db_option_group.database.name
-    VpcSecurityGroupIds              = [resource.aws_security_group.database.id]
-    DbSubnetGroupName                = resource.aws_db_subnet_group.database.name
+    MasterUserPassword  = data.aws_secretsmanager_secret_version.master_user_secret.secret_string
+    ParameterGroupName  = resource.aws_db_parameter_group.database.name
+    OptionGroupName     = resource.aws_db_option_group.database.name
+    VpcSecurityGroupIds = [resource.aws_security_group.database.id]
+    DbSubnetGroupName   = resource.aws_db_subnet_group.database.name
   })
 }
