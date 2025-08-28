@@ -53,13 +53,13 @@ resource "aws_iam_role_policy" "state_machine" {
         ]
       },
       {
-        "Effect" : "Allow",
-        "Action" : [
+        Effect = "Allow",
+        Action = [
           "events:PutRule",
           "events:PutTargets",
           "events:TagResource"
         ],
-        "Resource" : [
+        Resource = [
           "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-database-restore",
           "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-database-export",
           "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-database-delete"
@@ -83,7 +83,10 @@ resource "aws_iam_policy" "allow_start_execution" {
           "states:DescribeStateMachine",
           "states:ListExecutions"
         ],
-        Resource = ["${aws_sfn_state_machine.db_export.arn}", "${aws_sfn_state_machine.db_delete.arn}"]
+        Resource = [
+          "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-database-export",
+          "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-database-delete"
+        ]
       }
     ]
   })
