@@ -57,8 +57,8 @@ resource "aws_iam_role_policy" "state_machine" {
         Action = [
           "events:PutRule",
           "events:PutTargets",
-          "events:DescribeRule",
-          "events:TagResource"
+          "events:TagResource",
+          "events:DescribeRule"
         ],
         Resource = [
           "arn:aws:events:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:rule/StepFunctionsGetEventsForStepFunctionsExecutionRule"
