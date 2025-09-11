@@ -33,7 +33,7 @@ resource "aws_iam_role_policy" "state_machine" {
           "rds:DeleteDBInstance"
         ]
         Resource = [
-          "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:${var.name}-sql-server-backup-export",
+          "arn:aws:rds:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:db:${var.name}-sql-server-backup-export",
           "${aws_security_group.database.arn}",
           "${aws_db_subnet_group.database.arn}",
           "${aws_db_parameter_group.database.arn}",
@@ -61,7 +61,7 @@ resource "aws_iam_role_policy" "state_machine" {
           "events:DescribeRule"
         ],
         Resource = [
-          "arn:aws:events:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:rule/StepFunctionsGetEventsForStepFunctionsExecutionRule"
+          "arn:aws:events:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:rule/StepFunctionsGetEventsForStepFunctionsExecutionRule"
         ]
       }
     ]
@@ -82,8 +82,8 @@ resource "aws_iam_policy" "allow_start_execution" {
           "states:ListExecutions"
         ],
         Resource = [
-          "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-database-export",
-          "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-database-delete"
+          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-database-export",
+          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-database-delete"
         ]
       },
       {
@@ -92,8 +92,8 @@ resource "aws_iam_policy" "allow_start_execution" {
           "states:DescribeExecution",
         ],
         Resource = [
-          "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-database-export",
-          "arn:aws:states:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-database-delete"
+          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-database-export",
+          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-database-delete"
         ]
       }
     ]
