@@ -45,6 +45,7 @@ module "upload_checker" {
     STATE_MACHINE_ARN     = aws_sfn_state_machine.db_restore.id
     OUTPUT_BUCKET         = module.parquet_exports.bucket.id
     NAME                  = var.name
+    MAX_CONCURRENCY       = var.max_concurrency
   }
 
   source_path = [{
@@ -226,7 +227,6 @@ module "database_export_scanner" {
   environment_variables = {
     DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
     DATABASE_REFRESH_MODE  = var.database_refresh_mode
-    MAX_CONCURRENCY = var.max_concurrency
     OUTPUT_PARQUET_FILE_SIZE = var.output_parquet_file_size
   }
 

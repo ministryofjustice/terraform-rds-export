@@ -37,8 +37,6 @@ def handler(event, context):
             "extraction_timestamp": extraction_timestamp,
             "output_bucket": os.environ["OUTPUT_BUCKET"],
             "name": os.environ["NAME"],
-            "max_concurrency": os.environ["MAX_CONCURRENCY"],
-            "output_parquet_file_size": os.environ["OUTPUT_PARQUET_FILE_SIZE"],
         }
 
         # Start Step Function with file info
