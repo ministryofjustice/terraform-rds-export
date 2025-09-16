@@ -31,3 +31,8 @@ variable "tags" {
   type        = map(string)
   description = "Common tags to be used by all resources"
 }
+
+variable "environment" {
+  type        = string
+  description = "Deployment environment (e.g., dev, test, staging, prod). Used for resource naming, tagging, and conditional settings."
+}
