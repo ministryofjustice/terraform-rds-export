@@ -36,3 +36,15 @@ variable "environment" {
   type        = string
   description = "Deployment environment (e.g., dev, test, staging, prod). Used for resource naming, tagging, and conditional settings."
 }
+
+variable "output_parquet_file_size" {
+  type        = number
+  description = "Approximate target size (in MiB) for each Parquet file produced by the database-export lambda"
+  default     = 10
+}
+
+variable "max_concurrency" {
+  type        = number
+  description = "Maximum number of database-export lambda run in parallel."
+  default     = 5
+}
