@@ -94,7 +94,7 @@ module "parquet_exports" {
   providers = {
     aws.bucket-replication = aws.bucket-replication
   }
-  bucket_prefix      = "${var.name}-parquet_exports-${var.environment}-"
+  bucket_prefix      = "${var.name}-parquet-exports-${var.environment}-"
   custom_kms_key     = var.kms_key_arn
   versioning_enabled = true
 
