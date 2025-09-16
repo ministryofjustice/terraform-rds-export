@@ -62,7 +62,7 @@ module "backup_uploads" {
 
 #trivy:ignore:AVD-AWS-0132 # Bucket encrypted with AES-256
 resource "aws_s3_bucket_server_side_encryption_configuration" "backup_uploads" {
-  bucket = module.backup_uploads.id
+  bucket = module.backup_uploads.bucket.id
   rule {
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
@@ -72,7 +72,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "backup_uploads" {
 
 # Block Public Access
 resource "aws_s3_bucket_public_access_block" "backup_uploads" {
-  bucket                  = module.backup_uploads.id
+  bucket                  = module.backup_uploads.bucket.id
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
@@ -81,7 +81,7 @@ resource "aws_s3_bucket_public_access_block" "backup_uploads" {
 
 # Creating folder to drop .bak files in
 resource "aws_s3_object" "backup_uploads_folder" {
-  bucket = module.backup_uploads.id
+  bucket = module.backup_uploads.bucket.id
   key    = "${var.name}/"
 }
 
@@ -148,7 +148,7 @@ module "parquet_exports" {
 
 #trivy:ignore:AVD-AWS-0132 # Bucket encrypted with AES-256
 resource "aws_s3_bucket_server_side_encryption_configuration" "parquet_exports" {
-  bucket = module.parquet_exports.id
+  bucket = module.parquet_exports.bucket.id
   rule {
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
@@ -158,7 +158,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "parquet_exports" 
 
 # Block Public Access
 resource "aws_s3_bucket_public_access_block" "parquet_exports" {
-  bucket                  = module.parquet_exports.id
+  bucket                  = module.parquet_exports.bucket.id
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
@@ -172,12 +172,12 @@ resource "aws_lambda_permission" "allow_bucket" {
   action        = "lambda:InvokeFunction"
   function_name = module.upload_checker.lambda_function_arn
   principal     = "s3.amazonaws.com"
-  source_arn    = module.backup_uploads.arn
+  source_arn    = module.backup_uploads.bucket.arn
 }
 
 # Bucket Notification to trigger Lambda function
 resource "aws_s3_bucket_notification" "backup_uploads" {
-  bucket = module.backup_uploads.id
+  bucket = module.backup_uploads.bucket.id
 
   lambda_function {
     lambda_function_arn = module.upload_checker.lambda_function_arn

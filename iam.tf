@@ -155,8 +155,8 @@ resource "aws_iam_role_policy" "database_restore" {
           "s3:AbortMultipartUpload",
         ]
         Resource = [
-          "${aws_s3_bucket.backup_uploads.arn}",
-          "${aws_s3_bucket.backup_uploads.arn}/*"
+          "${module.backup_uploads.bucket.arn}",
+          "${module.backup_uploads.bucket.arn}/*"
         ]
       },
       {
@@ -169,8 +169,8 @@ resource "aws_iam_role_policy" "database_restore" {
           "s3:DeleteObject"
         ]
         Resource = [
-          aws_s3_bucket.parquet_exports.arn,
-          "${aws_s3_bucket.parquet_exports.arn}/*"
+          module.parquet_exports.bucket.arn,
+          "${module.parquet_exports.bucket.arn}/*"
         ]
       }
     ]
