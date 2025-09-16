@@ -30,7 +30,7 @@
     "Export Data": {
       "Type": "Map",
       "ItemsPath": "$.ScannerLambdaResult.Payload.chunks",
-      "Parameters": {
+      "ItemSelector": {
         "chunk": {
           "table.$": "$$.Map.Item.Value.table",
           "query.$": "$$.Map.Item.Value.query",
@@ -43,7 +43,7 @@
         "output_bucket.$": "$.output_bucket",
         "name.$": "$.name"
       },
-      "MaxConcurrency": "$.max_concurrency",
+      "MaxConcurrencyPath": "$.max_concurrency",
       "ItemProcessor": {
         "ProcessorConfig": {
           "Mode": "INLINE"
