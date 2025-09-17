@@ -44,7 +44,7 @@ variable "output_parquet_file_size" {
 }
 
 variable "max_concurrency" {
-  type        = string
+  type        = number
   description = "Maximum number of database-export lambda run in parallel."
-  default     = "5"
+  default     = 5
 }
