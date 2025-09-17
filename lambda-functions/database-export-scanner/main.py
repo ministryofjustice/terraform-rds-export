@@ -329,7 +329,7 @@ def handler(event, context):
     output_bucket = event["output_bucket"]
     extraction_timestamp = event["extraction_timestamp"]
     tables_to_export = event["tables_to_export"]
-    output_parquet_file_size = event["output_parquet_file_size"]
+    output_parquet_file_size = os.environ["OUTPUT_PARQUET_FILE_SIZE"]
 
     # Check that the glue db exists, if not create it
     ensure_glue_database(glue, db_name, description=f"Catalog for {db_name}")

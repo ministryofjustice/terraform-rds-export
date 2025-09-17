@@ -31,6 +31,7 @@ resource "aws_sfn_state_machine" "db_export" {
     VpcSecurityGroupIds              = [resource.aws_security_group.database.id]
     DbSubnetGroupName                = resource.aws_db_subnet_group.database.name
     DatabaseDeleteStateMachineArn    = resource.aws_sfn_state_machine.db_delete.arn
+    max_concurrency                  = var.max_concurrency
   })
 }
 

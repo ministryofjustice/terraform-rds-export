@@ -43,7 +43,7 @@
         "output_bucket.$": "$.output_bucket",
         "name.$": "$.name"
       },
-      "MaxConcurrencyPath": "$.max_concurrency",
+      "MaxConcurrencyPath": ${max_concurrency},
       "ItemProcessor": {
         "ProcessorConfig": {
           "Mode": "INLINE"
