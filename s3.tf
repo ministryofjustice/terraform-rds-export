@@ -8,10 +8,38 @@ module "backup_uploads" {
   providers = {
     aws.bucket-replication = aws.bucket-replication
   }
+  bucket_policy = [
+    jsonencode({
+      Version   = "2012-10-17",
+      Statement = [
+        {
+          Sid       = "AccountBucketLevel",
+          Effect    = "Allow",
+          Principal = { AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root" },
+          Action    = [
+            "s3:ListBucket",
+            "s3:ListBucketMultipartUploads"
+          ],
+          Resource  = ["arn:aws:s3:::${local.backup_uploads_prefix}*"]
+        },
+        {
+          Sid       = "AccountObjectLevel",
+          Effect    = "Allow",
+          Principal = { AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root" },
+          Action    = [
+            "s3:PutObject",
+            "s3:AbortMultipartUpload",
+            "s3:PutObjectTagging"
+          ],
+          Resource  = ["arn:aws:s3:::${local.backup_uploads_prefix}*/*"]
+        }
+      ]
+    })
+  ]
   bucket_prefix      = "${var.name}-backup-uploads-${var.environment}-"
   custom_kms_key     = var.kms_key_arn
   versioning_enabled = true
-
+  sse_algorithm = "AES256"
   # to disable ACLs in preference of BucketOwnership controls as per https://aws.amazon.com/blogs/aws/heads-up-amazon-s3-security-changes-are-coming-in-april-of-2023/ set:
   ownership_controls = "BucketOwnerEnforced"
 
@@ -58,25 +86,6 @@ module "backup_uploads" {
   ]
 
   tags = var.tags
-}
-
-#trivy:ignore:AVD-AWS-0132 # Bucket encrypted with AES-256
-resource "aws_s3_bucket_server_side_encryption_configuration" "backup_uploads" {
-  bucket = module.backup_uploads.bucket.id
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
-
-# Block Public Access
-resource "aws_s3_bucket_public_access_block" "backup_uploads" {
-  bucket                  = module.backup_uploads.bucket.id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
 }
 
 # Creating folder to drop .bak files in
@@ -97,7 +106,7 @@ module "parquet_exports" {
   bucket_prefix      = "${var.name}-parquet-exports-${var.environment}-"
   custom_kms_key     = var.kms_key_arn
   versioning_enabled = true
-
+  sse_algorithm = "AES256"
   # to disable ACLs in preference of BucketOwnership controls as per https://aws.amazon.com/blogs/aws/heads-up-amazon-s3-security-changes-are-coming-in-april-of-2023/ set:
   ownership_controls = "BucketOwnerEnforced"
 
@@ -145,26 +154,6 @@ module "parquet_exports" {
 
   tags = var.tags
 }
-
-#trivy:ignore:AVD-AWS-0132 # Bucket encrypted with AES-256
-resource "aws_s3_bucket_server_side_encryption_configuration" "parquet_exports" {
-  bucket = module.parquet_exports.bucket.id
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
-
-# Block Public Access
-resource "aws_s3_bucket_public_access_block" "parquet_exports" {
-  bucket                  = module.parquet_exports.bucket.id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
 
 # Lambda function to check if all files have been uploaded to the S3 bucket
 resource "aws_lambda_permission" "allow_bucket" {
