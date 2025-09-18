@@ -20,7 +20,7 @@ module "backup_uploads" {
             "s3:ListBucket",
             "s3:ListBucketMultipartUploads"
           ],
-          Resource  = module.s3_concept_landing_bucket.bucket.arn
+          Resource  = module.backup_uploads.bucket.arn
         },
         {
           Sid       = "AccountObjectLevel",
@@ -31,7 +31,7 @@ module "backup_uploads" {
             "s3:AbortMultipartUpload",
             "s3:PutObjectTagging"
           ],
-          Resource  = "${module.s3_concept_landing_bucket.bucket.arn}/*"
+          Resource  = "${module.backup_uploads.bucket.arn}/*"
         }
       ] 
     })
