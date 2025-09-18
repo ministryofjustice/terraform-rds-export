@@ -20,7 +20,7 @@ module "backup_uploads" {
             "s3:ListBucket",
             "s3:ListBucketMultipartUploads"
           ],
-          Resource  = ["arn:aws:s3:::${local.backup_uploads_prefix}*"]
+          Resource  = module.s3_concept_landing_bucket.bucket.arn
         },
         {
           Sid       = "AccountObjectLevel",
@@ -31,9 +31,9 @@ module "backup_uploads" {
             "s3:AbortMultipartUpload",
             "s3:PutObjectTagging"
           ],
-          Resource  = ["arn:aws:s3:::${local.backup_uploads_prefix}*/*"]
+          Resource  = "${module.s3_concept_landing_bucket.bucket.arn}/*"
         }
-      ]
+      ] 
     })
   ]
   bucket_prefix      = "${var.name}-backup-uploads-${var.environment}-"
