@@ -39,7 +39,6 @@ module "backup_uploads" {
   bucket_prefix      = "${var.name}-backup-uploads-${var.environment}-"
   custom_kms_key     = var.kms_key_arn
   versioning_enabled = true
-  sse_algorithm = "AES256"
   # to disable ACLs in preference of BucketOwnership controls as per https://aws.amazon.com/blogs/aws/heads-up-amazon-s3-security-changes-are-coming-in-april-of-2023/ set:
   ownership_controls = "BucketOwnerEnforced"
 
@@ -106,7 +105,6 @@ module "parquet_exports" {
   bucket_prefix      = "${var.name}-parquet-exports-${var.environment}-"
   custom_kms_key     = var.kms_key_arn
   versioning_enabled = true
-  sse_algorithm = "AES256"
   # to disable ACLs in preference of BucketOwnership controls as per https://aws.amazon.com/blogs/aws/heads-up-amazon-s3-security-changes-are-coming-in-april-of-2023/ set:
   ownership_controls = "BucketOwnerEnforced"
 
