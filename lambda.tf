@@ -7,8 +7,8 @@ data "aws_iam_policy_document" "upload_checker_lambda_function" {
     ]
 
     resources = [
-      module.backup_uploads.bucket.arn,
-      "${module.backup_uploads.bucket.arn}/*",
+      aws_s3_bucket.backup_uploads.arn,
+      "${aws_s3_bucket.backup_uploads.arn}/*",
     ]
   }
 
@@ -41,11 +41,10 @@ module "upload_checker" {
   policy_json        = data.aws_iam_policy_document.upload_checker_lambda_function.json
 
   environment_variables = {
-    BACKUP_UPLOADS_BUCKET = module.backup_uploads.bucket.id
+    BACKUP_UPLOADS_BUCKET = aws_s3_bucket.backup_uploads.id
     STATE_MACHINE_ARN     = aws_sfn_state_machine.db_restore.id
-    OUTPUT_BUCKET         = module.parquet_exports.bucket.id
+    OUTPUT_BUCKET         = aws_s3_bucket.parquet_exports.id
     NAME                  = var.name
-    MAX_CONCURRENCY       = var.max_concurrency
   }
 
   source_path = [{
@@ -85,7 +84,7 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
       "s3:ListBucket"
     ]
     resources = [
-      module.parquet_exports.bucket.arn
+      aws_s3_bucket.parquet_exports.arn
     ]
   }
 
@@ -96,7 +95,7 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
       "s3:DeleteObject"
     ]
     resources = [
-      "${module.parquet_exports.bucket.arn}/*"
+      "${aws_s3_bucket.parquet_exports.arn}/*"
     ]
   }
 
@@ -106,9 +105,9 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
     ]
 
     resources = [
-      "arn:aws:glue:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:catalog",
-      "arn:aws:glue:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:database/*",
-      "arn:aws:glue:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:table/*/*"
+      "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog",
+      "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:database/*",
+      "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/*/*"
     ]
   }
 }
@@ -152,7 +151,7 @@ module "database_restore" {
   policy_json        = data.aws_iam_policy_document.data_restore_lambda_function.json
 
   environment_variables = {
-    UPLOADS_BUCKET         = module.backup_uploads.bucket.id
+    UPLOADS_BUCKET         = aws_s3_bucket.backup_uploads.id
     DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
   }
 
@@ -268,7 +267,7 @@ module "database_export_processor" {
 
   environment_variables = {
     DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
-    OUTPUT_BUCKET          = module.parquet_exports.bucket.id
+    OUTPUT_BUCKET          = aws_s3_bucket.parquet_exports.id
     DATABASE_REFRESH_MODE  = var.database_refresh_mode
   }
 
