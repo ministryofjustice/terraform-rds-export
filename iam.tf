@@ -166,11 +166,7 @@ resource "aws_iam_role_policy" "database_restore" {
         Action = [
           "s3:GetBucketLocation",
           "s3:ListBucket",
-          "s3:ListBucketVersions",
-          "kms:Encrypt",
-          "kms:GenerateDataKey",
-          "kms:GenerateDataKeyWithoutPlaintext",
-          "kms:DescribeKey"
+          "s3:ListBucketVersions"
         ]
         Resource = [module.parquet_exports.bucket.arn]
       },
@@ -181,11 +177,7 @@ resource "aws_iam_role_policy" "database_restore" {
           "s3:GetObject",
           "s3:GetObjectVersion",
           "s3:GetObjectTagging",
-          "s3:GetObjectAttributes",
-          "kms:Encrypt",
-          "kms:GenerateDataKey",
-          "kms:GenerateDataKeyWithoutPlaintext",
-          "kms:DescribeKey"
+          "s3:GetObjectAttributes"
         ]
         Resource = ["${module.parquet_exports.bucket.arn}/*"]
       },
@@ -195,11 +187,7 @@ resource "aws_iam_role_policy" "database_restore" {
         Action = [
           "s3:GetBucketLocation",
           "s3:ListBucket",
-          "s3:ListBucketMultipartUploads",
-          "kms:Encrypt",
-          "kms:GenerateDataKey",
-          "kms:GenerateDataKeyWithoutPlaintext",
-          "kms:DescribeKey"
+          "s3:ListBucketMultipartUploads"
         ]
         Resource = [module.backup_uploads.bucket.arn]
       },
@@ -210,11 +198,7 @@ resource "aws_iam_role_policy" "database_restore" {
           "s3:PutObject",
           "s3:PutObjectTagging",
           "s3:AbortMultipartUpload",
-          "s3:ListMultipartUploadParts",
-          "kms:Encrypt",
-          "kms:GenerateDataKey",
-          "kms:GenerateDataKeyWithoutPlaintext",
-          "kms:DescribeKey"
+          "s3:ListMultipartUploadParts"
         ]
         Resource = ["${module.backup_uploads.bucket.arn}/*"]
       }

@@ -16,7 +16,8 @@ module "backup_uploads" {
     # Allow account principals to list/multipart-list the bucket
     {
       effect     = "Allow"
-      actions    = ["s3:ListBucket", "s3:ListBucketMultipartUploads"]
+      actions    = ["s3:ListBucket", "s3:ListBucketMultipartUploads", "kms:Decrypt",
+          "kms:DescribeKey"]
       principals = {
         type        = "AWS"
         identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
@@ -25,7 +26,8 @@ module "backup_uploads" {
     # Allow account principals to write objects (no PutObjectAcl with BucketOwnerEnforced)
     {
       effect     = "Allow"
-      actions    = ["s3:PutObject", "s3:AbortMultipartUpload", "s3:PutObjectTagging"]
+      actions    = ["s3:PutObject", "s3:AbortMultipartUpload", "s3:PutObjectTagging", "kms:Decrypt",
+          "kms:DescribeKey"]
       principals = {
         type        = "AWS"
         identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
