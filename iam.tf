@@ -123,6 +123,10 @@ resource "aws_iam_role" "database_restore" {
   })
 }
 
+locals {
+  s3_via = "s3.${data.aws_region.current.name}.amazonaws.com"
+}
+
 resource "aws_iam_role_policy" "database_restore" {
   name = "${var.name}-rds-restore"
   role = aws_iam_role.database_restore.name
@@ -131,47 +135,72 @@ resource "aws_iam_role_policy" "database_restore" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "KMSSourceDecrypt"
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey"
+        ]
+        Resource  = [var.kms_key_arn]
+        Condition = {
+          StringEquals = { "kms:ViaService" = local.s3_via }
+        }
+      },
+      {
+        Sid    = "KMSDestEncrypt"
         Effect = "Allow"
         Action = [
           "kms:Encrypt",
-          "kms:Decrypt",
           "kms:GenerateDataKey",
-          "kms:ReEncrypt*",
+          "kms:GenerateDataKeyWithoutPlaintext",
           "kms:DescribeKey"
         ]
-        Resource = [
-          var.kms_key_arn
-        ]
+        Resource  = [var.kms_key_arn]
+        Condition = {
+          StringEquals = { "kms:ViaService" = local.s3_via }
+        }
       },
       {
+        Sid    = "S3SourceBucket"
         Effect = "Allow"
         Action = [
           "s3:GetBucketLocation",
           "s3:ListBucket",
+          "s3:ListBucketVersions"
+        ]
+        Resource = [module.parquet_exports.bucket.arn]
+      },
+      {
+        Sid    = "S3SourceObjects"
+        Effect = "Allow"
+        Action = [
           "s3:GetObject",
-          "s3:GetObjectAttributes",
+          "s3:GetObjectVersion",
+          "s3:GetObjectTagging",
+          "s3:GetObjectAttributes"
+        ]
+        Resource = ["${module.parquet_exports.bucket.arn}/*"]
+      },
+      {
+        Sid    = "S3DestBucket"
+        Effect = "Allow"
+        Action = [
+          "s3:GetBucketLocation",
+          "s3:ListBucket",
+          "s3:ListBucketMultipartUploads"
+        ]
+        Resource = [module.backup_uploads.bucket.arn]
+      },
+      {
+        Sid    = "S3DestObjects"
+        Effect = "Allow"
+        Action = [
           "s3:PutObject",
-          "s3:ListMultipartUploadParts",
+          "s3:PutObjectTagging",
           "s3:AbortMultipartUpload",
+          "s3:ListMultipartUploadParts"
         ]
-        Resource = [
-          "${module.backup_uploads.bucket.arn}",
-          "${module.backup_uploads.bucket.arn}/*"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:ListBucket",
-          "s3:GetObject",
-          "s3:GetBucketLocation",
-          "s3:PutObject",
-          "s3:DeleteObject"
-        ]
-        Resource = [
-          module.parquet_exports.bucket.arn,
-          "${module.parquet_exports.bucket.arn}/*"
-        ]
+        Resource = ["${module.backup_uploads.bucket.arn}/*"]
       }
     ]
   })
