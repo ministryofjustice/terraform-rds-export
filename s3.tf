@@ -12,25 +12,26 @@ module "backup_uploads" {
   providers = {
     aws.bucket-replication = aws.bucket-replication
   }
-  bucket_policy = [jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-          Sid       = "AccountBucketLevel",
-          Effect    = "Allow",
-          Principal = { AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root" },
-          Action    = ["s3:ListBucket", "s3:ListBucketMultipartUploads"],
-          Resource  = "arn:aws:s3:::${local.backup_uploads_prefix}*"
-        },
-        {
-          Sid       = "AccountObjectLevel",
-          Effect    = "Allow",
-          Principal = { AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root" },
-          Action    = ["s3:PutObject", "s3:AbortMultipartUpload", "s3:PutObjectTagging"],
-          Resource  = "arn:aws:s3:::${local.backup_uploads_prefix}*/*"
-        },
+    bucket_policy_v2 = [
+    # Allow account principals to list/multipart-list the bucket
+    {
+      effect     = "Allow"
+      actions    = ["s3:ListBucket", "s3:ListBucketMultipartUploads"]
+      principals = {
+        type        = "AWS"
+        identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      }
+    },
+    # Allow account principals to write objects (no PutObjectAcl with BucketOwnerEnforced)
+    {
+      effect     = "Allow"
+      actions    = ["s3:PutObject", "s3:AbortMultipartUpload", "s3:PutObjectTagging"]
+      principals = {
+        type        = "AWS"
+        identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      }
+    }
     ]
-  })]
   bucket_prefix      = local.backup_uploads_prefix
   custom_kms_key     = var.kms_key_arn
   versioning_enabled = true
