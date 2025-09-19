@@ -225,8 +225,8 @@ module "database_export_scanner" {
   policy_json        = data.aws_iam_policy_document.data_restore_lambda_function.json
 
   environment_variables = {
-    DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
-    DATABASE_REFRESH_MODE  = var.database_refresh_mode
+    DATABASE_PW_SECRET_ARN   = data.aws_secretsmanager_secret_version.master_user_secret.arn
+    DATABASE_REFRESH_MODE    = var.database_refresh_mode
     OUTPUT_PARQUET_FILE_SIZE = var.output_parquet_file_size
   }
 

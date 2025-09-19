@@ -141,7 +141,7 @@ resource "aws_iam_role_policy" "database_restore" {
           "kms:Decrypt",
           "kms:DescribeKey"
         ]
-        Resource  = [var.kms_key_arn]
+        Resource = [var.kms_key_arn]
         Condition = {
           StringEquals = { "kms:ViaService" = local.s3_via }
         }
@@ -155,7 +155,7 @@ resource "aws_iam_role_policy" "database_restore" {
           "kms:GenerateDataKeyWithoutPlaintext",
           "kms:DescribeKey"
         ]
-        Resource  = [var.kms_key_arn]
+        Resource = [var.kms_key_arn]
         Condition = {
           StringEquals = { "kms:ViaService" = local.s3_via }
         }
