@@ -12,6 +12,7 @@ module "backup_uploads" {
 
   bucket_prefix       = local.backup_uploads_prefix
   custom_kms_key      = var.kms_key_arn
+  sse_algorithm       = "aws:kms"
   versioning_enabled  = true
   ownership_controls  = "BucketOwnerEnforced"
   replication_enabled = false
@@ -78,6 +79,7 @@ module "backup_uploads" {
 resource "aws_s3_object" "backup_uploads_folder" {
   bucket = module.backup_uploads.bucket.id
   key    = "${var.name}/"
+  content = ""
 }
 
 # Create bucket to store exported parquet files
@@ -91,6 +93,7 @@ module "parquet_exports" {
   }
   bucket_prefix      = "${var.name}-parquet-exports-${var.environment}-"
   custom_kms_key     = var.kms_key_arn
+  sse_algorithm       = "aws:kms"
   versioning_enabled = true
   # to disable ACLs in preference of BucketOwnership controls as per https://aws.amazon.com/blogs/aws/heads-up-amazon-s3-security-changes-are-coming-in-april-of-2023/ set:
   ownership_controls = "BucketOwnerEnforced"
