@@ -87,7 +87,7 @@ def get_table_stats(cursor, schema, table):
     return 0, 0.0
 
 
-def calculate_rows_per_chunk(row_count, size_kb, target_mb=10):
+def calculate_rows_per_chunk(row_count, size_kb, target_mb=200):
     try:
         row_count = int(row_count)
         size_kb = float(size_kb)
