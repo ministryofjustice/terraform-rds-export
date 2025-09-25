@@ -30,7 +30,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
       "Parameters": {
-        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export-{}',$.name, $.environment)",
+        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export-{}',$.name, $.environment)"
       },
       "ResultPath": "$.DescribeDBDeleteResult",
       "Catch": [

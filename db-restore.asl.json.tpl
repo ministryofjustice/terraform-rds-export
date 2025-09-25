@@ -30,7 +30,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
       "Parameters": {
-        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export-{}',$.name, $.environment)",
+        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export-{}',$.name, $.environment)"
       },
       "ResultPath": "$.DescribeDBDeleteResult",
       "Catch": [
@@ -63,7 +63,7 @@
         "VpcSecurityGroupIds": ${jsonencode(VpcSecurityGroupIds)},
         "DbSubnetGroupName": "${DbSubnetGroupName}",
         "DbInstanceClass": "db.m5.2xlarge",
-        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export-{}',$.name, $.environment)",
+        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export-{}',$.name, $.environment)"
       },
       "ResultPath": "$.CreateDBResult",
       "Next": "Wait For DB Instance"
@@ -77,7 +77,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
       "Parameters": {
-        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export-{}',$.name, $.environment)",
+        "DbInstanceIdentifier.$": "States.Format('{}-sql-server-backup-export-{}',$.name, $.environment)"
       },
       "ResultPath": "$.DescribeDBResult",
       "Catch": [
