@@ -211,7 +211,7 @@ module "database_export_scanner" {
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
   function_name   = "${var.name}-database-export-scanner-${var.environment}"
-  description     = "Lambda to gather info for db export ${var.name}"
+  description     = "Lambda to gather info for db export ${var.name} ${var.environment}"
   handler         = "main.handler"
   runtime         = "python3.12"
   memory_size     = 2048
@@ -254,7 +254,7 @@ module "database_export_processor" {
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
   function_name   = "${var.name}-database-export-processor-${var.environment}"
-  description     = "Lambda to export data for ${var.name}"
+  description     = "Lambda to export data for ${var.name} ${var.environment}"
   handler         = "main.handler"
   runtime         = "python3.12"
   memory_size     = 4096
