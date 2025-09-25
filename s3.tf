@@ -62,7 +62,7 @@ module "s3-bucket-backup-uploads" {
 # Creating folder to drop .bak files in
 resource "aws_s3_object" "backup_uploads_folder" {
   bucket = module.s3-bucket-backup-uploads.bucket.id
-  key    = "${var.name}/"
+  key    = "${var.name}-${var.environment}/"
 }
 
 # Parquet exports S3 bucket with sensible defaults
