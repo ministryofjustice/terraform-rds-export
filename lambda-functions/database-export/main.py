@@ -26,6 +26,18 @@ def safe_decode(val):
     logger.warning("Failed to decode bytes: %s", val.hex())
     return val.decode("cp1252", errors="replace")
 
+def get_rowversion_cols(conn, table, schema="dbo"):
+    """Return a set of colum names that are rowversion/timestamp for a given table."""
+    sql = """
+    SELECT COLUMN_NAME
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s
+        AND DATA_TYPE IN ('timestamp', 'rowversion')
+    """
+
+    with conn.cursor() as cur:
+        cur.execute(sql, (schema, table))
+        return {row[0] for row in cur.fetchall()}
 
 def handler(event, context):
     # Retrieve configuration from environment variables
@@ -62,13 +74,18 @@ def handler(event, context):
 
         df = pd.read_sql_query(db_query, conn)
         logger.info(f"Data fetched successfully for {db_name}.{db_table} !")
+        
+        row_version_cols = get_rowversion_cols(conn, table=db_table, schema="dbo")
+        logger.info(f"Columns with datatype 'timestamp' or 'rowversion' for {db_table}: {row_version_cols}")
 
         # # Done: Fix the issue with the column types (And do more thorough testing of decoding)
         # # Done: Glue table definition needs to be fixed at the same time in the scanner lambda
 
         for col in df.columns:
             non_nulls = df[col].dropna()
-            if not non_nulls.empty and isinstance(
+            if col in row_version_cols:
+                df[col] = df[col].map(lambda v: v.hex())
+            elif not non_nulls.empty and isinstance(
                 non_nulls.iloc[0], (bytes, bytearray)
             ):
                 logger.info(f"Decoding column '{col}' with fallback decoding")

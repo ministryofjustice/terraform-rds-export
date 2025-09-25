@@ -1,62 +1,129 @@
-# Create S3 Bucket for SQL Server backup files to be uploaded to
-# TO DO: Add lifecycle configuration 
-#trivy:ignore:AVD-AWS-0089 # Bucket logging not required
-#trivy:ignore:AVD-AWS-0090 # Bucket versioning not required - TODO: May add later
-resource "aws_s3_bucket" "backup_uploads" {
-  bucket_prefix = "${var.name}-backup-uploads-${var.environment}-"
-}
+# Backup uploads S3 bucket with sensible defaults
+module "s3-bucket-backup-uploads" {
+  source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=v9.0.0"
 
-#trivy:ignore:AVD-AWS-0132 # Bucket encrypted with AES-256
-resource "aws_s3_bucket_server_side_encryption_configuration" "backup_uploads" {
-  bucket = aws_s3_bucket.backup_uploads.id
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
+  bucket_prefix      = "${var.name}-backup-uploads-${var.environment}-"
+  versioning_enabled = true
+
+  ownership_controls = "BucketOwnerEnforced"
+
+  replication_enabled = false
+  providers = {
+    aws.bucket-replication = aws
   }
+
+  sse_algorithm = "AES256"
+
+  lifecycle_rule = [
+    {
+      id      = "main"
+      enabled = "Enabled"
+      prefix  = ""
+
+      tags = {
+        rule      = "log"
+        autoclean = "true"
+      }
+
+      transition = [
+        {
+          days          = 90
+          storage_class = "STANDARD_IA"
+          }, {
+          days          = 365
+          storage_class = "GLACIER"
+        }
+      ]
+
+      expiration = {
+        days = 730
+      }
+
+      noncurrent_version_transition = [
+        {
+          days          = 90
+          storage_class = "STANDARD_IA"
+          }, {
+          days          = 365
+          storage_class = "GLACIER"
+        }
+      ]
+
+      noncurrent_version_expiration = {
+        days = 730
+      }
+    }
+  ]
+
+  tags = var.tags
 }
 
-# Block Public Access
-resource "aws_s3_bucket_public_access_block" "backup_uploads" {
-  bucket                  = aws_s3_bucket.backup_uploads.id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
 
 # Creating folder to drop .bak files in
 resource "aws_s3_object" "backup_uploads_folder" {
-  bucket = aws_s3_bucket.backup_uploads.id
+  bucket = module.s3-bucket-backup-uploads.bucket.id
   key    = "${var.name}/"
 }
 
-# Create bucket to store exported parquet files
-#trivy:ignore:AVD-AWS-0089 # Bucket logging not required
-#trivy:ignore:AVD-AWS-0090 # Bucket versioning not required
-resource "aws_s3_bucket" "parquet_exports" {
-  bucket_prefix = "${var.name}-parquet-exports-${var.environment}-"
-}
+# Parquet exports S3 bucket with sensible defaults
+module "s3-bucket-parquet-exports" {
+  source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=v9.0.0"
 
-#trivy:ignore:AVD-AWS-0132 # Bucket encrypted with AES-256
-resource "aws_s3_bucket_server_side_encryption_configuration" "parquet_exports" {
-  bucket = aws_s3_bucket.parquet_exports.id
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
+  bucket_prefix      = "${var.name}-parquet-exports-${var.environment}-"
+  versioning_enabled = true
+
+  ownership_controls = "BucketOwnerEnforced"
+
+  replication_enabled = false
+  providers = {
+    aws.bucket-replication = aws
   }
-}
 
-# Block Public Access
-resource "aws_s3_bucket_public_access_block" "parquet_exports" {
-  bucket                  = aws_s3_bucket.parquet_exports.id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
+  sse_algorithm = "AES256"
 
+  lifecycle_rule = [
+    {
+      id      = "main"
+      enabled = "Enabled"
+      prefix  = ""
+
+      tags = {
+        rule      = "log"
+        autoclean = "true"
+      }
+
+      transition = [
+        {
+          days          = 90
+          storage_class = "STANDARD_IA"
+          }, {
+          days          = 365
+          storage_class = "GLACIER"
+        }
+      ]
+
+      expiration = {
+        days = 730
+      }
+
+      noncurrent_version_transition = [
+        {
+          days          = 90
+          storage_class = "STANDARD_IA"
+          }, {
+          days          = 365
+          storage_class = "GLACIER"
+        }
+      ]
+
+      noncurrent_version_expiration = {
+        days = 730
+      }
+    }
+  ]
+
+  tags = var.tags
+}
 
 # Lambda function to check if all files have been uploaded to the S3 bucket
 resource "aws_lambda_permission" "allow_bucket" {
@@ -64,12 +131,12 @@ resource "aws_lambda_permission" "allow_bucket" {
   action        = "lambda:InvokeFunction"
   function_name = module.upload_checker.lambda_function_arn
   principal     = "s3.amazonaws.com"
-  source_arn    = aws_s3_bucket.backup_uploads.arn
+  source_arn    = module.s3-bucket-backup-uploads.bucket.arn
 }
 
 # Bucket Notification to trigger Lambda function
 resource "aws_s3_bucket_notification" "backup_uploads" {
-  bucket = aws_s3_bucket.backup_uploads.id
+  bucket = module.s3-bucket-backup-uploads.bucket.id
 
   lambda_function {
     lambda_function_arn = module.upload_checker.lambda_function_arn

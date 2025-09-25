@@ -1,5 +1,5 @@
 variable "name" {
-  description = "Used to create the database name in RDS and name of the database in Glue"
+  description = "Suffixed with the environment (<name>-<environment>) to create the database name in RDS and name of the database in Glue."
   type        = string
 }
 

@@ -37,6 +37,7 @@ def handler(event, context):
             "extraction_timestamp": extraction_timestamp,
             "output_bucket": os.environ["OUTPUT_BUCKET"],
             "name": os.environ["NAME"],
+            "environment": os.environ["ENVIRONMENT"]
         }
 
         # Start Step Function with file info

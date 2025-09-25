@@ -7,8 +7,8 @@ data "aws_iam_policy_document" "upload_checker_lambda_function" {
     ]
 
     resources = [
-      aws_s3_bucket.backup_uploads.arn,
-      "${aws_s3_bucket.backup_uploads.arn}/*",
+      module.s3-bucket-backup-uploads.bucket.arn,
+      "${module.s3-bucket-backup-uploads.bucket.arn}/*",
     ]
   }
 
@@ -28,8 +28,8 @@ module "upload_checker" {
   # Commit hash for v7.20.1
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
-  function_name   = "${var.name}-upload-checker"
-  description     = "Lambda to check if a file have been uploaded to the S3 bucket"
+  function_name   = "${var.name}-upload-checker-${var.environment}"
+  description     = "Lambda to check if a file has been uploaded to the S3 bucket"
   handler         = "main.handler"
   runtime         = "python3.12"
   memory_size     = 1024
@@ -41,11 +41,12 @@ module "upload_checker" {
   policy_json        = data.aws_iam_policy_document.upload_checker_lambda_function.json
 
   environment_variables = {
-    BACKUP_UPLOADS_BUCKET = aws_s3_bucket.backup_uploads.id
+    BACKUP_UPLOADS_BUCKET = module.s3-bucket-backup-uploads.bucket.id
     STATE_MACHINE_ARN     = aws_sfn_state_machine.db_restore.id
-    OUTPUT_BUCKET         = aws_s3_bucket.parquet_exports.id
+    OUTPUT_BUCKET         = module.s3-bucket-parquet-exports.bucket.id
     NAME                  = var.name
     MAX_CONCURRENCY       = var.max_concurrency
+    ENVIRONMENT           = var.environment
   }
 
   source_path = [{
@@ -85,7 +86,7 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
       "s3:ListBucket"
     ]
     resources = [
-      aws_s3_bucket.parquet_exports.arn
+      module.s3-bucket-parquet-exports.bucket.arn
     ]
   }
 
@@ -96,7 +97,7 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
       "s3:DeleteObject"
     ]
     resources = [
-      "${aws_s3_bucket.parquet_exports.arn}/*"
+      "${module.s3-bucket-parquet-exports.bucket.arn}/*"
     ]
   }
 
@@ -116,7 +117,7 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
 # Security group for database restore lambda function
 #trivy:ignore:AVD-AWS-0104
 resource "aws_security_group" "database_restore" {
-  name        = "${var.name}-database-restore"
+  name        = "${var.name}-database-restore-${var.environment}"
   description = "Allow outbound traffic from database restore lambda function"
   vpc_id      = var.vpc_id
 
@@ -134,7 +135,7 @@ module "database_restore" {
   # Commit hash for v7.20.1
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
-  function_name   = "${var.name}-database-restore"
+  function_name   = "${var.name}-database-restore-${var.environment}"
   description     = "Lambda to restore the database from the backup files in the S3 bucket"
   handler         = "main.handler"
   runtime         = "python3.12"
@@ -152,8 +153,9 @@ module "database_restore" {
   policy_json        = data.aws_iam_policy_document.data_restore_lambda_function.json
 
   environment_variables = {
-    UPLOADS_BUCKET         = aws_s3_bucket.backup_uploads.id
+    UPLOADS_BUCKET         = module.s3-bucket-backup-uploads.bucket.id
     DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
+    ENVIRONMENT            = var.environment
   }
 
   source_path = [{
@@ -171,7 +173,7 @@ module "database_restore_status" {
   # Commit hash for v7.20.1
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
-  function_name   = "${var.name}-database-restore-status"
+  function_name   = "${var.name}-database-restore-status-${var.environment}"
   description     = "Lambda to check the status of the database restore from S3"
   handler         = "main.handler"
   runtime         = "python3.12"
@@ -190,6 +192,7 @@ module "database_restore_status" {
 
   environment_variables = {
     DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
+    ENVIRONMENT            = var.environment
   }
 
   source_path = [{
@@ -207,7 +210,7 @@ module "database_export_scanner" {
   # Commit hash for v7.20.1
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
-  function_name   = "${var.name}-database-export-scanner"
+  function_name   = "${var.name}-database-export-scanner-${var.environment}"
   description     = "Lambda to gather info for db export ${var.name}"
   handler         = "main.handler"
   runtime         = "python3.12"
@@ -228,6 +231,7 @@ module "database_export_scanner" {
     DATABASE_PW_SECRET_ARN   = data.aws_secretsmanager_secret_version.master_user_secret.arn
     DATABASE_REFRESH_MODE    = var.database_refresh_mode
     OUTPUT_PARQUET_FILE_SIZE = var.output_parquet_file_size
+    ENVIRONMENT              = var.environment
   }
 
   source_path = [{
@@ -249,7 +253,7 @@ module "database_export_processor" {
   # Commit hash for v7.20.1
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
-  function_name   = "${var.name}-database-export-processor"
+  function_name   = "${var.name}-database-export-processor-${var.environment}"
   description     = "Lambda to export data for ${var.name}"
   handler         = "main.handler"
   runtime         = "python3.12"
@@ -268,8 +272,9 @@ module "database_export_processor" {
 
   environment_variables = {
     DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
-    OUTPUT_BUCKET          = aws_s3_bucket.parquet_exports.id
+    OUTPUT_BUCKET          = module.s3-bucket-parquet-exports.bucket.id
     DATABASE_REFRESH_MODE  = var.database_refresh_mode
+    ENVIRONMENT            = var.environment
   }
 
   source_path = [{
