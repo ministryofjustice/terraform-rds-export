@@ -78,7 +78,9 @@
           }
         }
       },
-      "Next": "Export Validation Orchestrator",
+      "Next": "Export Validation Orchestrator"
+    },
+    "Export Validation Orchestrator": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
@@ -100,7 +102,7 @@
         }
       ],
       "Next": "RowCount Updater",
-      "ResultPath": "$.ScannerLambdaResult"
+      "ResultPath": "$.ExportValidationResult"
     },
     "RowCount Updater": {
       "Type": "Map",
@@ -111,9 +113,9 @@
           "extraction_timestamp.$": "$.extraction_timestamp"
         },
         "db_name.$": "$.db_name",
-        "output_bucket.$": "$.output_bucket",
+        "output_bucket.$": "$.output_bucket"
       },
-       "MaxConcurrency": ${max_concurrency},
+      "MaxConcurrency": ${max_concurrency},
       "ItemProcessor": {
         "ProcessorConfig": {
           "Mode": "INLINE"
@@ -126,8 +128,7 @@
             "OutputPath": "$.Payload",
             "Parameters": {
               "FunctionName": "${ExportValidationRowCountUpdaterLambdaArn}",
-                "chunk.$": "$.chunk",
-              }
+              "chunk.$": "$.chunk"
             },
             "Retry": [
               {
