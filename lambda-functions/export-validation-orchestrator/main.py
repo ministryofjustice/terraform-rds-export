@@ -5,7 +5,7 @@ import os
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-def lambda_handler(event, context):
+def handler(event, context):
     db_name = event["db_name"]
     table_name = "table_export_validation"
 
