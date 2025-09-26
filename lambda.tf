@@ -90,6 +90,7 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
       "athena:ListDatabases",
       "athena:ListTableMetadata"
     ]
+    resources = ["*"]
   }
 
   statement {
