@@ -24,6 +24,12 @@
           "JitterStrategy": "FULL"
         }
       ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "Fail State"
+        }
+      ],
       "Next": "Export Data",
       "ResultPath": "$.ScannerLambdaResult"
     },
@@ -163,7 +169,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync",
       "Parameters": {
-        "StateMachineArn": "arn:aws:states:eu-west-1:684969100054:stateMachine:planetfm-database-delete",
+        "StateMachineArn": "${DatabaseDeleteStateMachineArn}",
         "Input": {
           "db_endpoint.$": "$.db_endpoint",
           "db_name.$": "$.db_name",
