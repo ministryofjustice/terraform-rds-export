@@ -120,7 +120,7 @@
         "ProcessorConfig": {
           "Mode": "INLINE"
         },
-        "StartAt": "Invoke Export Processo r- RowCount",
+        "StartAt": "Invoke Export Processor - RowCount",
         "States": {
           "Invoke Export Processor - RowCount": {
             "Type": "Task",
