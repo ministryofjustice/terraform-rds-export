@@ -48,9 +48,9 @@
         "ProcessorConfig": {
           "Mode": "INLINE"
         },
-        "StartAt": "Invoke Export Processor",
+        "StartAt": "Invoke Export Processor - Chunk Export",
         "States": {
-          "Invoke Export Processor": {
+          "Invoke Export Processor - Chunk Export": {
             "Type": "Task",
             "Resource": "arn:aws:states:::lambda:invoke",
             "OutputPath": "$.Payload",
@@ -120,9 +120,9 @@
         "ProcessorConfig": {
           "Mode": "INLINE"
         },
-        "StartAt": "Invoke Export Processor",
+        "StartAt": "Invoke Export Processo r- RowCount",
         "States": {
-          "Invoke Export Processor": {
+          "Invoke Export Processor - RowCount": {
             "Type": "Task",
             "Resource": "arn:aws:states:::lambda:invoke",
             "OutputPath": "$.Payload",
