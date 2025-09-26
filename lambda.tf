@@ -28,7 +28,7 @@ module "upload_checker" {
   # Commit hash for v7.20.1
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
-  function_name   = "${var.name}-upload-checker-${var.environment}"
+  function_name   = "${var.name}-${var.environment}-upload-checker"
   description     = "Lambda to check if a file has been uploaded to the S3 bucket"
   handler         = "main.handler"
   runtime         = "python3.12"
@@ -117,7 +117,7 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
 # Security group for database restore lambda function
 #trivy:ignore:AVD-AWS-0104
 resource "aws_security_group" "database_restore" {
-  name        = "${var.name}-database-restore-${var.environment}"
+  name        = "${var.name}-${var.environment}-database-restore"
   description = "Allow outbound traffic from database restore lambda function"
   vpc_id      = var.vpc_id
 
@@ -135,7 +135,7 @@ module "database_restore" {
   # Commit hash for v7.20.1
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
-  function_name   = "${var.name}-database-restore-${var.environment}"
+  function_name   = "${var.name}-${var.environment}-database-restore"
   description     = "Lambda to restore the database from the backup files in the S3 bucket"
   handler         = "main.handler"
   runtime         = "python3.12"
@@ -173,7 +173,7 @@ module "database_restore_status" {
   # Commit hash for v7.20.1
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
-  function_name   = "${var.name}-database-restore-status-${var.environment}"
+  function_name   = "${var.name}-${var.environment}-database-restore-status"
   description     = "Lambda to check the status of the database restore from S3"
   handler         = "main.handler"
   runtime         = "python3.12"
@@ -210,7 +210,7 @@ module "database_export_scanner" {
   # Commit hash for v7.20.1
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
-  function_name   = "${var.name}-database-export-scanner-${var.environment}"
+  function_name   = "${var.name}-${var.environment}-database-export-scanner"
   description     = "Lambda to gather info for db export ${var.name} ${var.environment}"
   handler         = "main.handler"
   runtime         = "python3.12"
@@ -253,7 +253,7 @@ module "database_export_processor" {
   # Commit hash for v7.20.1
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
-  function_name   = "${var.name}-database-export-processor-${var.environment}"
+  function_name   = "${var.name}-${var.environment}-database-export-processor"
   description     = "Lambda to export data for ${var.name} ${var.environment}"
   handler         = "main.handler"
   runtime         = "python3.12"

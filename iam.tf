@@ -1,6 +1,6 @@
 resource "aws_iam_role" "state_machine" {
   # checkov:skip=CKV_AWS_61: See comment below
-  name = "${var.name}-step-functions-database-export-${var.environment}"
+  name = "${var.name}-${var.environment}-step-functions-database-export"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -19,7 +19,7 @@ resource "aws_iam_role" "state_machine" {
 resource "aws_iam_role_policy" "state_machine" {
   # checkov:skip=CKV_AWS_288,CKV_AWS_290,CKV_AWS_286,CKV_AWS_287,CKV_AWS_63,CKV_AWS_289,CKV_AWS_61,CKV_AWS_355: Look at comment above
   # checkov:skip=CKV_AWS_62: See comment above
-  name = "${var.name}-step-functions-database-export-${var.environment}"
+  name = "${var.name}-${var.environment}-step-functions-database-export"
   role = aws_iam_role.state_machine.name
 
   policy = jsonencode({
@@ -33,7 +33,7 @@ resource "aws_iam_role_policy" "state_machine" {
           "rds:DeleteDBInstance"
         ]
         Resource = [
-          "arn:aws:rds:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:db:${var.name}-sql-server-backup-export-${var.environment}",
+          "arn:aws:rds:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:db:${var.name}-${var.environment}-sql-server-backup-export",
           "${aws_security_group.database.arn}",
           "${aws_db_subnet_group.database.arn}",
           "${aws_db_parameter_group.database.arn}",
@@ -82,8 +82,8 @@ resource "aws_iam_policy" "allow_start_execution" {
           "states:ListExecutions"
         ],
         Resource = [
-          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-database-export-${var.environment}",
-          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-database-delete-${var.environment}"
+          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-${var.environment}-database-export",
+          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-${var.environment}-database-delete"
         ]
       },
       {
@@ -92,8 +92,8 @@ resource "aws_iam_policy" "allow_start_execution" {
           "states:DescribeExecution",
         ],
         Resource = [
-          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-database-export-${var.environment}",
-          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-database-delete-${var.environment}"
+          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-${var.environment}-database-export",
+          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-${var.environment}-database-delete"
         ]
       }
     ]
@@ -107,7 +107,7 @@ resource "aws_iam_role_policy_attachment" "attach_start_export" {
 
 resource "aws_iam_role" "database_restore" {
   # checkov:skip=CKV_AWS_61: See comment below
-  name = "${var.name}-rds-restore-${var.environment}"
+  name = "${var.name}-${var.environment}-rds-restore"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -124,7 +124,7 @@ resource "aws_iam_role" "database_restore" {
 }
 
 resource "aws_iam_role_policy" "database_restore" {
-  name = "${var.name}-rds-restore-${var.environment}"
+  name = "${var.name}-${var.environment}-rds-restore"
   role = aws_iam_role.database_restore.name
 
   policy = jsonencode({

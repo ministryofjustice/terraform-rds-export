@@ -1,7 +1,7 @@
 resource "aws_sfn_state_machine" "db_restore" {
   # checkov:skip=CKV_AWS_284: x-ray tracing not required for now
   # checkov:skip=CKV_AWS_285: Logging not required for now. TODO: Add this in the future
-  name     = "${var.name}-database-restore-${var.environment}"
+  name     = "${var.name}-${var.environment}-database-restore"
   role_arn = aws_iam_role.state_machine.arn
 
   definition = templatefile("${path.module}/db-restore.asl.json.tpl", {
@@ -19,7 +19,7 @@ resource "aws_sfn_state_machine" "db_restore" {
 resource "aws_sfn_state_machine" "db_export" {
   # checkov:skip=CKV_AWS_284: x-ray tracing not required for now
   # checkov:skip=CKV_AWS_285: Logging not required for now. TODO: Add this in the future
-  name     = "${var.name}-database-export-${var.environment}"
+  name     = "${var.name}-${var.environment}-database-export"
   role_arn = aws_iam_role.state_machine.arn
 
   definition = templatefile("${path.module}/db-export.asl.json.tpl", {
@@ -38,7 +38,7 @@ resource "aws_sfn_state_machine" "db_export" {
 resource "aws_sfn_state_machine" "db_delete" {
   # checkov:skip=CKV_AWS_284: x-ray tracing not required for now
   # checkov:skip=CKV_AWS_285: Logging not required for now. TODO: Add this in the future
-  name     = "${var.name}-database-delete-${var.environment}"
+  name     = "${var.name}-${var.environment}-database-delete"
   role_arn = aws_iam_role.state_machine.arn
 
   definition = templatefile("${path.module}/db-delete.asl.json.tpl", {
