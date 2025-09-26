@@ -114,7 +114,8 @@
           "db_username.$": "$.db_username",
           "name.$": "$.name",
           "extraction_timestamp.$": "$.extraction_timestamp",
-          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id",
+          "environment.$": "$.environment"
         }
       },
       "Next": "Success State",
