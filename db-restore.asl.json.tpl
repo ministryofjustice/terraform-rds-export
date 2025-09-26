@@ -177,7 +177,8 @@
         "db_endpoint.$": "$.DescribeDBResult.DbInstances[0].Endpoint.Address",
         "db_username.$": "$.DescribeDBResult.DbInstances[0].MasterUsername",
         "tables_to_export": [],
-        "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id",
+        "environment.$": "$.environment"
       },
       "Next": "call database-export Step Functions"
     },

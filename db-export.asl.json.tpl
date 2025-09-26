@@ -98,7 +98,8 @@
         "output_bucket.$": "$.output_bucket",
         "db_username.$": "$.db_username",
         "name.$": "$.name",
-        "extraction_timestamp.$": "$.extraction_timestamp"
+        "extraction_timestamp.$": "$.extraction_timestamp",
+        "environment.$": "$.environment"
       },
       "Next": "call database-delete Step Functions"
     },
