@@ -5,6 +5,7 @@ import logging
 import pymssql
 import pandas as pd
 import warnings
+import uuid
 import awswrangler as wr
 from urllib.parse import urlparse
 
@@ -17,7 +18,43 @@ logger.setLevel(logging.INFO)
 secretmanager = boto3.client("secretsmanager")
 glue = boto3.client("glue")
 s3 = boto3.client("s3")
+athena = boto3.client("athena")
 
+
+def run_athena_query(query, database, workgroup="primary"):
+    output_location = f"s3://planetfm-parquet-exports-sandbox-20250925115705994400000001/athena-query-results/"
+    
+    response = athena.start_query_execution(
+        QueryString=query,
+        QueryExecutionContext={"Database": database},
+        ResultConfiguration={"OutputLocation": output_location},
+        WorkGroup=workgroup,
+        ClientRequestToken=str(uuid.uuid4())  # ensures idempotency
+    )
+    
+    query_id = response["QueryExecutionId"]
+    logger.info(f"Athena query started: {query_id}")
+    
+    # Wait for completion
+    timeout_seconds = 60
+    poll_interval = 2
+    elapsed = 0
+    
+    while elapsed < timeout_seconds:
+        result = athena.get_query_execution(QueryExecutionId=query_id)
+        state = result["QueryExecution"]["Status"]["State"]
+        if state in ["SUCCEEDED", "FAILED", "CANCELLED"]:
+            break
+        time.sleep(poll_interval)
+        elapsed += poll_interval
+
+    if state != "SUCCEEDED":
+        reason = result["QueryExecution"]["Status"].get("StateChangeReason", "Unknown")
+        logger.error(f"Athena query failed: {state}, Reason: {reason}")
+        raise Exception(f"Athena query failed: {state}, Reason: {reason}")
+    
+    logger.info(f"Athena query succeeded: {query_id}")
+    return query_id
 
 def get_all_primary_keys(cursor, schema="dbo"):
     """
@@ -348,13 +385,13 @@ def handler(event, context):
         conn = pymssql.connect(
             server=db_endpoint, user=db_username, password=db_password, database=db_name
         )
-        query = """
+        query = f"""
         SELECT
             s.name AS schema_name,
             t.name AS table_name,
             p.rows AS original_row_count,
             '' AS exported_row_count,
-            '' AS exported_timestamp
+            '{extraction_timestamp}' AS extraction_timestamp
         FROM sys.tables t
         JOIN sys.indexes i ON t.object_id = i.object_id
         JOIN sys.partitions p ON i.object_id = p.object_id AND i.index_id = p.index_id
@@ -365,9 +402,63 @@ def handler(event, context):
         """
 
         df = pd.read_sql_query(query, conn)
-
-        # Log Table stats for all the schema
         logger.info("Table stats:\n%s", df.to_string(index=False))
+
+        # Log Table stats for all the database tables
+        create_query = f"""
+            CREATE TABLE IF NOT EXISTS {db_name}.table_export_validation (
+            schema_name STRING,
+            table_name STRING,
+            original_row_count BIGINT,
+            exported_row_count STRING,
+            extraction_timestamp STRING
+            )
+            PARTITIONED BY (extraction_timestamp)
+            LOCATION 's3://{output_bucket}/table_export_validation/'
+            TBLPROPERTIES (
+            'table_type' = 'ICEBERG',
+            'format' = 'parquet'
+            )
+            """
+        run_athena_query(create_query, db_name, workgroup="primary")
+        logger.info("Ensured Iceberg table_export_validation exists.")
+
+        columns_types = {
+            "schema_name": "string",
+            "table_name": "string",
+            "original_row_count": "bigint",
+            "exported_row_count": "string",
+            "extraction_timestamp": "string"
+        }
+
+        # 1. Write to a staging S3 location
+        wr.s3.to_parquet(
+            df=df,
+            path=f"s3://{output_bucket}/staging_table_export_validation/",
+            dataset=True,
+            mode="overwrite"
+        )
+
+        # 2. Create staging Glue table pointing to staging location (if not exists)
+        wr.catalog.create_parquet_table(
+            database=db_name,
+            table="staging_table_export_validation",
+            path=f"s3://{output_bucket}/staging_table_export_validation/",
+            columns_types=columns_types,
+            mode="overwrite"
+        )
+
+
+        # 3. Use Athena MERGE or INSERT
+        insert_query = f"""
+        INSERT INTO {db_name}.table_export_validation
+        SELECT * FROM {db_name}.staging_table_export_validation
+        """
+        run_athena_query(insert_query, db_name)
+
+        conn = pymssql.connect(
+            server=db_endpoint, user=db_username, password=db_password, database=db_name
+        )
 
         cursor = conn.cursor()
 
@@ -429,30 +520,6 @@ def handler(event, context):
                 cursor=cursor,
             )
 
-        s3_path = f"s3://{output_bucket}/{db_name}/table-stats/"
-        # Ensure partition column exists in DataFrame
-        if "extraction_timestamp" not in df.columns:
-            df["extraction_timestamp"] = extraction_timestamp
-
-        # Optional: ensure it’s string
-        df["extraction_timestamp"] = df["extraction_timestamp"].astype(str)
-
-        # Write to S3 partitioned by extraction_timestamp
-        try:
-            wr.s3.to_parquet(
-                df=df,
-                path=s3_path,
-                dataset=True,
-                mode="append",
-                database=db_name,
-                table="table_stats",
-                partition_cols=["extraction_timestamp"],
-                catalog_versioning=True,
-            )
-            logger.info("Table stats written to S3 and Glue successfully.")
-        except Exception as e:
-            logger.error("Failed to write to S3/Glue: %s", e)
-            raise
 
         chunks = []
         for full_table, pk_columns in pk_map.items():

@@ -78,17 +78,73 @@
           }
         }
       },
-      "Next": "Prepare Input for Delete",
-      "ResultPath": "$.ExportResults",
-      "Catch": [
+      "Next": "Export Validation Orchestrator",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${ExportValidationOrchestratorLambdaArn}",
+        "Payload.$": "$"
+      },
+      "Retry": [
         {
           "ErrorEquals": [
-            "States.ALL"
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
           ],
-          "ResultPath": null,
-          "Next": "Fail State"
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
         }
-      ]
+      ],
+      "Next": "RowCount Updater",
+      "ResultPath": "$.ScannerLambdaResult"
+    },
+    "RowCount Updater": {
+      "Type": "Map",
+      "ItemsPath": "$.ScannerLambdaResult.Payload.chunks",
+      "ItemSelector": {
+        "chunk": {
+          "table.$": "$$.Map.Item.Value.table",
+          "extraction_timestamp.$": "$.extraction_timestamp"
+        },
+        "db_name.$": "$.db_name",
+        "output_bucket.$": "$.output_bucket",
+      },
+       "MaxConcurrency": ${max_concurrency},
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "Invoke Export Processor",
+        "States": {
+          "Invoke Export Processor": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+              "FunctionName": "${ExportValidationRowCountUpdaterLambdaArn}",
+                "chunk.$": "$.chunk",
+              }
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "IntervalSeconds": 5,
+                "MaxAttempts": 3,
+                "BackoffRate": 1,
+                "JitterStrategy": "NONE"
+              }
+            ],
+            "End": true
+          }
+        }
+      },
+      "Next": "Prepare Input for Delete"
     },
     "Prepare Input for Delete": {
       "Type": "Pass",
@@ -106,7 +162,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync",
       "Parameters": {
-        "StateMachineArn": "${DatabaseDeleteStateMachineArn}",
+        "StateMachineArn": "arn:aws:states:eu-west-1:684969100054:stateMachine:planetfm-database-delete",
         "Input": {
           "db_endpoint.$": "$.db_endpoint",
           "db_name.$": "$.db_name",
