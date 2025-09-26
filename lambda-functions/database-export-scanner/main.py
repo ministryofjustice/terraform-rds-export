@@ -308,7 +308,7 @@ def create_glue_table(
     columns = [{"Name": cn, "Type": "string"} for cn, dt in cols]
     # columns = [{"Name": cn, "Type": map_sql_to_glue_type(dt)} for cn, dt in cols]
 
-    s3_path = f"s3://{bucket}/{db_name}/{schema}/{table}/"
+    s3_path = f"s3://{bucket}/{db_name}/{table}/"
     if database_refresh_mode == "incremental":
         table_input = {
             "Name": table,
