@@ -30,24 +30,63 @@
           "Next": "Fail State"
         }
       ],
-      "Next": "Export Data",
+      "Next": "Prepare Input for Export Validation",
       "ResultPath": "$.ScannerLambdaResult"
+    },
+    "Prepare Input for Export Validation": {
+      "Type": "Pass",
+      "Parameters": {
+        "original_input.$": "$",
+        "scanner_result.$": "$.ScannerLambdaResult"
+      },
+      "ResultPath": "$.ValidationInput",
+      "Next": "Export Validation Orchestrator"
+    },
+    "Export Validation Orchestrator": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${ExportValidationOrchestratorLambdaArn}",
+        "Payload.$": "$.ValidationInput.original_input"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "Fail State"
+        }
+      ],
+      "Next": "Export Data",
+      "ResultPath": "$.ExportValidationResult"
     },
     "Export Data": {
       "Type": "Map",
-      "ItemsPath": "$.ScannerLambdaResult.Payload.chunks",
+      "ItemsPath": "$.ValidationInput.scanner_result.Payload.chunks",
       "ItemSelector": {
         "chunk": {
           "table.$": "$$.Map.Item.Value.table",
           "query.$": "$$.Map.Item.Value.query",
           "database.$": "$$.Map.Item.Value.database",
-          "extraction_timestamp.$": "$.extraction_timestamp"
+          "extraction_timestamp.$": "$.ValidationInput.original_input.extraction_timestamp"
         },
-        "db_endpoint.$": "$.db_endpoint",
-        "db_username.$": "$.db_username",
-        "db_name.$": "$.db_name",
-        "output_bucket.$": "$.output_bucket",
-        "name.$": "$.name"
+        "db_endpoint.$": "$.ValidationInput.original_input.db_endpoint",
+        "db_username.$": "$.ValidationInput.original_input.db_username",
+        "db_name.$": "$.ValidationInput.original_input.db_name",
+        "output_bucket.$": "$.ValidationInput.original_input.output_bucket",
+        "name.$": "$.ValidationInput.original_input.name"
       },
       "MaxConcurrency": ${max_concurrency},
       "ItemProcessor": {
@@ -71,9 +110,7 @@
             },
             "Retry": [
               {
-                "ErrorEquals": [
-                  "States.ALL"
-                ],
+                "ErrorEquals": ["States.ALL"],
                 "IntervalSeconds": 5,
                 "MaxAttempts": 3,
                 "BackoffRate": 1,
@@ -84,42 +121,18 @@
           }
         }
       },
-      "Next": "Export Validation Orchestrator"
-    },
-    "Export Validation Orchestrator": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::lambda:invoke",
-      "Parameters": {
-        "FunctionName": "${ExportValidationOrchestratorLambdaArn}",
-        "Payload.$": "$"
-      },
-      "Retry": [
-        {
-          "ErrorEquals": [
-            "Lambda.ServiceException",
-            "Lambda.AWSLambdaException",
-            "Lambda.SdkClientException",
-            "Lambda.TooManyRequestsException"
-          ],
-          "IntervalSeconds": 1,
-          "MaxAttempts": 3,
-          "BackoffRate": 2,
-          "JitterStrategy": "FULL"
-        }
-      ],
-      "Next": "RowCount Updater",
-      "ResultPath": "$.ExportValidationResult"
+      "Next": "RowCount Updater"
     },
     "RowCount Updater": {
       "Type": "Map",
-      "ItemsPath": "$.ScannerLambdaResult.Payload.chunks",
+      "ItemsPath": "$.ValidationInput.scanner_result.Payload.chunks",
       "ItemSelector": {
         "chunk": {
           "table.$": "$$.Map.Item.Value.table",
-          "extraction_timestamp.$": "$.extraction_timestamp"
+          "extraction_timestamp.$": "$.ValidationInput.original_input.extraction_timestamp"
         },
-        "db_name.$": "$.db_name",
-        "output_bucket.$": "$.output_bucket"
+        "db_name.$": "$.ValidationInput.original_input.db_name",
+        "output_bucket.$": "$.ValidationInput.original_input.output_bucket"
       },
       "MaxConcurrency": ${max_concurrency},
       "ItemProcessor": {
@@ -138,9 +151,7 @@
             },
             "Retry": [
               {
-                "ErrorEquals": [
-                  "States.ALL"
-                ],
+                "ErrorEquals": ["States.ALL"],
                 "IntervalSeconds": 5,
                 "MaxAttempts": 3,
                 "BackoffRate": 1,
@@ -151,17 +162,23 @@
           }
         }
       },
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "Fail State"
+        }
+      ],
       "Next": "Prepare Input for Delete"
     },
     "Prepare Input for Delete": {
       "Type": "Pass",
       "Parameters": {
-        "db_endpoint.$": "$.db_endpoint",
-        "db_name.$": "$.db_name",
-        "output_bucket.$": "$.output_bucket",
-        "db_username.$": "$.db_username",
-        "name.$": "$.name",
-        "extraction_timestamp.$": "$.extraction_timestamp"
+        "db_endpoint.$": "$.ValidationInput.original_input.db_endpoint",
+        "db_name.$": "$.ValidationInput.original_input.db_name",
+        "output_bucket.$": "$.ValidationInput.original_input.output_bucket",
+        "db_username.$": "$.ValidationInput.original_input.db_username",
+        "name.$": "$.ValidationInput.original_input.name",
+        "extraction_timestamp.$": "$.ValidationInput.original_input.extraction_timestamp"
       },
       "Next": "call database-delete Step Functions"
     },
