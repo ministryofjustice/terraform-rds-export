@@ -40,7 +40,7 @@ def get_query_result(query_id):
     except (IndexError, KeyError):
         return "0"
 
-def lambda_handler(event, context):
+def handler(event, context):
     schema = event["db_name"]
     table = event["table_name"]
     extraction_timestamp = event["extraction_timestamp"]

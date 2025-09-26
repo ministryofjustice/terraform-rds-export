@@ -84,7 +84,7 @@
           }
         }
       },
-      "Next": "Export Validation Orchestrator"
+      "Next": "Export Validation Orchestrator",
       "ResultPath": "$.ScannerLambdaResult"
     },
     "Export Validation Orchestrator": {
