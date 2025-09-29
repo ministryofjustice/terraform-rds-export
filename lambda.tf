@@ -47,6 +47,7 @@ module "upload_checker" {
     NAME                  = var.name
     MAX_CONCURRENCY       = var.max_concurrency
     ENVIRONMENT           = var.environment
+    REGION                = "${data.aws_region.current.id}"
   }
 
   source_path = [{
@@ -169,6 +170,7 @@ module "database_restore" {
     UPLOADS_BUCKET         = module.s3-bucket-backup-uploads.bucket.id
     DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
     ENVIRONMENT            = var.environment
+    REGION                 = "${data.aws_region.current.id}"
   }
 
   source_path = [{
@@ -206,6 +208,7 @@ module "database_restore_status" {
   environment_variables = {
     DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
     ENVIRONMENT            = var.environment
+    REGION                 = "${data.aws_region.current.id}"
   }
 
   source_path = [{
@@ -245,6 +248,7 @@ module "database_export_scanner" {
     DATABASE_REFRESH_MODE    = var.database_refresh_mode
     OUTPUT_PARQUET_FILE_SIZE = var.output_parquet_file_size
     ENVIRONMENT              = var.environment
+    REGION                   = "${data.aws_region.current.id}"
   }
 
   source_path = [{
@@ -288,6 +292,7 @@ module "database_export_processor" {
     OUTPUT_BUCKET          = module.s3-bucket-parquet-exports.bucket.id
     DATABASE_REFRESH_MODE  = var.database_refresh_mode
     ENVIRONMENT            = var.environment
+    REGION                 = "${data.aws_region.current.id}"
   }
 
   source_path = [{
@@ -330,6 +335,7 @@ module "export_validation_rowcount_updater" {
     DATABASE_PW_SECRET_ARN   = data.aws_secretsmanager_secret_version.master_user_secret.arn
     DATABASE_REFRESH_MODE    = var.database_refresh_mode
     OUTPUT_PARQUET_FILE_SIZE = var.output_parquet_file_size
+    REGION                   = "${data.aws_region.current.id}"
   }
 
   source_path = [{

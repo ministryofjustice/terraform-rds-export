@@ -16,10 +16,10 @@ warnings.filterwarnings("ignore", message="pandas only supports SQLAlchemy conne
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-secretmanager = boto3.client("secretsmanager")
-glue = boto3.client("glue")
-s3 = boto3.client("s3")
-athena = boto3.client("athena")
+secretmanager = boto3.client("secretsmanager", region_name=os.environ["REGION"])
+glue = boto3.client("glue", region_name=os.environ["REGION"])
+s3 = boto3.client("s3", region_name=os.environ["REGION"])
+athena = boto3.client("athena", region_name=os.environ["REGION"])
 
 
 def run_athena_query(query, database, workgroup):

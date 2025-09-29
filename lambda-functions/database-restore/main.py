@@ -8,7 +8,7 @@ from datetime import datetime
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-secretmanager = boto3.client("secretsmanager")
+secretmanager = boto3.client("secretsmanager", region_name=os.environ["REGION"])
 
 
 def handler(event, context):
