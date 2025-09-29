@@ -10,7 +10,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # AWS clients
-secretmanager = boto3.client("secretsmanager", region_name=os.environ["REGION"])
+secretmanager = boto3.client("secretsmanager")
 
 
 def safe_decode(val):

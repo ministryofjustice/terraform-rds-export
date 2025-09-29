@@ -16,17 +16,19 @@ warnings.filterwarnings("ignore", message="pandas only supports SQLAlchemy conne
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-secretmanager = boto3.client("secretsmanager", region_name=os.environ["REGION"])
-glue = boto3.client("glue", region_name=os.environ["REGION"])
-s3 = boto3.client("s3", region_name=os.environ["REGION"])
-athena = boto3.client("athena", region_name=os.environ["REGION"])
+secretmanager = boto3.client("secretsmanager")
+glue = boto3.client("glue")
+s3 = boto3.client("s3")
+athena = boto3.client("athena")
 
 
-def run_athena_query(query, database, workgroup):
+def run_athena_query(query, database, bucket):
     response = athena.start_query_execution(
         QueryString=query,
         QueryExecutionContext={"Database": database},
-        WorkGroup=workgroup,
+        ResultConfiguration={
+            "OutputLocation": f"s3://{bucket}/athena-results/"
+        },
     )
     query_id = response["QueryExecutionId"]
 
@@ -449,7 +451,7 @@ def handler(event, context):
             'format' = 'parquet'
             )
             """
-        run_athena_query(create_query, db_name, workgroup="primary")
+        run_athena_query(create_query, db_name, output_bucket)
         logger.info("Ensured Iceberg table_export_validation exists.")
 
         columns_types = {
@@ -492,7 +494,7 @@ def handler(event, context):
             INSERT INTO "{db_name}".table_export_validation
             SELECT * FROM "{db_name}".{staging_table_name}
             """
-            run_athena_query(insert_query, db_name, workgroup="primary")
+            run_athena_query(insert_query, db_name, output_bucket)
 
             logger.info(f"Inserted batch {i+1} successfully")
 

@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 logger = logging.getLogger()
 logger.setLevel(os.getenv("LOG_LEVEL", "INFO"))
 
-stepfunctions = boto3.client("stepfunctions", region_name=os.environ["REGION"])
+stepfunctions = boto3.client("stepfunctions")
 state_machine_arn = os.environ["STATE_MACHINE_ARN"]
 
 

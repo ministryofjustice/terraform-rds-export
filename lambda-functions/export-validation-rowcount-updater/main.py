@@ -6,14 +6,16 @@ import time
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-athena = boto3.client("athena", region_name=os.environ["REGION"])
+athena = boto3.client("athena")
 
 
-def run_athena_query(query, database, workgroup):
+def run_athena_query(query, database, bucket):
     response = athena.start_query_execution(
         QueryString=query,
         QueryExecutionContext={"Database": database},
-        WorkGroup=workgroup,
+        ResultConfiguration={
+            "OutputLocation": f"s3://{bucket}/athena-results/"
+        },
     )
     query_id = response["QueryExecutionId"]
 
@@ -46,7 +48,7 @@ def handler(event, context):
     extraction_timestamp = chunk["extraction_timestamp"]
 
     stats_table = "table_export_validation"
-    workgroup = os.environ.get("ATHENA_WORKGROUP", "primary")
+    output_bucket = os.environ["OUTPUT_BUCKET"]
     refresh_mode = os.environ.get("DATABASE_REFRESH_MODE", "full")
 
     try:
@@ -63,7 +65,7 @@ def handler(event, context):
             '''
 
         logger.info("Running row count query:\n%s", count_query)
-        query_id = run_athena_query(count_query, db_name, workgroup)
+        query_id = run_athena_query(count_query, db_name, output_bucket)
         exported_row_count = get_query_result(query_id)
         logger.info(f"Got {exported_row_count} rows for {db_name}.{db_table} ({refresh_mode})")
 
@@ -74,7 +76,7 @@ def handler(event, context):
             ORDER BY extraction_timestamp DESC
             LIMIT 1
         '''
-        query_id = run_athena_query(check_query, db_name, workgroup)
+        query_id = run_athena_query(check_query, db_name, output_bucket)
         result = athena.get_query_results(QueryExecutionId=query_id)
 
         try:
@@ -88,7 +90,7 @@ def handler(event, context):
             WHERE table_name = '{db_table}'
             AND extraction_timestamp = '{extraction_timestamp}'
             '''
-        run_athena_query(delete_query, db_name, workgroup)
+        run_athena_query(delete_query, db_name, output_bucket)
 
         # 2. Insert updated row
         insert_query = f'''
@@ -99,7 +101,7 @@ def handler(event, context):
             {exported_row_count} AS exported_row_count,
             '{extraction_timestamp}' AS extraction_timestamp
         '''
-        run_athena_query(insert_query, db_name, workgroup)
+        run_athena_query(insert_query, db_name, output_bucket)
 
         return {
             "status": "success",
