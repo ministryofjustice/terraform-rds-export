@@ -1,15 +1,13 @@
 import os
 import logging
 import boto3
-import pandas as pd
-import awswrangler as wr
 import time
-from datetime import datetime
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 athena = boto3.client("athena")
+
 
 def run_athena_query(query, database, workgroup):
     response = athena.start_query_execution(
@@ -19,7 +17,6 @@ def run_athena_query(query, database, workgroup):
     )
     query_id = response["QueryExecutionId"]
 
-    # Wait for completion
     while True:
         status = athena.get_query_execution(QueryExecutionId=query_id)
         state = status["QueryExecution"]["Status"]["State"]
@@ -33,6 +30,7 @@ def run_athena_query(query, database, workgroup):
 
     return query_id
 
+
 def get_query_result(query_id):
     result = athena.get_query_results(QueryExecutionId=query_id)
     try:
@@ -40,50 +38,76 @@ def get_query_result(query_id):
     except (IndexError, KeyError):
         return "0"
 
+
 def handler(event, context):
-    schema = event["db_name"]
-    table = event["table_name"]
-    extraction_timestamp = event["extraction_timestamp"]
-    
+    chunk = event["chunk"]
+    db_name = chunk["database"]
+    db_table = chunk["table"]
+    extraction_timestamp = chunk["extraction_timestamp"]
+
     stats_table = "table_export_validation"
-    output_bucket = event["output_bucket"]
     workgroup = os.environ.get("ATHENA_WORKGROUP", "primary")
     refresh_mode = os.environ.get("DATABASE_REFRESH_MODE", "full")
 
     try:
-        # Build Athena query
         if refresh_mode == "incremental":
-            count_query = f"""
-                SELECT COUNT(*) AS row_count, {table} as table_name
-                FROM "{schema}"."{table}"
+            count_query = f'''
+                SELECT COUNT(*) AS row_count, '{db_table}' AS table_name
+                FROM "{db_name}"."{db_table}"
                 WHERE extraction_timestamp = '{extraction_timestamp}'
-            """
+            '''
         else:
-            count_query = f"""
-                SELECT COUNT(*) AS row_count, {table} as table_name
-                FROM "{schema}"."{table}"
-            """
+            count_query = f'''
+                SELECT COUNT(*) AS row_count, '{db_table}' AS table_name
+                FROM "{db_name}"."{db_table}"
+            '''
 
-        query_id = run_athena_query(count_query, schema, workgroup)
-        count = get_query_result(query_id)
-        logger.info(f"Got {count} rows for {schema}.{table} ({refresh_mode})")
+        logger.info("Running row count query:\n%s", count_query)
+        query_id = run_athena_query(count_query, db_name, workgroup)
+        exported_row_count = get_query_result(query_id)
+        logger.info(f"Got {exported_row_count} rows for {db_name}.{db_table} ({refresh_mode})")
 
-        merge_query = f"""
-        MERGE INTO {schema}.table_export_validation AS target
-        USING (
-            {count_query}
-        ) AS source
-        ON  target.table_name = source.table_name
-        WHEN MATCHED THEN UPDATE SET
-            exported_row_count = source.row_count
-        )
-        """
+        check_query = f'''
+            SELECT original_row_count
+            FROM "{db_name}".{stats_table}
+            WHERE table_name = '{db_table}'
+            ORDER BY extraction_timestamp DESC
+            LIMIT 1
+        '''
+        query_id = run_athena_query(check_query, db_name, workgroup)
+        result = athena.get_query_results(QueryExecutionId=query_id)
 
-        # Run the query
-        run_athena_query(merge_query, schema, workgroup)
+        try:
+            original_row_count = result["ResultSet"]["Rows"][1]["Data"][0]["VarCharValue"]
+        except (IndexError, KeyError):
+            original_row_count = "NULL"
 
-        return { "status": "success", "table": f"{schema}.{table}", "count": count }
+        # 1. Delete existing row if exists
+        delete_query = f'''
+            DELETE FROM {db_name}.{stats_table}
+            WHERE table_name = '{db_table}'
+            AND extraction_timestamp = '{extraction_timestamp}'
+            '''
+        run_athena_query(delete_query, db_name, workgroup)
+
+        # 2. Insert updated row
+        insert_query = f'''
+        INSERT INTO "{db_name}"."{stats_table}"
+        SELECT
+            '{db_table}' AS table_name,
+            {original_row_count} AS original_row_count,
+            {exported_row_count} AS exported_row_count,
+            '{extraction_timestamp}' AS extraction_timestamp
+        '''
+        run_athena_query(insert_query, db_name, workgroup)
+
+        return {
+            "status": "success",
+            "table": f"{db_name}.{db_table}",
+            "original_row_count": original_row_count,
+            "exported_row_count": exported_row_count,
+        }
 
     except Exception as e:
-        logger.error(f"Failed to update stats for {schema}.{table}: {str(e)}")
-        raise e
+        logger.error(f"Failed to update stats for {db_name}.{db_table}: {str(e)}")
+        raise

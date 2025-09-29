@@ -1,6 +1,7 @@
 import os
 import boto3
 import time
+import math
 import logging
 import pymssql
 import pandas as pd
@@ -21,40 +22,58 @@ s3 = boto3.client("s3")
 athena = boto3.client("athena")
 
 
-def run_athena_query(query, database, workgroup="primary"):
-    output_location = f"s3://planetfm-parquet-exports-sandbox-20250925115705994400000001/athena-query-results/"
-    
+def run_athena_query(query, database, workgroup):
     response = athena.start_query_execution(
         QueryString=query,
         QueryExecutionContext={"Database": database},
-        ResultConfiguration={"OutputLocation": output_location},
         WorkGroup=workgroup,
-        ClientRequestToken=str(uuid.uuid4())  # ensures idempotency
     )
-    
     query_id = response["QueryExecutionId"]
-    logger.info(f"Athena query started: {query_id}")
-    
+
     # Wait for completion
-    timeout_seconds = 60
-    poll_interval = 2
-    elapsed = 0
-    
-    while elapsed < timeout_seconds:
-        result = athena.get_query_execution(QueryExecutionId=query_id)
-        state = result["QueryExecution"]["Status"]["State"]
+    while True:
+        status = athena.get_query_execution(QueryExecutionId=query_id)
+        state = status["QueryExecution"]["Status"]["State"]
         if state in ["SUCCEEDED", "FAILED", "CANCELLED"]:
             break
-        time.sleep(poll_interval)
-        elapsed += poll_interval
+        time.sleep(2)
 
     if state != "SUCCEEDED":
-        reason = result["QueryExecution"]["Status"].get("StateChangeReason", "Unknown")
-        logger.error(f"Athena query failed: {state}, Reason: {reason}")
-        raise Exception(f"Athena query failed: {state}, Reason: {reason}")
-    
-    logger.info(f"Athena query succeeded: {query_id}")
+        reason = status["QueryExecution"]["Status"].get("StateChangeReason", "unknown")
+        raise Exception(f"Athena query failed: {state} - {reason}")
+
     return query_id
+
+def drop_table_and_data(database, table_name, bucket):
+    """
+    Deletes the Glue table entry and underlying S3 data for Iceberg tables.
+    Athena DROP TABLE is not reliable for Iceberg — must use Glue API.
+    """
+
+    # 1. Delete Glue table (not via Athena)
+    try:
+        glue.delete_table(DatabaseName=database, Name=table_name)
+        logger.info(f"Deleted Glue table: {database}.{table_name}")
+    except glue.exceptions.EntityNotFoundException:
+        logger.warning(f"Glue table not found: {database}.{table_name}")
+    except Exception as e:
+        logger.error(f"Failed to delete Glue table: {e}")
+        raise
+
+    # 2. Delete S3 objects in that location
+    logger.info(f"Deleting all S3 objects for: s3://{bucket}/{table_name}/")
+    paginator = s3.get_paginator("list_objects_v2")
+    pages = paginator.paginate(Bucket=bucket, Prefix=f"{table_name}/")
+
+    deleted_count = 0
+    for page in pages:
+        if "Contents" in page:
+            objects = [{"Key": obj["Key"]} for obj in page["Contents"]]
+            s3.delete_objects(Bucket=bucket, Delete={"Objects": objects})
+            deleted_count += len(objects)
+
+    logger.info(f"Deleted {deleted_count} objects from s3://{bucket}/{table_name}/")
+
 
 def get_all_primary_keys(cursor, schema="dbo"):
     """
@@ -387,10 +406,9 @@ def handler(event, context):
         )
         query = f"""
         SELECT
-            s.name AS schema_name,
             t.name AS table_name,
             p.rows AS original_row_count,
-            '' AS exported_row_count,
+            NULL AS exported_row_count,
             '{extraction_timestamp}' AS extraction_timestamp
         FROM sys.tables t
         JOIN sys.indexes i ON t.object_id = i.object_id
@@ -403,17 +421,28 @@ def handler(event, context):
 
         df = pd.read_sql_query(query, conn)
         logger.info("Table stats:\n%s", df.to_string(index=False))
+        
+        unique_tables = df['table_name'].unique()
+        batch_size = 90
+        num_batches = math.ceil(len(unique_tables) / batch_size)
+
+        # Drop staging and main validation database tables
+        for i in range(num_batches):
+            staging_table_name = f"staging_table_export_validation_batch_{i}"
+            drop_table_and_data(db_name, staging_table_name, output_bucket)
+            
+        drop_table_and_data(db_name, "staging_table_export_validation", output_bucket)
+        drop_table_and_data(db_name, "table_export_validation", output_bucket)
 
         # Log Table stats for all the database tables
         create_query = f"""
             CREATE TABLE IF NOT EXISTS {db_name}.table_export_validation (
-            schema_name STRING,
             table_name STRING,
             original_row_count BIGINT,
-            exported_row_count STRING,
+            exported_row_count BIGINT,
             extraction_timestamp STRING
             )
-            PARTITIONED BY (extraction_timestamp)
+            PARTITIONED BY (table_name)
             LOCATION 's3://{output_bucket}/table_export_validation/'
             TBLPROPERTIES (
             'table_type' = 'ICEBERG',
@@ -424,37 +453,49 @@ def handler(event, context):
         logger.info("Ensured Iceberg table_export_validation exists.")
 
         columns_types = {
-            "schema_name": "string",
             "table_name": "string",
             "original_row_count": "bigint",
-            "exported_row_count": "string",
-            "extraction_timestamp": "string"
+            "exported_row_count": "bigint",
+            "extraction_timestamp": "string",
         }
 
-        # 1. Write to a staging S3 location
-        wr.s3.to_parquet(
-            df=df,
-            path=f"s3://{output_bucket}/staging_table_export_validation/",
-            dataset=True,
-            mode="overwrite"
-        )
+        # 1. Extract unique table names and split into chunks
 
-        # 2. Create staging Glue table pointing to staging location (if not exists)
-        wr.catalog.create_parquet_table(
-            database=db_name,
-            table="staging_table_export_validation",
-            path=f"s3://{output_bucket}/staging_table_export_validation/",
-            columns_types=columns_types,
-            mode="overwrite"
-        )
+        for i in range(num_batches):
+            batch_tables = unique_tables[i * batch_size: (i + 1) * batch_size]
+            batch_df = df[df['table_name'].isin(batch_tables)]
 
+            staging_table_name = f"staging_table_export_validation_batch_{i}"
+            staging_path = f"s3://{output_bucket}/staging_table_export_validation/"
 
-        # 3. Use Athena MERGE or INSERT
-        insert_query = f"""
-        INSERT INTO {db_name}.table_export_validation
-        SELECT * FROM {db_name}.staging_table_export_validation
-        """
-        run_athena_query(insert_query, db_name)
+            logger.info(f"Processing batch {i+1}/{num_batches}: {len(batch_tables)} tables")
+
+            # 2. Write batch to S3
+            wr.s3.to_parquet(
+                df=batch_df,
+                path=staging_path,
+                dataset=True,
+                mode="overwrite"
+            )
+
+            # 3. Register as a Glue table
+            wr.catalog.create_parquet_table(
+                database=db_name,
+                table=staging_table_name,
+                path=staging_path,
+                columns_types=columns_types,
+                mode="overwrite"
+            )
+
+            # 4. Insert into Iceberg table using Athena
+            insert_query = f"""
+            INSERT INTO "{db_name}".table_export_validation
+            SELECT * FROM "{db_name}".{staging_table_name}
+            """
+            run_athena_query(insert_query, db_name, workgroup="primary")
+
+            logger.info(f"Inserted batch {i+1} successfully")
+
 
         conn = pymssql.connect(
             server=db_endpoint, user=db_username, password=db_password, database=db_name
@@ -519,7 +560,6 @@ def handler(event, context):
                 table_properties=table_prop,
                 cursor=cursor,
             )
-
 
         chunks = []
         for full_table, pk_columns in pk_map.items():

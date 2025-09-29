@@ -12,6 +12,7 @@ logger.setLevel(logging.INFO)
 # AWS clients
 secretmanager = boto3.client("secretsmanager")
 
+
 def safe_decode(val):
     """Attempt to decode bytes using CP1252, UTF-8, then Latin-1 as fallback."""
     if not isinstance(val, (bytes, bytearray)):
@@ -24,14 +25,16 @@ def safe_decode(val):
     logger.warning("Failed to decode bytes: %s", val.hex())
     return val.decode("cp1252", errors="replace")
 
+
 def get_secret_value(secret_arn: str) -> str:
     """Fetch secret string from Secrets Manager."""
     try:
         response = secretmanager.get_secret_value(SecretId=secret_arn)
         return response["SecretString"]
-    except Exception as e:
+    except Exception:
         logger.exception("Error fetching secret: %s", secret_arn)
         raise
+
 
 def decode_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Decode binary columns to string."""
@@ -44,12 +47,12 @@ def decode_columns(df: pd.DataFrame) -> pd.DataFrame:
             )
     return df
 
+
 def handler(event, context):
     # === Environment & Event Variables ===
     db_endpoint = event["db_endpoint"]
     db_username = event["db_username"]
     db_pw_secret_arn = os.environ["DATABASE_PW_SECRET_ARN"]
-    refresh_mode = os.environ.get("DATABASE_REFRESH_MODE", "incremental")
     output_bucket = event["output_bucket"]
 
     chunk = event["chunk"]
@@ -87,24 +90,20 @@ def handler(event, context):
 
     try:
         output_path = f"s3://{output_bucket}/{db_name}/{db_table}/"
-        logger.info(f"Writing to S3: {output_path} (partitioned by extraction_timestamp)")
+        logger.info(
+            f"Writing to S3: {output_path} (partitioned by extraction_timestamp)"
+        )
 
         wr.s3.to_parquet(
             df=df,
             path=output_path,
             dataset=True,
             mode="append",
-            partition_cols=["extraction_timestamp"]
+            partition_cols=["extraction_timestamp"],
         )
 
         logger.info(f"Data export completed: {db_name}.{db_table} ({len(df)} rows)")
-        return {
-            "status": "success",
-            "database": db_name,
-            "table": db_table,
-            "rows_exported": len(df),
-            "s3_output_path": output_path
-        }
+        return {"database": db_name, "table": db_table, "s3_output_path": output_path}
 
     except Exception as e:
         logger.exception(f"Failed to write to S3 for {db_name}.{db_table}: {e}")

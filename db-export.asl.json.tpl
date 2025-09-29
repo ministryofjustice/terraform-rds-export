@@ -26,7 +26,9 @@
       ],
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "Next": "Fail State"
         }
       ],
@@ -65,8 +67,10 @@
               "Payload": {
                 "chunk.$": "$.chunk",
                 "db_endpoint.$": "$.db_endpoint",
+                "db_name.$": "$.db_name",
                 "db_username.$": "$.db_username",
-                "output_bucket.$": "$.output_bucket"
+                "output_bucket.$": "$.output_bucket",
+                "name.$": "$.name"
               }
             },
             "Retry": [
@@ -84,32 +88,8 @@
           }
         }
       },
-      "Next": "Export Validation Orchestrator",
-      "ResultPath": "$.ScannerLambdaResult"
-    },
-    "Export Validation Orchestrator": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::lambda:invoke",
-      "Parameters": {
-        "FunctionName": "${ExportValidationOrchestratorLambdaArn}",
-        "Payload.$": "$"
-      },
-      "Retry": [
-        {
-          "ErrorEquals": [
-            "Lambda.ServiceException",
-            "Lambda.AWSLambdaException",
-            "Lambda.SdkClientException",
-            "Lambda.TooManyRequestsException"
-          ],
-          "IntervalSeconds": 1,
-          "MaxAttempts": 3,
-          "BackoffRate": 2,
-          "JitterStrategy": "FULL"
-        }
-      ],
       "Next": "RowCount Updater",
-      "ResultPath": "$"
+      "ResultPath": "$.ExportDataResult"
     },
     "RowCount Updater": {
       "Type": "Map",
@@ -117,25 +97,25 @@
       "ItemSelector": {
         "chunk": {
           "table.$": "$$.Map.Item.Value.table",
+          "database.$": "$$.Map.Item.Value.database",
           "extraction_timestamp.$": "$.extraction_timestamp"
-        },
-        "db_name.$": "$.db_name",
-        "output_bucket.$": "$.output_bucket"
+        }
       },
       "MaxConcurrency": ${max_concurrency},
       "ItemProcessor": {
         "ProcessorConfig": {
           "Mode": "INLINE"
         },
-        "StartAt": "Invoke Export Processor - RowCount",
+        "StartAt": "Invoke RowCount Updater",
         "States": {
-          "Invoke Export Processor - RowCount": {
+          "Invoke RowCount Updater": {
             "Type": "Task",
             "Resource": "arn:aws:states:::lambda:invoke",
-            "OutputPath": "$.Payload",
             "Parameters": {
-              "FunctionName": "${ExportValidationRowCountUpdaterLambdaArn}",
-              "chunk.$": "$.chunk"
+              "FunctionName": "${ExportValidationRowCountUpdaterLambdaArn}",  
+              "Payload": {
+                "chunk.$": "$.chunk"
+              }
             },
             "Retry": [
               {
@@ -148,21 +128,22 @@
                 "JitterStrategy": "NONE"
               }
             ],
-            "End": true
+            "End": true,
+            "OutputPath": "$.Payload"
           }
         }
       },
-      "Next": "Prepare Input for Delete"
+      "Next": "Prepare Input for Delete",
+      "ResultPath": null
     },
     "Prepare Input for Delete": {
       "Type": "Pass",
       "Parameters": {
         "db_endpoint.$": "$.db_endpoint",
         "db_name.$": "$.db_name",
-        "output_bucket.$": "$.output_bucket",
         "db_username.$": "$.db_username",
-        "name.$": "$.name",
-        "extraction_timestamp.$": "$.extraction_timestamp"
+        "output_bucket.$": "$.output_bucket",
+        "name.$": "$.name"
       },
       "Next": "call database-delete Step Functions"
     },
@@ -174,11 +155,9 @@
         "Input": {
           "db_endpoint.$": "$.db_endpoint",
           "db_name.$": "$.db_name",
-          "output_bucket.$": "$.output_bucket",
           "db_username.$": "$.db_username",
-          "name.$": "$.name",
-          "extraction_timestamp.$": "$.extraction_timestamp",
-          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+          "output_bucket.$": "$.output_bucket",
+          "name.$": "$.name"
         }
       },
       "Next": "Success State",
