@@ -23,15 +23,16 @@ resource "aws_sfn_state_machine" "db_export" {
   role_arn = aws_iam_role.state_machine.arn
 
   definition = templatefile("${path.module}/db-export.asl.json.tpl", {
-    DatabaseExportScannerLambdaArn   = module.database_export_scanner.lambda_function_arn
-    DatabaseExportProcessorLambdaArn = module.database_export_processor.lambda_function_arn
-    MasterUserPassword               = data.aws_secretsmanager_secret_version.master_user_secret.secret_string
-    ParameterGroupName               = resource.aws_db_parameter_group.database.name
-    OptionGroupName                  = resource.aws_db_option_group.database.name
-    VpcSecurityGroupIds              = [resource.aws_security_group.database.id]
-    DbSubnetGroupName                = resource.aws_db_subnet_group.database.name
-    DatabaseDeleteStateMachineArn    = resource.aws_sfn_state_machine.db_delete.arn
-    max_concurrency                  = var.max_concurrency
+    DatabaseExportScannerLambdaArn           = module.database_export_scanner.lambda_function_arn
+    DatabaseExportProcessorLambdaArn         = module.database_export_processor.lambda_function_arn
+    ExportValidationRowCountUpdaterLambdaArn = module.export_validation_rowcount_updater.lambda_function_arn
+    MasterUserPassword                       = data.aws_secretsmanager_secret_version.master_user_secret.secret_string
+    ParameterGroupName                       = resource.aws_db_parameter_group.database.name
+    OptionGroupName                          = resource.aws_db_option_group.database.name
+    VpcSecurityGroupIds                      = [resource.aws_security_group.database.id]
+    DbSubnetGroupName                        = resource.aws_db_subnet_group.database.name
+    DatabaseDeleteStateMachineArn            = resource.aws_sfn_state_machine.db_delete.arn
+    max_concurrency                          = var.max_concurrency
   })
 }
 

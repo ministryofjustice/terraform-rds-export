@@ -83,6 +83,19 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
 
   statement {
     actions = [
+      "athena:StartQueryExecution",
+      "athena:GetQueryExecution",
+      "athena:GetQueryResults",
+      "athena:GetWorkGroup",
+      "athena:GetDataCatalog",
+      "athena:ListDatabases",
+      "athena:ListTableMetadata"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    actions = [
       "s3:ListBucket"
     ]
     resources = [
@@ -283,6 +296,44 @@ module "database_export_processor" {
       "pip3.12 install --platform=manylinux2014_x86_64 --only-binary=:all: --no-compile --target=. -r requirements.txt",
       ":zip",
     ]
+  }]
+
+  layers = [
+    "arn:aws:lambda:${data.aws_region.current.id}:336392948345:layer:AWSSDKPandas-Python312:18"
+  ]
+
+  tags = var.tags
+}
+
+module "export_validation_rowcount_updater" {
+  # Commit hash for v7.20.1
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
+
+  function_name   = "${var.name}-export-validation-rowcount-updater"
+  description     = "Lambda to update export validation iceberg table"
+  handler         = "main.handler"
+  runtime         = "python3.12"
+  memory_size     = 2048
+  timeout         = 900
+  architectures   = ["x86_64"]
+  build_in_docker = false
+
+  # VPC Config - Lambda function needs to be in the same VPC as the RDS instance
+  vpc_subnet_ids         = var.database_subnet_ids
+  vpc_security_group_ids = [aws_security_group.database_restore.id]
+  attach_network_policy  = true
+
+  attach_policy_json = true
+  policy_json        = data.aws_iam_policy_document.data_restore_lambda_function.json
+
+  environment_variables = {
+    DATABASE_PW_SECRET_ARN   = data.aws_secretsmanager_secret_version.master_user_secret.arn
+    DATABASE_REFRESH_MODE    = var.database_refresh_mode
+    OUTPUT_PARQUET_FILE_SIZE = var.output_parquet_file_size
+  }
+
+  source_path = [{
+    path = "${path.module}/lambda-functions/export-validation-rowcount-updater/main.py"
   }]
 
   layers = [
