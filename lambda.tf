@@ -47,6 +47,7 @@ module "upload_checker" {
     NAME                  = var.name
     MAX_CONCURRENCY       = var.max_concurrency
     ENVIRONMENT           = var.environment
+    DB_NAME               = var.db_name
   }
 
   source_path = [{
@@ -102,7 +103,7 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
       module.s3-bucket-parquet-exports.bucket.arn
     ]
   }
-    statement {
+  statement {
     actions = [
       "s3:GetBucketLocation"
     ]

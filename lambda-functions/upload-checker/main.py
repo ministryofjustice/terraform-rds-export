@@ -17,14 +17,14 @@ def handler(event, context):
         bucket = record["s3"]["bucket"]["name"]
         key = record["s3"]["object"]["key"]
 
-        # S3 key should be in the format 'db_name/bak_file.bak'
+        # S3 key should be in the format 'name-environment/bak_file.bak'
         parts = key.strip("/").split("/")
         if len(parts) != 2:
-            error_msg = f"Invalid S3 key format: {key}. Expected 'db_name/file_key'."
+            error_msg = f"Invalid S3 key format: {key}. Expected 'name-environment/file_key'."
             logger.error(error_msg)
             raise ValueError(error_msg)
 
-        db_name = parts[0]
+        db_name = os.environ["DB_NAME"]
 
         logger.info(f"File uploaded: s3://{bucket}/{key}")
 
