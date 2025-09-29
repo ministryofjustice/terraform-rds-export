@@ -19,7 +19,7 @@ logger.setLevel(logging.INFO)
 secretmanager = boto3.client("secretsmanager")
 glue = boto3.client("glue")
 s3 = boto3.client("s3")
-athena = boto3.client("athena")
+athena = boto3.client("athena", region_name = os.environ["REGION"])
 
 
 def run_athena_query(query, database, bucket):
