@@ -6,7 +6,6 @@ variable "name" {
 variable "db_name" {
   description = "The name of the database. Used for Glue, Athena, and restore process in RDS. Only lowercase letters, numbers, and the underscore character"
   type        = string
-  default     = "ppud_dev"
 }
 
 variable "database_refresh_mode" {
