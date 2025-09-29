@@ -6,7 +6,7 @@ import time
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-athena = boto3.client("athena", region_name = os.environ["REGION"])
+athena = boto3.client("athena")
 
 
 def run_athena_query(query, database, bucket):

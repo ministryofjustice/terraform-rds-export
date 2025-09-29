@@ -102,7 +102,15 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
       module.s3-bucket-parquet-exports.bucket.arn
     ]
   }
-
+    statement {
+    actions = [
+      "s3:GetBucketLocation"
+    ]
+    resources = [
+      module.s3-bucket-parquet-exports.bucket.arn,
+      "${module.s3-bucket-parquet-exports.bucket.arn}/*"
+    ]
+  }
   statement {
     actions = [
       "s3:GetObject",
@@ -245,7 +253,6 @@ module "database_export_scanner" {
     DATABASE_REFRESH_MODE    = var.database_refresh_mode
     OUTPUT_PARQUET_FILE_SIZE = var.output_parquet_file_size
     ENVIRONMENT              = var.environment
-    REGION                   = "${data.aws_region.current.id}"
   }
 
   source_path = [{
@@ -332,7 +339,6 @@ module "export_validation_rowcount_updater" {
     DATABASE_REFRESH_MODE    = var.database_refresh_mode
     OUTPUT_PARQUET_FILE_SIZE = var.output_parquet_file_size
     OUTPUT_BUCKET            = module.s3-bucket-parquet-exports.bucket.id
-    REGION                   = "${data.aws_region.current.id}"
   }
 
   source_path = [{
