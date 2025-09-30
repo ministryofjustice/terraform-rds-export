@@ -144,6 +144,7 @@
         "db_username.$": "$.db_username",
         "output_bucket.$": "$.output_bucket",
         "name.$": "$.name",
+        "extraction_timestamp.$": "$.extraction_timestamp",
         "environment.$": "$.environment"
       },
       "Next": "call database-delete Step Functions"
