@@ -255,22 +255,16 @@ def delete_glue_table(
                     s3.delete_objects(Bucket=bucket, Delete={"Objects": objects})
                     deleted_files += len(objects)
 
-        else:
-            raise ValueError(
-                f"Invalid database_refresh_mode: '{database_refresh_mode}'"
-            )
-
-        logger.info(f"Deleted {deleted_files} objects from s3://{bucket}/{prefix}")
-
+            logger.info(f"Deleted {deleted_files} objects from s3://{bucket}/{prefix}")
+        
         # 3. Delete Glue table (only for full refresh)
-        if database_refresh_mode == "full":
             glue.delete_table(DatabaseName=glue_db, Name=table_name)
             logger.info(f"Deleted Glue table: {glue_db}.{table_name}")
 
-        return {
-            "status": "SUCCESS",
-            "message": f"{'Deleted table and ' if database_refresh_mode == 'full' else ''}Deleted {deleted_files} files from {s3_path}",
-        }
+            return {
+                "status": "SUCCESS",
+                "message": f"Deleted glue table and deleted {deleted_files} files from {s3_path}",
+            }
 
     except glue.exceptions.EntityNotFoundException:
         logger.warning(f"Table not found: {glue_db}.{table_name}")
@@ -524,7 +518,6 @@ def handler(event, context):
                 "extraction_timestamp_column_dtype": "string",
             }
             schema, table = full_table.split(".")
-            logger.info(f"Deleting glue table: {full_table}")
             delete_glue_table(
                 glue_db=db_name,
                 table_name=table,
