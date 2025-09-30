@@ -230,7 +230,6 @@ def delete_glue_table(
     glue_db: str,
     table_name: str,
     database_refresh_mode: str,
-    extraction_timestamp: str = None,
 ):
     try:
         # 1. Get Glue table location
@@ -249,26 +248,6 @@ def delete_glue_table(
             logger.info("Performing FULL refresh: deleting entire table S3 prefix")
             paginator = s3.get_paginator("list_objects_v2")
             pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
-
-            for page in pages:
-                if "Contents" in page:
-                    objects = [{"Key": obj["Key"]} for obj in page["Contents"]]
-                    s3.delete_objects(Bucket=bucket, Delete={"Objects": objects})
-                    deleted_files += len(objects)
-
-        elif database_refresh_mode == "incremental":
-            if not extraction_timestamp:
-                raise ValueError(
-                    "extraction_timestamp must be provided for incremental refresh."
-                )
-
-            partition_prefix = f"{prefix}/extraction_timestamp={extraction_timestamp}/"
-            logger.info(
-                f"Performing INCREMENTAL refresh: deleting partition folder {partition_prefix}"
-            )
-
-            paginator = s3.get_paginator("list_objects_v2")
-            pages = paginator.paginate(Bucket=bucket, Prefix=partition_prefix)
 
             for page in pages:
                 if "Contents" in page:
