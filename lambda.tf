@@ -318,7 +318,7 @@ module "export_validation_rowcount_updater" {
   # Commit hash for v7.20.1
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
 
-  function_name   = "${var.name}-export-validation-rowcount-updater"
+  function_name   = "${var.name}-${var.environment}-export-validation-rowcount-updater"
   description     = "Lambda to update export validation iceberg table"
   handler         = "main.handler"
   runtime         = "python3.12"
