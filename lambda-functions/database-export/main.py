@@ -115,6 +115,8 @@ def handler(event, context):
         wr.s3.to_parquet(
             df=df,
             path=output_path,
+            database=db_name,
+            table=db_table,
             dataset=True,
             mode="append",
             partition_cols=["extraction_timestamp"],
