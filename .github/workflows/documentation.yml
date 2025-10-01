@@ -8,12 +8,12 @@ on:
 permissions:
   contents: read
 
-
 jobs:
   docs:
     permissions:
       pull-requests: write
       contents: write
+    if: ${{ github.event.format-code.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
