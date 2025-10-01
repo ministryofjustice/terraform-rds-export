@@ -1,3 +1,13 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+  }
+  required_version = "~> 1.5"
+}
+
 module "rds_export" {
   #checkov:skip=CKV_TF_1,CKV_TF_2: Use commit hash in production
   source = "github.com/ministryofjustice/terraform-rds-export?ref=<commit-hash>"
