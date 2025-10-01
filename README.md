@@ -41,6 +41,7 @@ tags = {
   is-production    = "False"
   owner            = "Data Engineering: DataEngineering-gg@justice.gov.uk"
   source-code      = "https://github.com/ministryofjustice/analytical-platform/tree/main/terraform/aws/analytical-platform-data-engineering-production/ppud-dev"
+  test = "test"
 }
 }
 ```
