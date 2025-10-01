@@ -68,6 +68,7 @@ def handler(event, context):
     db_username = event["db_username"]
     db_pw_secret_arn = os.environ["DATABASE_PW_SECRET_ARN"]
     output_bucket = event["output_bucket"]
+    database_refresh_mode = os.environ["DATABASE_REFRESH_MODE"]
 
     chunk = event["chunk"]
     db_name = chunk["database"]
@@ -109,7 +110,8 @@ def handler(event, context):
     try:
         output_path = f"s3://{output_bucket}/{db_name}/{db_table}/"
         logger.info(
-            f"Writing to S3: {output_path} (partitioned by extraction_timestamp)"
+            f"Writing to S3: {output_path}"
+            f"{' partitioned by extraction_timestamp' if database_refresh_mode == 'incremental' else ''}"
         )
 
         wr.s3.to_parquet(
@@ -119,7 +121,11 @@ def handler(event, context):
             table=db_table,
             dataset=True,
             mode="append",
-            partition_cols=["extraction_timestamp"],
+            partition_cols=(
+                ["extraction_timestamp"]
+                if database_refresh_mode == "incremental"
+                else None
+            )
         )
 
         logger.info(f"Data export completed: {db_name}.{db_table} ({len(df)} rows)")
