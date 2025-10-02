@@ -21,4 +21,6 @@ jobs:
         uses: ministryofjustice/modernisation-platform-github-actions/format-code@e3ccf33927794ce5350b9211e288ad84e69365a8 # v3.4.4
         with:
           ignore_files: "README.md"
+          apply_fixes: "all"
+          apply_fixes_event: pull_request
           apply_fixes_mode: "commit"
