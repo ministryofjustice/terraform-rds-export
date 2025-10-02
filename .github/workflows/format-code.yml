@@ -22,4 +22,3 @@ jobs:
         with:
           ignore_files: "README.md"
           apply_fixes_mode: "commit"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
