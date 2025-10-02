@@ -20,7 +20,9 @@ def handler(event, context):
         # S3 key should be in the format 'name-environment/bak_file.bak'
         parts = key.strip("/").split("/")
         if len(parts) != 2:
-            error_msg = f"Invalid S3 key format: {key}. Expected 'name-environment/file_key'."
+            error_msg = (
+                f"Invalid S3 key format: {key}. Expected 'name-environment/file_key'."
+            )
             logger.error(error_msg)
             raise ValueError(error_msg)
 
@@ -37,7 +39,7 @@ def handler(event, context):
             "extraction_timestamp": extraction_timestamp,
             "output_bucket": os.environ["OUTPUT_BUCKET"],
             "name": os.environ["NAME"],
-            "environment": os.environ["ENVIRONMENT"]
+            "environment": os.environ["ENVIRONMENT"],
         }
 
         # Start Step Function with file info

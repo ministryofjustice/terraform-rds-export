@@ -26,9 +26,7 @@ def run_athena_query(query, database, bucket):
     response = athena.start_query_execution(
         QueryString=query,
         QueryExecutionContext={"Database": database},
-        ResultConfiguration={
-            "OutputLocation": f"s3://{bucket}/athena-results/"
-        },
+        ResultConfiguration={"OutputLocation": f"s3://{bucket}/athena-results/"},
     )
     query_id = response["QueryExecutionId"]
 
@@ -45,6 +43,7 @@ def run_athena_query(query, database, bucket):
         raise Exception(f"Athena query failed: {state} - {reason}")
 
     return query_id
+
 
 def drop_table_and_data(database, table_name, bucket):
     """
@@ -256,8 +255,8 @@ def delete_glue_table(
                     deleted_files += len(objects)
 
             logger.info(f"Deleted {deleted_files} objects from s3://{bucket}/{prefix}")
-        
-        # 3. Delete Glue table (only for full refresh)
+
+            # 3. Delete Glue table (only for full refresh)
             glue.delete_table(DatabaseName=glue_db, Name=table_name)
             logger.info(f"Deleted Glue table: {glue_db}.{table_name}")
 
@@ -396,8 +395,8 @@ def handler(event, context):
 
         df = pd.read_sql_query(query, conn)
         logger.info("Table stats:\n%s", df.to_string(index=False))
-        
-        unique_tables = df['table_name'].unique()
+
+        unique_tables = df["table_name"].unique()
         batch_size = 90
         num_batches = math.ceil(len(unique_tables) / batch_size)
 
@@ -405,7 +404,7 @@ def handler(event, context):
         for i in range(num_batches):
             staging_table_name = f"staging_table_export_validation_batch_{i}"
             drop_table_and_data(db_name, staging_table_name, output_bucket)
-            
+
         drop_table_and_data(db_name, "staging_table_export_validation", output_bucket)
         drop_table_and_data(db_name, "table_export_validation", output_bucket)
 
@@ -437,20 +436,19 @@ def handler(event, context):
         # 1. Extract unique table names and split into chunks
 
         for i in range(num_batches):
-            batch_tables = unique_tables[i * batch_size: (i + 1) * batch_size]
-            batch_df = df[df['table_name'].isin(batch_tables)]
+            batch_tables = unique_tables[i * batch_size : (i + 1) * batch_size]
+            batch_df = df[df["table_name"].isin(batch_tables)]
 
             staging_table_name = f"staging_table_export_validation_batch_{i}"
             staging_path = f"s3://{output_bucket}/staging_table_export_validation/"
 
-            logger.info(f"Processing batch {i+1}/{num_batches}: {len(batch_tables)} tables")
+            logger.info(
+                f"Processing batch {i+1}/{num_batches}: {len(batch_tables)} tables"
+            )
 
             # 2. Write batch to S3
             wr.s3.to_parquet(
-                df=batch_df,
-                path=staging_path,
-                dataset=True,
-                mode="overwrite"
+                df=batch_df, path=staging_path, dataset=True, mode="overwrite"
             )
 
             # 3. Register as a Glue table
@@ -459,7 +457,7 @@ def handler(event, context):
                 table=staging_table_name,
                 path=staging_path,
                 columns_types=columns_types,
-                mode="overwrite"
+                mode="overwrite",
             )
 
             # 4. Insert into Iceberg table using Athena
@@ -470,7 +468,6 @@ def handler(event, context):
             run_athena_query(insert_query, db_name, output_bucket)
 
             logger.info(f"Inserted batch {i+1} successfully")
-
 
         conn = pymssql.connect(
             server=db_endpoint, user=db_username, password=db_password, database=db_name

@@ -25,6 +25,7 @@ def safe_decode(val):
     logger.warning("Failed to decode bytes: %s", val.hex())
     return val.decode("cp1252", errors="replace")
 
+
 def get_rowversion_cols(conn, table, schema="dbo"):
     """Return a set of colum names that are rowversion/timestamp for a given table."""
     sql = """
@@ -37,6 +38,7 @@ def get_rowversion_cols(conn, table, schema="dbo"):
     with conn.cursor() as cur:
         cur.execute(sql, (schema, table))
         return {row[0] for row in cur.fetchall()}
+
 
 def get_secret_value(secret_arn: str) -> str:
     """Fetch secret string from Secrets Manager."""
@@ -94,10 +96,12 @@ def handler(event, context):
     except Exception as e:
         logger.exception(f"Failed to fetch data from SQL Server: {e}")
         raise
-    
-    # === Get rowversion and timestamp data type columns ===        
+
+    # === Get rowversion and timestamp data type columns ===
     row_version_cols = get_rowversion_cols(conn, table=db_table, schema="dbo")
-    logger.info(f"Columns with datatype 'timestamp' or 'rowversion' for {db_table}: {row_version_cols}")
+    logger.info(
+        f"Columns with datatype 'timestamp' or 'rowversion' for {db_table}: {row_version_cols}"
+    )
 
     # === Decode and Clean Data ===
     try:
@@ -125,7 +129,7 @@ def handler(event, context):
                 ["extraction_timestamp"]
                 if database_refresh_mode == "incremental"
                 else None
-            )
+            ),
         )
 
         logger.info(f"Data export completed: {db_name}.{db_table} ({len(df)} rows)")
