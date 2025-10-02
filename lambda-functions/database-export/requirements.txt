@@ -1,0 +1,2 @@
+SQLAlchemy==2.0.39
+pymssql==2.3.2

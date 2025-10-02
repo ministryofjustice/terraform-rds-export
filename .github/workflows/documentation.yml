@@ -1,0 +1,35 @@
+name: Generate Terraform README docs
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  docs:
+    permissions:
+      pull-requests: write
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        ref: ${{ github.event.pull_request.head.ref }}
+
+    - name: Render terraform docs and push changes back to PR
+      uses: terraform-docs/gh-actions@6de6da0cefcc6b4b7a5cbea4d79d97060733093c # v1.4.1
+      with:
+        working-dir: .
+        output-file: README.md
+        output-method: inject
+        git-push: "false"
+
+    - name: Fix Git permissions
+      run: sudo chown -R $(whoami) .git/
+
+    - name: Run Signed Commit Action
+      uses: ministryofjustice/modernisation-platform-github-actions/signed-commit@e3ccf33927794ce5350b9211e288ad84e69365a8 # v3.4.4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
