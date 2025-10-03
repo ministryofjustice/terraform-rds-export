@@ -89,7 +89,7 @@
         }
       },
       "Next": "RowCount Updater",
-      "InputPath": "$.ScannerLambdaResult"
+      "OutputPath": "$.ScannerLambdaResult"
     },
     "RowCount Updater": {
       "Type": "Map",
