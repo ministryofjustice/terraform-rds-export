@@ -89,7 +89,7 @@
         }
       },
       "Next": "RowCount Updater",
-      "ResultPath": "$.ExportDataResult"
+      "ResultPath": "$"
     },
     "RowCount Updater": {
       "Type": "Map",
