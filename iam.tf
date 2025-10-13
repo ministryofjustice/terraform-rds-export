@@ -51,7 +51,7 @@ resource "aws_iam_role_policy" "state_machine" {
           module.database_export_scanner.lambda_function_arn,
           module.database_export_processor.lambda_function_arn,
           module.export_validation_rowcount_updater.lambda_function_arn,
-          module.transform_ouput.lambda_function_arn
+          module.transform_output.lambda_function_arn
         ]
       },
       {
