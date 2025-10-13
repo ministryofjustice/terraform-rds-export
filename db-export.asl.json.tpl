@@ -98,7 +98,7 @@
         "FunctionName": "${TransformOutputLambdaArn}",
         "Payload": {
           "name.$": "$.name",
-          "environment.$": "$.environment"
+          "environment.$": "$.environment",
           "chunks.$": "$.ScannerLambdaResult.Payload.chunks"
         }
       "Retry": [
