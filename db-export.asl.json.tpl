@@ -99,8 +99,9 @@
         "Payload": {
           "name.$": "$.name",
           "environment.$": "$.environment",
+          "extraction_timestamp.$": "$.extraction_timestamp",
           "chunks.$": "$.ScannerLambdaResult.Payload.chunks"
-        }
+        },
       "Retry": [
         {
           "ErrorEquals": [
@@ -125,7 +126,7 @@
         "chunk": {
           "table.$": "$$.Map.Item.Value.table",
           "database.$": "$$.Map.Item.Value.database",
-          "extraction_timestamp.$": "$.extraction_timestamp"
+          "extraction_timestamp.$": "$.Payload.extraction_timestamp"
         }
       },
       "MaxConcurrency": ${max_concurrency},
@@ -166,8 +167,8 @@
     "Prepare Input for Delete": {
       "Type": "Pass",
       "Parameters": {
-        "name.$": "$.name",
-        "environment.$": "$.environment"
+        "name.$": "$.Payload.name",
+        "environment.$": "$.Payload.environment"
       },
       "Next": "call database-delete Step Functions"
     },
