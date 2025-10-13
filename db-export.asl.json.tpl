@@ -91,7 +91,7 @@
       "Next": "Transform Output",
       "ResultPath": null
     },
-    "Transform Output":{
+    "Transform Output": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
@@ -101,7 +101,8 @@
           "environment.$": "$.environment",
           "extraction_timestamp.$": "$.extraction_timestamp",
           "chunks.$": "$.ScannerLambdaResult.Payload.chunks"
-        },
+        }
+      },
       "Retry": [
         {
           "ErrorEquals": [
