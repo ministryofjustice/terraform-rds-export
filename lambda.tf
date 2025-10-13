@@ -372,8 +372,8 @@ module "transform_output" {
   attach_network_policy  = true
 
   environment_variables = {
-    NAME                  = var.name
-    ENVIRONMENT           = var.environment
+    NAME        = var.name
+    ENVIRONMENT = var.environment
   }
 
   source_path = [{
