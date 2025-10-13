@@ -88,12 +88,39 @@
           }
         }
       },
-      "Next": "RowCount Updater",
+      "Next": "Transform Output",
       "ResultPath": null
+    },
+    "Transform Output":{
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${TransformOutputLambdaArn}",
+        "Payload": {
+          "name.$": "$.name",
+          "environment.$": "$.environment"
+          "chunks.$": "$.ScannerLambdaResult.Payload.chunks"
+        }
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 3,
+          "BackoffRate": 1,
+          "JitterStrategy": "NONE"
+        }
+      ],
+      "Next": "RowCount Updater",
+      "ResultSelector": {
+        "Payload.$": "$.Payload"
+      },
+      "ResultPath": "$"
     },
     "RowCount Updater": {
       "Type": "Map",
-      "ItemsPath": "$.ScannerLambdaResult.Payload.chunks",
+      "ItemsPath": "$.Payload.tables",
       "ItemSelector": {
         "chunk": {
           "table.$": "$$.Map.Item.Value.table",
@@ -139,12 +166,7 @@
     "Prepare Input for Delete": {
       "Type": "Pass",
       "Parameters": {
-        "db_endpoint.$": "$.db_endpoint",
-        "db_name.$": "$.db_name",
-        "db_username.$": "$.db_username",
-        "output_bucket.$": "$.output_bucket",
         "name.$": "$.name",
-        "extraction_timestamp.$": "$.extraction_timestamp",
         "environment.$": "$.environment"
       },
       "Next": "call database-delete Step Functions"
@@ -155,13 +177,7 @@
       "Parameters": {
         "StateMachineArn": "${DatabaseDeleteStateMachineArn}",
         "Input": {
-          "db_endpoint.$": "$.db_endpoint",
-          "db_name.$": "$.db_name",
-          "db_username.$": "$.db_username",
-          "output_bucket.$": "$.output_bucket",
           "name.$": "$.name",
-          "extraction_timestamp.$": "$.extraction_timestamp",
-          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id",
           "environment.$": "$.environment"
         }
       },
