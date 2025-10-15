@@ -6,8 +6,14 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:deleteDBInstance",
       "Parameters": {
-        "DbInstanceIdentifier.$": "States.Format('{}-{}-sql-server-backup-export',$.name, $.environment)",
+        "DbInstanceIdentifier.$": "$.DescribeDBResult.DbInstanceIdentifier",
         "SkipFinalSnapshot": true
+      },
+      "ResultSelector": {
+        "DbInstanceIdentifier.$": "$.DbInstance.DbInstanceIdentifier",
+        "DbInstanceArn.$": "$.DbInstance.DbInstanceArn",
+        "DbInstanceStatus.$": "$.DbInstance.DbInstanceStatus",
+        "Vpc.$": "$.DbInstance.DbSubnetGroup.VpcId"
       },
       "ResultPath": "$.DeleteDBInstance",
       "Next": "Wait For Delete DB Instance",
@@ -17,7 +23,7 @@
             "Rds.DbInstanceNotFoundException"
           ],
           "Next": "Success State",
-          "ResultPath": null
+          "ResultPath": "$.error"
         }
       ]
     },
@@ -30,7 +36,12 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
       "Parameters": {
-        "DbInstanceIdentifier.$": "States.Format('{}-{}-sql-server-backup-export',$.name, $.environment)"
+        "DbInstanceIdentifier.$": "$.DescribeDBResult.DbInstanceIdentifier"
+      },
+      "ResultSelector": {
+        "DbInstanceStatus.$": "$.DbInstances[0].DbInstanceStatus",
+        "DbInstanceIdentifier.$": "$.DbInstances[0].DbInstanceIdentifier",
+        "DbInstanceArn.$": "$.DbInstances[0].DbInstanceArn"
       },
       "ResultPath": "$.DescribeDBDeleteResult",
       "Catch": [
@@ -39,7 +50,7 @@
             "Rds.DbInstanceNotFoundException"
           ],
           "Next": "Success State",
-          "ResultPath": null
+          "ResultPath": "$.error"
         }
       ],
       "Next": "Choice End State"
@@ -48,7 +59,7 @@
       "Type": "Choice",
       "Choices": [
         {
-          "Variable": "$.DescribeDBDeleteResult.DbInstances[0].DbInstanceStatus",
+          "Variable": "$.DescribeDBDeleteResult.DbInstanceStatus",
           "StringEquals": "deleting",
           "Next": "Wait For Delete DB Instance"
         }

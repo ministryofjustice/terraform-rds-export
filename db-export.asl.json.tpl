@@ -29,15 +29,19 @@
           "ErrorEquals": [
             "States.ALL"
           ],
+          "ResultPath": "$.error",
           "Next": "Fail State"
         }
       ],
       "Next": "Export Data",
-      "ResultPath": "$.ScannerLambdaResult"
+      "ResultSelector": {
+        "Payload.$": "$.Payload"
+      }
+      "ResultPath": "$.LambdaResult"
     },
     "Export Data": {
       "Type": "Map",
-      "ItemsPath": "$.ScannerLambdaResult.Payload.chunks",
+      "ItemsPath": "$.LambdaResult.Payload.chunks",
       "ItemSelector": {
         "chunk": {
           "table.$": "$$.Map.Item.Value.table",
@@ -89,7 +93,7 @@
         }
       },
       "Next": "Transform Output",
-      "ResultPath": null
+      "ResultPath": "$.LambdaResult"
     },
     "Transform Output": {
       "Type": "Task",
@@ -97,10 +101,7 @@
       "Parameters": {
         "FunctionName": "${TransformOutputLambdaArn}",
         "Payload": {
-          "name.$": "$.name",
-          "environment.$": "$.environment",
-          "extraction_timestamp.$": "$.extraction_timestamp",
-          "chunks.$": "$.ScannerLambdaResult.Payload.chunks"
+          "chunks.$": "$.LambdaResult"
         }
       },
       "Retry": [
@@ -118,7 +119,7 @@
       "ResultSelector": {
         "Payload.$": "$.Payload"
       },
-      "ResultPath": "$"
+      "ResultPath": "$.LambdaResult"
     },
     "RowCount Updater": {
       "Type": "Map",
@@ -127,7 +128,7 @@
         "chunk": {
           "table.$": "$$.Map.Item.Value.table",
           "database.$": "$$.Map.Item.Value.database",
-          "extraction_timestamp.$": "$.Payload.extraction_timestamp"
+          "extraction_timestamp.$": "$.extraction_timestamp"
         }
       },
       "MaxConcurrency": ${max_concurrency},
@@ -163,13 +164,12 @@
         }
       },
       "Next": "Prepare Input for Delete",
-      "ResultPath": null
+      "ResultPath": "$.LambdaResult"
     },
     "Prepare Input for Delete": {
       "Type": "Pass",
       "Parameters": {
-        "name.$": "$.Payload.name",
-        "environment.$": "$.Payload.environment"
+        "DbInstanceIdentifier.$": "$.DescribeDBResult.DbInstanceIdentifier"
       },
       "Next": "call database-delete Step Functions"
     },
@@ -179,8 +179,7 @@
       "Parameters": {
         "StateMachineArn": "${DatabaseDeleteStateMachineArn}",
         "Input": {
-          "name.$": "$.name",
-          "environment.$": "$.environment"
+          "DbInstanceIdentifier.$": "$.DescribeDBResult.DbInstanceIdentifier"
         }
       },
       "Next": "Success State",

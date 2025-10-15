@@ -1,6 +1,7 @@
 {
   "Comment": "Creates a RDS DB Instance to restore a .bak file, and triggers a state machine to export the data.",
   "StartAt": "Delete DB Instance If Exists",
+  "TimeoutSeconds": 7200,
   "States": {
     "Delete DB Instance If Exists": {
       "Type": "Task",
@@ -78,7 +79,11 @@
         "DbInstanceIdentifier.$": "$.DbInstance.DbInstanceIdentifier",
         "DbInstanceArn.$": "$.DbInstance.DbInstanceArn",
         "DbInstanceStatus.$": "$.DbInstance.DbInstanceStatus",
-        "Vpc.$": "$.DbInstance.DbSubnetGroup.VpcId"
+        "Vpc.$": "$.DbInstance.DbSubnetGroup.VpcId",
+        "Engine.$": "$.DbInstance.Engine",
+        "EngineVersion.$": "$.DbInstance.EngineVersion",
+        "DbInstanceClass.$": "$.DbInstance.DbInstanceClass",
+        "AllocatedStorage.$": "$.DbInstance.AllocatedStorage"
       },
       "ResultPath": "$.CreateDBResult",
       "Catch": [
@@ -203,7 +208,8 @@
         "db_username.$": "$.DescribeDBResult.DbUsername",
         "tables_to_export": [],
         "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id",
-        "environment.$": "$.environment"
+        "environment.$": "$.environment",
+        "DbInstanceIdentifier.$": "$.DescribeDBResult.DbInstanceIdentifier"
       },
       "Next": "call database-export Step Functions"
     },
@@ -229,6 +235,5 @@
     "Success State": {
       "Type": "Succeed"
     }
-  },
-  "TimeoutSeconds": 7200
+  }
 }
