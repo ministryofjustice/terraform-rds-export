@@ -36,7 +36,7 @@
       "Next": "Export Data",
       "ResultSelector": {
         "Payload.$": "$.Payload"
-      }
+      },
       "ResultPath": "$.LambdaResult"
     },
     "Export Data": {
