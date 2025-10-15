@@ -1,5 +1,5 @@
 variable "name" {
-  description = "The name of the project"
+  description = "The name of the project. Combined with the environment (<name>-<evironment>) to create the RDS DB instance identifier."
   type        = string
 }
 

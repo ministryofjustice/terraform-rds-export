@@ -371,11 +371,6 @@ module "transform_output" {
   vpc_security_group_ids = [aws_security_group.database_restore.id]
   attach_network_policy  = true
 
-  environment_variables = {
-    NAME        = var.name
-    ENVIRONMENT = var.environment
-  }
-
   source_path = [{
     path = "${path.module}/lambda-functions/transform-output/main.py"
   }]
