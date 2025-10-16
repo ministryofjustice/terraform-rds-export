@@ -24,7 +24,7 @@
             "Rds.DbInstanceNotFoundException"
           ],
           "Next": "Create DB Instance",
-          "ResultPath": "$.error"
+          "ResultPath": "$.DBDeleteResult"
         }
       ]
     },
@@ -49,7 +49,7 @@
             "Rds.DbInstanceNotFoundException"
           ],
           "Next": "Create DB Instance",
-          "ResultPath": "$.error"
+          "ResultPath": "$.DescribeDBDeleteResult"
         }
       ],
       "Next": "Wait For Delete DB"
@@ -109,11 +109,7 @@
         "DbInstanceIdentifier.$": "$.CreateDBResult.DbInstanceIdentifier"
       },
       "ResultSelector": {
-        "DbInstanceStatus.$": "$.DbInstances[0].DbInstanceStatus",
-        "DbInstanceIdentifier.$": "$.DbInstances[0].DbInstanceIdentifier",
-        "DbInstanceArn.$": "$.DbInstances[0].DbInstanceArn",
-        "DbEndpoint.$": "$.DbInstances[0].Endpoint.Address",
-        "DbUsername.$": "$.DbInstances[0].MasterUsername"
+        "DbInstanceDetails.$": "$.DbInstances[0]
       },
       "ResultPath": "$.DescribeDBResult",
       "Next": "Choice Start Restore"
@@ -123,7 +119,7 @@
       "Choices": [
         {
           "Not": {
-            "Variable": "$.DescribeDBResult.DbInstanceStatus",
+            "Variable": "$.DescribeDBResult.DbInstanceDetails.DbInstanceStatus",
             "StringEquals": "available"
           },
           "Next": "Wait For DB Instance"
@@ -154,8 +150,8 @@
         "Payload": {
           "task_id.$": "$.DatabaseRestoreLambdaResult.task_id",
           "db_name.$": "$.DatabaseRestoreLambdaResult.db_name",
-          "db_endpoint.$": "$.DescribeDBResult.DbEndpoint",
-          "db_username.$": "$.DescribeDBResult.DbUsername"
+          "db_endpoint.$": "$.DescribeDBResult.DbInstanceDetails.Endpoint.Address",
+          "db_username.$": "$.DescribeDBResult.DbInstanceDetails.MasterUsername"
         }
       },
       "Retry": [
@@ -204,12 +200,12 @@
         "extraction_timestamp.$": "$.extraction_timestamp",
         "output_bucket.$": "$.output_bucket",
         "name.$": "$.name",
-        "db_endpoint.$": "$.DescribeDBResult.DbEndpoint",
-        "db_username.$": "$.DescribeDBResult.DbUsername",
+        "db_endpoint.$": "$.DescribeDBResult.DbInstanceDetails.Endpoint.Address",
+        "db_username.$": "$.DescribeDBResult.DbInstanceDetails.MasterUsername",
         "tables_to_export": [],
         "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id",
         "environment.$": "$.environment",
-        "DbInstanceIdentifier.$": "$.DescribeDBResult.DbInstanceIdentifier"
+        "DbInstanceIdentifier.$": "$.CreateDBResult.DbInstanceIdentifier"
       },
       "Next": "call database-export Step Functions"
     },

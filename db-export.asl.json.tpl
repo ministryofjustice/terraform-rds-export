@@ -1,5 +1,5 @@
 {
-  "Comment": "Exports data to S3 and deletes the RDS DB instance after.",
+  "Comment": "Creates metadata in Glue and exports data to S3, then triggers a state machine to deletes the RDS DB instance.",
   "StartAt": "Run Export Scanner Lambda",
   "TimeoutSeconds": 7200,
   "States": {
@@ -169,7 +169,14 @@
     "Prepare Input for Delete": {
       "Type": "Pass",
       "Parameters": {
-        "DbInstanceIdentifier.$": "$.DescribeDBResult.DbInstanceIdentifier"
+        "DbInstanceIdentifier.$": "$.DbInstanceIdentifier",
+        "db_name.$": "$.db_name",
+        "extraction_timestamp.$": "$.extraction_timestamp",
+        "output_bucket.$": "$.output_bucket",
+        "name.$": "$.name",
+        "tables_to_export": [],
+        "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id",
+        "environment.$": "$.environment"
       },
       "Next": "call database-delete Step Functions"
     },
@@ -178,9 +185,7 @@
       "Resource": "arn:aws:states:::states:startExecution.sync",
       "Parameters": {
         "StateMachineArn": "${DatabaseDeleteStateMachineArn}",
-        "Input": {
-          "DbInstanceIdentifier.$": "$.DescribeDBResult.DbInstanceIdentifier"
-        }
+        "Input.$": "$"
       },
       "Next": "Success State",
       "ResultPath": null
