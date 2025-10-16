@@ -1,5 +1,5 @@
 {
-  "Comment": "Exports data to S3 and deletes the RDS DB instance after.",
+  "Comment": "Creates metadata in Glue and exports data to S3, then triggers a state machine to deletes the RDS DB instance.",
   "StartAt": "Run Export Scanner Lambda",
   "TimeoutSeconds": 7200,
   "States": {
@@ -29,15 +29,19 @@
           "ErrorEquals": [
             "States.ALL"
           ],
+          "ResultPath": "$.error",
           "Next": "Fail State"
         }
       ],
       "Next": "Export Data",
-      "ResultPath": "$.ScannerLambdaResult"
+      "ResultSelector": {
+        "Payload.$": "$.Payload"
+      },
+      "ResultPath": "$.LambdaResult"
     },
     "Export Data": {
       "Type": "Map",
-      "ItemsPath": "$.ScannerLambdaResult.Payload.chunks",
+      "ItemsPath": "$.LambdaResult.Payload.chunks",
       "ItemSelector": {
         "chunk": {
           "table.$": "$$.Map.Item.Value.table",
@@ -88,12 +92,38 @@
           }
         }
       },
+      "Next": "Transform Output",
+      "ResultPath": "$.LambdaResult"
+    },
+    "Transform Output": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${TransformOutputLambdaArn}",
+        "Payload": {
+          "chunks.$": "$.LambdaResult"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 3,
+          "BackoffRate": 1,
+          "JitterStrategy": "NONE"
+        }
+      ],
       "Next": "RowCount Updater",
-      "ResultPath": "$.ExportDataResult"
+      "ResultSelector": {
+        "Payload.$": "$.Payload"
+      },
+      "ResultPath": "$.LambdaResult"
     },
     "RowCount Updater": {
       "Type": "Map",
-      "ItemsPath": "$.ScannerLambdaResult.Payload.chunks",
+      "ItemsPath": "$.LambdaResult.Payload.tables",
       "ItemSelector": {
         "chunk": {
           "table.$": "$$.Map.Item.Value.table",
@@ -134,17 +164,18 @@
         }
       },
       "Next": "Prepare Input for Delete",
-      "ResultPath": null
+      "ResultPath": "$.LambdaResult"
     },
     "Prepare Input for Delete": {
       "Type": "Pass",
       "Parameters": {
-        "db_endpoint.$": "$.db_endpoint",
+        "DbInstanceIdentifier.$": "$.DbInstanceIdentifier",
         "db_name.$": "$.db_name",
-        "db_username.$": "$.db_username",
+        "extraction_timestamp.$": "$.extraction_timestamp",
         "output_bucket.$": "$.output_bucket",
         "name.$": "$.name",
-        "extraction_timestamp.$": "$.extraction_timestamp",
+        "tables_to_export": [],
+        "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id",
         "environment.$": "$.environment"
       },
       "Next": "call database-delete Step Functions"
@@ -154,16 +185,7 @@
       "Resource": "arn:aws:states:::states:startExecution.sync",
       "Parameters": {
         "StateMachineArn": "${DatabaseDeleteStateMachineArn}",
-        "Input": {
-          "db_endpoint.$": "$.db_endpoint",
-          "db_name.$": "$.db_name",
-          "db_username.$": "$.db_username",
-          "output_bucket.$": "$.output_bucket",
-          "name.$": "$.name",
-          "extraction_timestamp.$": "$.extraction_timestamp",
-          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id",
-          "environment.$": "$.environment"
-        }
+        "Input.$": "$"
       },
       "Next": "Success State",
       "ResultPath": null

@@ -1,6 +1,7 @@
 {
-  "Comment": "Creates a RDS DB Instance to restore a .bak file. Exports the data to S3 and writes to the Glue Catalog. Deletes the DB instance after running or if any errors.",
+  "Comment": "Creates a RDS DB Instance to restore a .bak file, and triggers a state machine to export the data.",
   "StartAt": "Delete DB Instance If Exists",
+  "TimeoutSeconds": 14400,
   "States": {
     "Delete DB Instance If Exists": {
       "Type": "Task",
@@ -9,7 +10,13 @@
         "DbInstanceIdentifier.$": "States.Format('{}-{}-sql-server-backup-export',$.name, $.environment)",
         "SkipFinalSnapshot": true
       },
-      "ResultPath": "$.DeleteDBInstance",
+      "ResultSelector": {
+        "DbInstanceIdentifier.$": "$.DbInstance.DbInstanceIdentifier",
+        "DbInstanceArn.$": "$.DbInstance.DbInstanceArn",
+        "DbInstanceStatus.$": "$.DbInstance.DbInstanceStatus",
+        "Vpc.$": "$.DbInstance.DbSubnetGroup.VpcId"
+      },
+      "ResultPath": "$.DBDeleteResult",
       "Next": "Wait For Delete DB",
       "Catch": [
         {
@@ -17,7 +24,7 @@
             "Rds.DbInstanceNotFoundException"
           ],
           "Next": "Create DB Instance",
-          "ResultPath": null
+          "ResultPath": "$.DBDeleteResult"
         }
       ]
     },
@@ -30,7 +37,10 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
       "Parameters": {
-        "DbInstanceIdentifier.$": "States.Format('{}-{}-sql-server-backup-export',$.name, $.environment)"
+        "DbInstanceIdentifier.$": "$.DBDeleteResult.DbInstanceIdentifier"
+      },
+      "ResultSelector": {
+        "DbInstanceStatus.$": "$.DbInstance.DbInstanceStatus"
       },
       "ResultPath": "$.DescribeDBDeleteResult",
       "Catch": [
@@ -39,7 +49,7 @@
             "Rds.DbInstanceNotFoundException"
           ],
           "Next": "Create DB Instance",
-          "ResultPath": null
+          "ResultPath": "$.DescribeDBDeleteResult"
         }
       ],
       "Next": "Wait For Delete DB"
@@ -65,7 +75,26 @@
         "DbInstanceClass": "db.m5.2xlarge",
         "DbInstanceIdentifier.$": "States.Format('{}-{}-sql-server-backup-export',$.name, $.environment)"
       },
+      "ResultSelector": {
+        "DbInstanceIdentifier.$": "$.DbInstance.DbInstanceIdentifier",
+        "DbInstanceArn.$": "$.DbInstance.DbInstanceArn",
+        "DbInstanceStatus.$": "$.DbInstance.DbInstanceStatus",
+        "Vpc.$": "$.DbInstance.DbSubnetGroup.VpcId",
+        "Engine.$": "$.DbInstance.Engine",
+        "EngineVersion.$": "$.DbInstance.EngineVersion",
+        "DbInstanceClass.$": "$.DbInstance.DbInstanceClass",
+        "AllocatedStorage.$": "$.DbInstance.AllocatedStorage"
+      },
       "ResultPath": "$.CreateDBResult",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "Fail State"
+        }
+      ],
       "Next": "Wait For DB Instance"
     },
     "Wait For DB Instance": {
@@ -77,18 +106,12 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
       "Parameters": {
-        "DbInstanceIdentifier.$": "States.Format('{}-{}-sql-server-backup-export',$.name, $.environment)"
+        "DbInstanceIdentifier.$": "$.CreateDBResult.DbInstanceIdentifier"
+      },
+      "ResultSelector": {
+        "DbInstanceDetails.$": "$.DbInstances[0]"
       },
       "ResultPath": "$.DescribeDBResult",
-      "Catch": [
-        {
-          "ErrorEquals": [
-            "Rds.DbInstanceNotFoundException"
-          ],
-          "Next": "Wait For DB Instance",
-          "ResultPath": null
-        }
-      ],
       "Next": "Choice Start Restore"
     },
     "Choice Start Restore": {
@@ -96,7 +119,7 @@
       "Choices": [
         {
           "Not": {
-            "Variable": "$.DescribeDBResult.DbInstances[0].DbInstanceStatus",
+            "Variable": "$.DescribeDBResult.DbInstanceDetails.DbInstanceStatus",
             "StringEquals": "available"
           },
           "Next": "Wait For DB Instance"
@@ -114,7 +137,7 @@
           "ErrorEquals": [
             "States.ALL"
           ],
-          "ResultPath": null,
+          "ResultPath": "$.error",
           "Next": "Fail State"
         }
       ]
@@ -127,8 +150,8 @@
         "Payload": {
           "task_id.$": "$.DatabaseRestoreLambdaResult.task_id",
           "db_name.$": "$.DatabaseRestoreLambdaResult.db_name",
-          "db_endpoint.$": "$.DescribeDBResult.DbInstances[0].Endpoint.Address",
-          "db_username.$": "$.DescribeDBResult.DbInstances[0].MasterUsername"
+          "db_endpoint.$": "$.DescribeDBResult.DbInstanceDetails.Endpoint.Address",
+          "db_username.$": "$.DescribeDBResult.DbInstanceDetails.MasterUsername"
         }
       },
       "Retry": [
@@ -143,13 +166,16 @@
         }
       ],
       "Next": "Choice Start Export",
+      "ResultSelector": {
+        "RestoreStatus.$": "$.Payload.restore_status"
+      },
       "ResultPath": "$.DatabaseRestoreStatusLambdaResult",
       "Catch": [
         {
           "ErrorEquals": [
             "States.ALL"
           ],
-          "ResultPath": null,
+          "ResultPath": "$.error",
           "Next": "Fail State"
         }
       ]
@@ -159,7 +185,7 @@
       "Choices": [
         {
           "Not": {
-            "Variable": "$.DatabaseRestoreStatusLambdaResult.Payload.restore_status",
+            "Variable": "$.DatabaseRestoreStatusLambdaResult.RestoreStatus",
             "StringEquals": "SUCCESS"
           },
           "Next": "Wait For Restore Completion"
@@ -174,11 +200,12 @@
         "extraction_timestamp.$": "$.extraction_timestamp",
         "output_bucket.$": "$.output_bucket",
         "name.$": "$.name",
-        "db_endpoint.$": "$.DescribeDBResult.DbInstances[0].Endpoint.Address",
-        "db_username.$": "$.DescribeDBResult.DbInstances[0].MasterUsername",
+        "db_endpoint.$": "$.DescribeDBResult.DbInstanceDetails.Endpoint.Address",
+        "db_username.$": "$.DescribeDBResult.DbInstanceDetails.MasterUsername",
         "tables_to_export": [],
         "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id",
-        "environment.$": "$.environment"
+        "environment.$": "$.environment",
+        "DbInstanceIdentifier.$": "$.CreateDBResult.DbInstanceIdentifier"
       },
       "Next": "call database-export Step Functions"
     },
@@ -204,6 +231,5 @@
     "Success State": {
       "Type": "Succeed"
     }
-  },
-  "TimeoutSeconds": 7200
+  }
 }

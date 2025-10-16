@@ -26,6 +26,7 @@ resource "aws_sfn_state_machine" "db_export" {
     DatabaseExportScannerLambdaArn           = module.database_export_scanner.lambda_function_arn
     DatabaseExportProcessorLambdaArn         = module.database_export_processor.lambda_function_arn
     ExportValidationRowCountUpdaterLambdaArn = module.export_validation_rowcount_updater.lambda_function_arn
+    TransformOutputLambdaArn                 = module.transform_output.lambda_function_arn
     MasterUserPassword                       = data.aws_secretsmanager_secret_version.master_user_secret.secret_string
     ParameterGroupName                       = resource.aws_db_parameter_group.database.name
     OptionGroupName                          = resource.aws_db_option_group.database.name

@@ -13,12 +13,12 @@ secretmanager = boto3.client("secretsmanager")
 
 def handler(event, context):
     # Retrieve configuration from environment variables
-    db_endpoint = event["DescribeDBResult"]["DbInstances"][0]["Endpoint"]["Address"]
+    db_endpoint = event["DescribeDBResult"]["DbInstanceDetails"]["Endpoint"]["Address"]
     db_pw_secret_arn = os.environ["DATABASE_PW_SECRET_ARN"]
     bak_upload_bucket = event.get("bak_upload_bucket")
     bak_upload_key = event.get("bak_upload_key")
     db_name = event.get("db_name")
-    db_username = event["DescribeDBResult"]["DbInstances"][0]["MasterUsername"]
+    db_username = event["DescribeDBResult"]["DbInstanceDetails"]["MasterUsername"]
 
     if not bak_upload_bucket or not bak_upload_key or not db_name:
         logger.error(

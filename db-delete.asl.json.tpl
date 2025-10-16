@@ -1,13 +1,20 @@
 {
   "Comment": "Deletes the RDS DB Instance if it exists. Succeeds if the DB is deleted or already absent.",
   "StartAt": "Delete DB Instance",
+  "TimeoutSeconds": 3600,
   "States": {
     "Delete DB Instance": {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:deleteDBInstance",
       "Parameters": {
-        "DbInstanceIdentifier.$": "States.Format('{}-{}-sql-server-backup-export',$.name, $.environment)",
+        "DbInstanceIdentifier.$": "$.DbInstanceIdentifier",
         "SkipFinalSnapshot": true
+      },
+      "ResultSelector": {
+        "DbInstanceIdentifier.$": "$.DbInstance.DbInstanceIdentifier",
+        "DbInstanceArn.$": "$.DbInstance.DbInstanceArn",
+        "DbInstanceStatus.$": "$.DbInstance.DbInstanceStatus",
+        "Vpc.$": "$.DbInstance.DbSubnetGroup.VpcId"
       },
       "ResultPath": "$.DeleteDBInstance",
       "Next": "Wait For Delete DB Instance",
@@ -17,7 +24,7 @@
             "Rds.DbInstanceNotFoundException"
           ],
           "Next": "Success State",
-          "ResultPath": null
+          "ResultPath": "$.DeleteDBInstance"
         }
       ]
     },
@@ -30,7 +37,12 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
       "Parameters": {
-        "DbInstanceIdentifier.$": "States.Format('{}-{}-sql-server-backup-export',$.name, $.environment)"
+        "DbInstanceIdentifier.$": "$.DbInstanceIdentifier"
+      },
+      "ResultSelector": {
+        "DbInstanceStatus.$": "$.DbInstances[0].DbInstanceStatus",
+        "DbInstanceIdentifier.$": "$.DbInstances[0].DbInstanceIdentifier",
+        "DbInstanceArn.$": "$.DbInstances[0].DbInstanceArn"
       },
       "ResultPath": "$.DescribeDBDeleteResult",
       "Catch": [
@@ -39,7 +51,7 @@
             "Rds.DbInstanceNotFoundException"
           ],
           "Next": "Success State",
-          "ResultPath": null
+          "ResultPath": "$.DescribeDBDeleteResult"
         }
       ],
       "Next": "Choice End State"
@@ -48,7 +60,7 @@
       "Type": "Choice",
       "Choices": [
         {
-          "Variable": "$.DescribeDBDeleteResult.DbInstances[0].DbInstanceStatus",
+          "Variable": "$.DescribeDBDeleteResult.DbInstanceStatus",
           "StringEquals": "deleting",
           "Next": "Wait For Delete DB Instance"
         }
@@ -58,6 +70,5 @@
     "Success State": {
       "Type": "Succeed"
     }
-  },
-  "TimeoutSeconds": 3600
+  }
 }

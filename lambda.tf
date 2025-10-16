@@ -352,3 +352,32 @@ module "export_validation_rowcount_updater" {
 
   tags = var.tags
 }
+
+module "transform_output" {
+  # Commit hash for v7.20.1
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
+
+  function_name   = "${var.name}-${var.environment}-transform-output"
+  description     = "Lambda to transform the output for table validation"
+  handler         = "main.handler"
+  runtime         = "python3.12"
+  memory_size     = 2048
+  timeout         = 900
+  architectures   = ["x86_64"]
+  build_in_docker = false
+
+  # VPC Config - Lambda function needs to be in the same VPC as the RDS instance
+  vpc_subnet_ids         = var.database_subnet_ids
+  vpc_security_group_ids = [aws_security_group.database_restore.id]
+  attach_network_policy  = true
+
+  source_path = [{
+    path = "${path.module}/lambda-functions/transform-output/main.py"
+  }]
+
+  layers = [
+    "arn:aws:lambda:${data.aws_region.current.id}:336392948345:layer:AWSSDKPandas-Python312:18"
+  ]
+
+  tags = var.tags
+}
