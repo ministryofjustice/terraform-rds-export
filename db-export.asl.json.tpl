@@ -123,7 +123,7 @@
     },
     "RowCount Updater": {
       "Type": "Map",
-      "ItemsPath": "$.Payload.tables",
+      "ItemsPath": "$.LambdaResult.Payload.tables",
       "ItemSelector": {
         "chunk": {
           "table.$": "$$.Map.Item.Value.table",
