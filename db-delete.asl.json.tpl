@@ -6,7 +6,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:deleteDBInstance",
       "Parameters": {
-        "DbInstanceIdentifier.$": "$.DescribeDBResult.DbInstanceIdentifier",
+        "DbInstanceIdentifier.$": "$.DbInstanceIdentifier",
         "SkipFinalSnapshot": true
       },
       "ResultSelector": {
@@ -23,7 +23,7 @@
             "Rds.DbInstanceNotFoundException"
           ],
           "Next": "Success State",
-          "ResultPath": "$.error"
+          "ResultPath": "$.DeleteDBInstance"
         }
       ]
     },
@@ -36,7 +36,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
       "Parameters": {
-        "DbInstanceIdentifier.$": "$.DescribeDBResult.DbInstanceIdentifier"
+        "DbInstanceIdentifier.$": "$.DbInstanceIdentifier"
       },
       "ResultSelector": {
         "DbInstanceStatus.$": "$.DbInstances[0].DbInstanceStatus",
@@ -50,7 +50,7 @@
             "Rds.DbInstanceNotFoundException"
           ],
           "Next": "Success State",
-          "ResultPath": "$.error"
+          "ResultPath": "$.DescribeDBDeleteResult"
         }
       ],
       "Next": "Choice End State"
