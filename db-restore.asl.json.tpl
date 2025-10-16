@@ -109,7 +109,7 @@
         "DbInstanceIdentifier.$": "$.CreateDBResult.DbInstanceIdentifier"
       },
       "ResultSelector": {
-        "DbInstanceDetails.$": "$.DbInstances[0]
+        "DbInstanceDetails.$": "$.DbInstances[0]"
       },
       "ResultPath": "$.DescribeDBResult",
       "Next": "Choice Start Restore"
