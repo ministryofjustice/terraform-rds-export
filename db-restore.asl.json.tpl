@@ -70,7 +70,8 @@
         "MasterUserPassword": "${MasterUserPassword}",
         "DbParameterGroupName": "${ParameterGroupName}",
         "OptionGroupName": "${OptionGroupName}",
-        "VpcSecurityGroupIds": ${jsonencode(VpcSecurityGroupIds)},
+        "VpcSecurityGroupIds": ${jsonencode(VpcSecurityGroupIds)
+        },
         "DbSubnetGroupName": "${DbSubnetGroupName}",
         "DbInstanceClass": "db.m5.2xlarge",
         "DbInstanceIdentifier.$": "States.Format('{}-{}-sql-server-backup-export',$.name, $.environment)"
@@ -146,7 +147,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
-        "FunctionName":  "${DatabaseRestoreStatusLambdaArn}",
+        "FunctionName": "${DatabaseRestoreStatusLambdaArn}",
         "Payload": {
           "task_id.$": "$.DatabaseRestoreLambdaResult.task_id",
           "db_name.$": "$.DatabaseRestoreLambdaResult.db_name",
@@ -183,6 +184,11 @@
     "Choice Start Export": {
       "Type": "Choice",
       "Choices": [
+        {
+          "Variable": "$.DatabaseRestoreStatusLambdaResult.RestoreStatus",
+          "StringEquals": "ERROR",
+          "Next": "Fail State"
+        },
         {
           "Not": {
             "Variable": "$.DatabaseRestoreStatusLambdaResult.RestoreStatus",
