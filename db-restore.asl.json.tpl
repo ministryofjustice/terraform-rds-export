@@ -63,7 +63,7 @@
         "StorageType": "gp2",
         "StorageEncrypted": true,
         "Engine": "sqlserver-se",
-        "EngineVersion": "15.00.4420.2.v1",
+        "EngineVersion": "${EngineVersion}",
         "LicenseModel": "license-included",
         "MasterUsername": "admin",
         "ManageMasterUserPassword": false,
