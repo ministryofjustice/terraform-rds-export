@@ -1,5 +1,5 @@
 data "aws_rds_engine_version" "selected" {
-  engine         = "sqlserver-se"
+  engine             = "sqlserver-se"
   preferred_versions = [var.engine_version]
 }
 
@@ -37,7 +37,7 @@ resource "aws_db_subnet_group" "database" {
 # Create parameter group for database
 resource "aws_db_parameter_group" "database" {
   name        = "${var.name}-${var.environment}-backup-export"
-  family      = "sqlserver-se-15.0"
+  family      = "sqlserver-se-${substr(var.engine_version, 0, 2)}.0"
   description = "Parameter group for SQL Server Standard Edition"
 }
 
