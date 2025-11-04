@@ -5,12 +5,13 @@ data "aws_rds_engine_version" "selected" {
 
 # Fail early if the engine version is invalid
 resource "null_resource" "validate_engine_version" {
-  count = try(data.aws_rds_engine_version.selected.engine_version, null) != null ? 0 : 1
+  count = try(data.aws_rds_engine_version.selected.version, null) != null ? 0 : 1
 
   provisioner "local-exec" {
     command = "echo 'Invalid engine_version ${var.engine_version} for engine sqlserver-se' && exit 1"
   }
 }
+
 
 # Security group for RDS instance
 resource "aws_security_group" "database" {
