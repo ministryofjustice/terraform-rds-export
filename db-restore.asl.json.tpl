@@ -62,7 +62,7 @@
         "MaxAllocatedStorage": 300,
         "StorageType": "gp2",
         "StorageEncrypted": true,
-        "Engine": "sqlserver-se",
+        "Engine": "${Engine}",
         "EngineVersion": "${EngineVersion}",
         "LicenseModel": "license-included",
         "MasterUsername": "admin",
@@ -70,8 +70,7 @@
         "MasterUserPassword": "${MasterUserPassword}",
         "DbParameterGroupName": "${ParameterGroupName}",
         "OptionGroupName": "${OptionGroupName}",
-        "VpcSecurityGroupIds": ${jsonencode(VpcSecurityGroupIds)
-        },
+        "VpcSecurityGroupIds": ${jsonencode(VpcSecurityGroupIds)},
         "DbSubnetGroupName": "${DbSubnetGroupName}",
         "DbInstanceClass": "db.m5.2xlarge",
         "DbInstanceIdentifier.$": "States.Format('{}-{}-sql-server-backup-export',$.name, $.environment)"

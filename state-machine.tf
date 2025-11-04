@@ -13,6 +13,7 @@ resource "aws_sfn_state_machine" "db_restore" {
     VpcSecurityGroupIds            = [resource.aws_security_group.database.id]
     DbSubnetGroupName              = resource.aws_db_subnet_group.database.name
     DatabaseExportStateMachineArn  = resource.aws_sfn_state_machine.db_export.arn
+    Engine                         = var.engine
     EngineVersion                  = var.engine_version
   })
 }

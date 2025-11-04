@@ -1,20 +1,14 @@
-# Dynamically fetch valid engine versions for this region
 data "aws_rds_engine_version" "selected" {
-  engine = var.engine
+  engine         = var.engine
+  engine_version = var.engine_version
 }
 
-locals {
-  engine_version_valid = contains(
-    [for v in data.aws_rds_engine_version.selected.valid_versions : v.version],
-    var.engine_version
-  )
-}
+# Fail early if the engine version is invalid
+resource "null_resource" "validate_engine_version" {
+  count = try(data.aws_rds_engine_version.selected.engine_version, null) != null ? 0 : 1
 
-# Validate the input
-check "engine_version_valid" {
-  assert {
-    condition     = local.engine_version_valid
-    error_message = "Invalid engine_version '${var.engine_version}'. Must be one of the valid RDS versions for ${var.engine}."
+  provisioner "local-exec" {
+    command = "echo 'Invalid engine_version ${var.engine_version} for engine ${var.engine}' && exit 1"
   }
 }
 
@@ -49,8 +43,8 @@ resource "aws_db_parameter_group" "database" {
 # Create option group for database
 resource "aws_db_option_group" "database" {
   name                     = "${var.name}-${var.environment}-backup-export"
-  engine_name              = "sqlserver-se"
-  major_engine_version     = "15.00"
+  engine_name              = var.engine
+  major_engine_version     = substr(var.engine_version, 0, 5)
   option_group_description = "Used by the database for loading backups and exporting to S3"
 
   option {
