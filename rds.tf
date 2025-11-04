@@ -1,6 +1,6 @@
 data "aws_rds_engine_version" "selected" {
   engine         = var.engine
-  engine_version = var.engine_version
+  preferred_versions = [var.engine_version]
 }
 
 # Fail early if the engine version is invalid
