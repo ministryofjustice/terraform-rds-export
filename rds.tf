@@ -1,3 +1,23 @@
+# Dynamically fetch valid engine versions for this region
+data "aws_rds_engine_version" "selected" {
+  engine = var.engine
+}
+
+locals {
+  engine_version_valid = contains(
+    [for v in data.aws_rds_engine_version.selected.valid_versions : v.version],
+    var.engine_version
+  )
+}
+
+# Validate the input
+check "engine_version_valid" {
+  assert {
+    condition     = local.engine_version_valid
+    error_message = "Invalid engine_version '${var.engine_version}'. Must be one of the valid RDS versions for ${var.engine}."
+  }
+}
+
 # Security group for RDS instance
 resource "aws_security_group" "database" {
   name        = "${var.name}-${var.environment}-database"

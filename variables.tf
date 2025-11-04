@@ -59,3 +59,9 @@ variable "engine_version" {
   type        = string
   default     = "15.00.4420.2.v1"
 }
+
+variable "engine" {
+  description = "Database engine type"
+  type        = string
+  default     = "sqlserver-se"
+}
