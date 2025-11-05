@@ -60,6 +60,7 @@ module "rds_export" {
 | <a name="input_database_refresh_mode"></a> [database\_refresh\_mode](#input\_database\_refresh\_mode) | Specifies the type of database refresh: 'full' for complete refresh or 'incremental' for partial updates. | `string` | n/a | yes |
 | <a name="input_database_subnet_ids"></a> [database\_subnet\_ids](#input\_database\_subnet\_ids) | The IDs of the subnets in the VPC where the database will be deployed | `list(string)` | n/a | yes |
 | <a name="input_db_name"></a> [db\_name](#input\_db\_name) | The name of the database. Used for Glue, Athena, and restore process in RDS. Only lowercase letters, numbers, and the underscore character | `string` | n/a | yes |
+| <a name="input_engine_version"></a> [engine\_version](#input\_engine\_version) | The SQL Server engine version for the RDS instance. | `string` | `"15.00.4420.2.v1"` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Deployment environment (e.g., dev, test, staging, prod). Used for resource naming, tagging, and conditional settings. | `string` | n/a | yes |
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | The ARN of the KMS key to use for secretes and exported snapshot | `string` | n/a | yes |
 | <a name="input_master_user_secret_id"></a> [master\_user\_secret\_id](#input\_master\_user\_secret\_id) | The ARN of the secret containing the master user password to use for the RDS DB database | `any` | n/a | yes |
@@ -94,9 +95,11 @@ No outputs.
 | [aws_sfn_state_machine.db_delete](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sfn_state_machine) | resource |
 | [aws_sfn_state_machine.db_export](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sfn_state_machine) | resource |
 | [aws_sfn_state_machine.db_restore](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sfn_state_machine) | resource |
+| [null_resource.validate_engine_version](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_iam_policy_document.data_restore_lambda_function](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.upload_checker_lambda_function](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_rds_engine_version.selected](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/rds_engine_version) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 | [aws_secretsmanager_secret_version.master_user_secret](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/secretsmanager_secret_version) | data source |
 | [aws_vpc.vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/vpc) | data source |

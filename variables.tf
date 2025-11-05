@@ -53,3 +53,9 @@ variable "max_concurrency" {
   description = "Maximum number of database-export lambda run in parallel."
   default     = 5
 }
+
+variable "engine_version" {
+  description = "The SQL Server engine version for the RDS instance."
+  type        = string
+  default     = "15.00.4420.2.v1"
+}

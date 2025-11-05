@@ -60,9 +60,14 @@ def handler(event, context):
                     # Retrieve the lifecycle status from column index 5.
                     restore_status = row[5]
                     logger.info("Task lifecycle from database: %s", restore_status)
+
+                    if restore_status == "ERROR":
+                        logger.error("Fatal error fetching row: %s", row[6])
+
                     break
             except Exception as fetch_error:
                 logger.debug("Error fetching row: %s", fetch_error)
+
             if not cursor.nextset():
                 logger.error(
                     "No further result sets available; status could not be determined."

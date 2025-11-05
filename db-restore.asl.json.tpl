@@ -62,8 +62,8 @@
         "MaxAllocatedStorage": 300,
         "StorageType": "gp2",
         "StorageEncrypted": true,
-        "Engine": "sqlserver-se",
-        "EngineVersion": "15.00.4420.2.v1",
+        "Engine": "${Engine}",
+        "EngineVersion": "${EngineVersion}",
         "LicenseModel": "license-included",
         "MasterUsername": "admin",
         "ManageMasterUserPassword": false,
@@ -146,7 +146,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
-        "FunctionName":  "${DatabaseRestoreStatusLambdaArn}",
+        "FunctionName": "${DatabaseRestoreStatusLambdaArn}",
         "Payload": {
           "task_id.$": "$.DatabaseRestoreLambdaResult.task_id",
           "db_name.$": "$.DatabaseRestoreLambdaResult.db_name",
@@ -183,6 +183,11 @@
     "Choice Start Export": {
       "Type": "Choice",
       "Choices": [
+        {
+          "Variable": "$.DatabaseRestoreStatusLambdaResult.RestoreStatus",
+          "StringEquals": "ERROR",
+          "Next": "Fail State"
+        },
         {
           "Not": {
             "Variable": "$.DatabaseRestoreStatusLambdaResult.RestoreStatus",

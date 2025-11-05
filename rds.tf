@@ -1,3 +1,18 @@
+data "aws_rds_engine_version" "selected" {
+  engine             = "sqlserver-se"
+  preferred_versions = [var.engine_version]
+}
+
+# Fail early if the engine version is invalid
+resource "null_resource" "validate_engine_version" {
+  count = try(data.aws_rds_engine_version.selected.version, null) != null ? 0 : 1
+
+  provisioner "local-exec" {
+    command = "echo 'Invalid engine_version ${var.engine_version} for engine sqlserver-se' && exit 1"
+  }
+}
+
+
 # Security group for RDS instance
 resource "aws_security_group" "database" {
   name        = "${var.name}-${var.environment}-database"
@@ -22,7 +37,7 @@ resource "aws_db_subnet_group" "database" {
 # Create parameter group for database
 resource "aws_db_parameter_group" "database" {
   name        = "${var.name}-${var.environment}-backup-export"
-  family      = "sqlserver-se-15.0"
+  family      = "sqlserver-se-${substr(var.engine_version, 0, 2)}.0"
   description = "Parameter group for SQL Server Standard Edition"
 }
 
@@ -30,7 +45,7 @@ resource "aws_db_parameter_group" "database" {
 resource "aws_db_option_group" "database" {
   name                     = "${var.name}-${var.environment}-backup-export"
   engine_name              = "sqlserver-se"
-  major_engine_version     = "15.00"
+  major_engine_version     = substr(var.engine_version, 0, 5)
   option_group_description = "Used by the database for loading backups and exporting to S3"
 
   option {
