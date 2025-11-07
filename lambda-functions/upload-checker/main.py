@@ -17,11 +17,11 @@ def handler(event, context):
         bucket = record["s3"]["bucket"]["name"]
         key = record["s3"]["object"]["key"]
 
-        # S3 key should be in the format 'name-environment/bak_file.bak'
-        parts = key.strip("/").split("/")
-        if len(parts) != 2:
+        # S3 key should end in .bak
+        file_type = key[-4:0]
+        if file_type.lower() != ".bak":
             error_msg = (
-                f"Invalid S3 key format: {key}. Expected 'name-environment/file_key'."
+                f"Invalid file format: {file_type}. Expected a .bak file."
             )
             logger.error(error_msg)
             raise ValueError(error_msg)
