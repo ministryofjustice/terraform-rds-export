@@ -18,7 +18,7 @@ def handler(event, context):
         key = record["s3"]["object"]["key"]
 
         # S3 key should end in .bak
-        file_type = key[-4:0]
+        file_type = key[-4]
         if file_type.lower() != ".bak":
             error_msg = (
                 f"Invalid file format: {file_type}. Expected a .bak file."
