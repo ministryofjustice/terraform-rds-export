@@ -72,7 +72,10 @@ module "rds_export" {
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_backup_uploads_s3_bucket_arn"></a> [backup\_uploads\_s3\_bucket\_arn](#output\_backup\_uploads\_s3\_bucket\_arn) | ARN of the backup uploads bucket |
+| <a name="output_backup_uploads_s3_bucket_id"></a> [backup\_uploads\_s3\_bucket\_id](#output\_backup\_uploads\_s3\_bucket\_id) | Name of the backup uploads bucket |
 
 ## Resources
 
