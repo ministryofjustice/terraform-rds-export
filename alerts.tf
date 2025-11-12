@@ -62,7 +62,7 @@ resource "aws_cloudwatch_event_target" "sns" {
         
         input_template = <<EOF
     {
-        "state_machine_arn": <stateMachineARN>,
+        "state_machine_arn": <stateMachineArn>,
         "execution_name": <executionName>,
         "status": <status>,
         "error": <error>,
