@@ -1,5 +1,5 @@
 resource "aws_cloudwatch_event_rule" "sfn_events" {
-    name = "${var.name}_${var.environment}_sfn_execution_status"
+    name = "${var.name}-${var.environment}-sfn-execution-status"
     role_arn    = aws_iam_role.eventbridge.arn #need to create this role
     description = "Capture the execution status of the state machine"
 
@@ -18,7 +18,7 @@ resource "aws_cloudwatch_event_rule" "sfn_events" {
 }
 
 resource "aws_cloudwatch_log_group" "eventbridge" {
-  name = "${var.name}_${var.environment}_events_logs"
+  name = "${var.name}-${var.environment}-sfn-events-logs"
 
   log_group_class   = "STANDARD"
   retention_in_days = 0
