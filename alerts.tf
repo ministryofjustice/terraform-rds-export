@@ -27,7 +27,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
         actions = ["sns:Publish"]
 
         principals {
-            type = "Servie"
+            type = "Service"
             identifiers = [events.amazonaws.com]
         }
 
