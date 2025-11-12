@@ -48,7 +48,8 @@ resource "aws_sns_topic_subscription" "sfn_events" {
 
 resource "aws_cloudwatch_event_target" "sns" {
     rule = aws_cloudwatch_event_rule.sfn_events.name
-    arn = aws_sns_topic_subscription.sfn_events.arn
+    arn = aws_sns_topic.sfn_events.arn
+    target_id = "SfnAlertToSNS"
 
     input_transformer {
         input_paths = {
