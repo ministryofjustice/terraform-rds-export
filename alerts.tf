@@ -53,11 +53,11 @@ resource "aws_cloudwatch_event_target" "sns" {
 
     input_transformer {
         input_paths = {
-            stateMachineArn = "$.detail.stateMachineArn",
-            executionName = "$.detail.name",
-            status = "$.detail.status",
-            error = "$.detail.error",
-            time = "$.time",
+            stateMachineArn = "$.detail.stateMachineArn"
+            executionName = "$.detail.name"
+            status = "$.detail.status"
+            error = "$.detail.error"
+            time = "$.time"
         }
         
         input_template = <<EOF
