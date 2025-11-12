@@ -218,3 +218,19 @@ resource "aws_iam_role_policy" "eventbridge_cloudwatch_publish" {
     ]
   })
 }
+
+resource "aws_iam_role_policy" "eventbridge_sns_publish" {
+  name = "${var.name}-${var.environment}-sns-publish"
+  role = aws_iam_role.eventbridge.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = "sns:Publish"
+        Resource = aws_sns_topic.sfn_events.arn
+      }
+    ]
+  })
+}

@@ -17,6 +17,60 @@ resource "aws_cloudwatch_event_rule" "sfn_events" {
     })
 }
 
+resource "aws_sns_topic" "sfn_events" {
+    name = "${var.name}-${var.environment}-sfn-events"
+}
+
+data "aws_iam_policy_document" "sns_topic_policy" {
+    statement {
+        effect = "Allow"
+        actions = ["sns:Publish"]
+
+        principals {
+            type = "Servie"
+            identifiers = [events.amazonaws.com]
+        }
+
+        resources = [aws_sns_topic.sfn_events.arn]
+    }
+}
+
+resource "aws_sns_topic_policy" "sfn_events" {
+    arn = aws_sns_topic.sfn_events.arn
+    policy = data.aws_iam_policy_document.sns_topic_policy
+}
+
+resource "aws_sns_topic_subscription" "sfn_events" {
+    topic_arn = aws_sns_topic.sfn_events
+    protocol = "https"
+    endpoint = data.aws_secretsmanager_secret_version.slack_webhook.secret_string
+}
+
+resource "aws_cloudwatch_event_target" "sns" {
+    rule = aws_cloudwatch_event_rule.sfn_events.name
+    arn = aws_sns_topic_subscription.sfn_events.arn
+
+    input_transformer {
+        input_paths = {
+            stateMachineArn = "$.detail.stateMachineArn",
+            executionName = "$.detail.name",
+            status = "$.detail.status",
+            error = "$.detail.error",
+            time = "$.time",
+        }
+        
+        input_template = <<EOF
+    {
+        "state_machine_arn": <stateMachineARN>,
+        "execution_name": <executionName>,
+        "status": <status>,
+        "error": <error>,
+        "time": <time>
+    }
+    EOF
+    }
+}
+
 resource "aws_cloudwatch_log_group" "eventbridge" {
   name = "${var.name}-${var.environment}-sfn-events-logs"
 
