@@ -37,11 +37,11 @@ data "aws_iam_policy_document" "sns_topic_policy" {
 
 resource "aws_sns_topic_policy" "sfn_events" {
     arn = aws_sns_topic.sfn_events.arn
-    policy = data.aws_iam_policy_document.sns_topic_policy
+    policy = data.aws_iam_policy_document.sns_topic_policy.json
 }
 
 resource "aws_sns_topic_subscription" "sfn_events" {
-    topic_arn = aws_sns_topic.sfn_events
+    topic_arn = aws_sns_topic.sfn_events.arn
     protocol = "https"
     endpoint = data.aws_secretsmanager_secret_version.slack_webhook.secret_string
 }
