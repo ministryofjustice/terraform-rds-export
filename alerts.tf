@@ -50,16 +50,18 @@ resource "aws_cloudwatch_event_target" "sns" {
       executionName   = "$.detail.name"
       status          = "$.detail.status"
       error           = "$.detail.error"
+      cause           = "$.detail.cause"
       time            = "$.time"
     }
 
     input_template = <<EOF
     {
-        "state_machine_arn": <stateMachineArn>,
-        "execution_name": <executionName>,
-        "status": <status>,
-        "error": <error>,
-        "time": <time>
+        "StateMachineARN": <stateMachineArn>,
+        "ExecutionName": <executionName>,
+        "Status": <status>,
+        "Error": <error>,
+        "Cause": <cause>,
+        "Time": <time>
     }
     EOF
   }
