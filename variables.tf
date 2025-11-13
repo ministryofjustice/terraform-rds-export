@@ -59,8 +59,3 @@ variable "engine_version" {
   type        = string
   default     = "15.00.4420.2.v1"
 }
-
-variable "slack_webhook_secret_id" {
-  type        = string
-  description = "A slack webhook to post state machine failure notifications to"
-}
