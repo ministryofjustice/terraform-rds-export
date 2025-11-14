@@ -1,6 +1,6 @@
 data "aws_iam_policy_document" "upload_checker_lambda_function" {
   statement {
-    // Allow the lambda to read the upload files from the S3 bucket
+    // Allow the lambda to read the uploaded .bak files from the S3 bucket
     actions = [
       "s3:ListBucket",
       "s3:GetObject"

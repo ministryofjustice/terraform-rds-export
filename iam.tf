@@ -178,3 +178,59 @@ resource "aws_iam_role_policy" "database_restore" {
     ]
   })
 }
+
+resource "aws_iam_role" "eventbridge" {
+  name = "${var.name}-${var.environment}-eventbridge"
+  assume_role_policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "events.amazonaws.com"
+        },
+        "Action" : "sts:AssumeRole",
+        "Condition" : {
+          "StringEquals" : {
+            "aws:SourceAccount" : data.aws_caller_identity.current.id
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "eventbridge_cloudwatch_publish" {
+  name = "${var.name}-${var.environment}-cloudwatch-publish"
+  role = aws_iam_role.eventbridge.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:PutLogEvents",
+          "logs:CreateLogStream"
+        ]
+        Resource = "${aws_cloudwatch_log_group.eventbridge.arn}:*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "eventbridge_sns_publish" {
+  name = "${var.name}-${var.environment}-sns-publish"
+  role = aws_iam_role.eventbridge.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = "sns:Publish"
+        Resource = aws_sns_topic.sfn_events.arn
+      }
+    ]
+  })
+}

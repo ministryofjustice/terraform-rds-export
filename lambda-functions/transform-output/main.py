@@ -5,6 +5,7 @@ import os
 logger = logging.getLogger()
 logger.setLevel(os.getenv("LOG_LEVEL", "INFO"))
 
+# Transforms the output to keep minimal info as input for next step
 def handler(event, context):
     data = event["chunks"]
 
