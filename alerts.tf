@@ -1,3 +1,4 @@
+# EventBride rule to capture non-successful state function executions
 resource "aws_cloudwatch_event_rule" "sfn_events" {
   name        = "${var.name}-${var.environment}-sfn-execution-status"
   role_arn    = aws_iam_role.eventbridge.arn #need to create this role
@@ -17,6 +18,9 @@ resource "aws_cloudwatch_event_rule" "sfn_events" {
   })
 }
 
+# Creating SNS for distributing messages
+# Setting up the publish side
+# Subscription side to be set outside of module
 resource "aws_sns_topic" "sfn_events" {
   name = "${var.name}-${var.environment}-sfn-events"
 }
@@ -39,6 +43,8 @@ resource "aws_sns_topic_policy" "sfn_events" {
   arn    = aws_sns_topic.sfn_events.arn
   policy = data.aws_iam_policy_document.sns_topic_policy.json
 }
+
+# Events sent to SNS
 resource "aws_cloudwatch_event_target" "sns" {
   rule      = aws_cloudwatch_event_rule.sfn_events.name
   arn       = aws_sns_topic.sfn_events.arn
@@ -67,6 +73,7 @@ resource "aws_cloudwatch_event_target" "sns" {
   }
 }
 
+# Creating CloudWatch resources
 resource "aws_cloudwatch_log_group" "eventbridge" {
   name = "${var.name}-${var.environment}-sfn-events-logs"
 
@@ -100,6 +107,7 @@ resource "aws_cloudwatch_log_resource_policy" "eventbridge" {
   policy_name     = "eventbridge-log-publishing-policy-${var.name}-${var.environment}"
 }
 
+# Events sent to CloudWatch logs
 resource "aws_cloudwatch_event_target" "cloudwatch" {
   rule = aws_cloudwatch_event_rule.sfn_events.name
   arn  = aws_cloudwatch_log_group.eventbridge.arn

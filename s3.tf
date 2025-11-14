@@ -1,4 +1,4 @@
-# Backup uploads S3 bucket with sensible defaults
+# Backup .bak uploads bucket with sensible defaults
 module "s3-bucket-backup-uploads" {
   source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=v9.0.0"
 
@@ -59,7 +59,7 @@ module "s3-bucket-backup-uploads" {
 }
 
 
-# Creating folder to drop .bak files in
+# Creating folder in backup uploads bucket
 resource "aws_s3_object" "backup_uploads_folder" {
   bucket = module.s3-bucket-backup-uploads.bucket.id
   key    = "${var.name}-${var.environment}/"
@@ -125,7 +125,7 @@ module "s3-bucket-parquet-exports" {
   tags = var.tags
 }
 
-# Lambda function to check if all files have been uploaded to the S3 bucket
+# Permission to invoke lambda function in bucket
 resource "aws_lambda_permission" "allow_bucket" {
   statement_id  = "AllowExecutionFromS3Bucket"
   action        = "lambda:InvokeFunction"

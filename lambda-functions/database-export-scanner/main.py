@@ -21,6 +21,10 @@ glue = boto3.client("glue")
 s3 = boto3.client("s3")
 athena = boto3.client("athena")
 
+# Scans the data in the RDS DB Instance
+# Creates the database and tables in Glue Catalog
+# Creates the metadata with data type string
+# Gets the row count and populates this in the row_count_table in Athena
 
 def run_athena_query(query, database, bucket):
     response = athena.start_query_execution(
