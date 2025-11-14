@@ -58,17 +58,17 @@ module "rds_export" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_database_refresh_mode"></a> [database\_refresh\_mode](#input\_database\_refresh\_mode) | Specifies the type of database refresh: 'full' for complete refresh or 'incremental' for partial updates. | `string` | n/a | yes |
-| <a name="input_database_subnet_ids"></a> [database\_subnet\_ids](#input\_database\_subnet\_ids) | The IDs of the subnets in the VPC where the database will be deployed | `list(string)` | n/a | yes |
-| <a name="input_db_name"></a> [db\_name](#input\_db\_name) | The name of the database. Used for Glue, Athena, and restore process in RDS. Only lowercase letters, numbers, and the underscore character | `string` | n/a | yes |
+| <a name="input_database_subnet_ids"></a> [database\_subnet\_ids](#input\_database\_subnet\_ids) | The IDs of the subnets in the VPC where the database will be deployed. | `list(string)` | n/a | yes |
+| <a name="input_db_name"></a> [db\_name](#input\_db\_name) | The name of the database. Used for Glue, Athena, and restore process in RDS. Only lowercase letters, numbers, and the underscore character. | `string` | n/a | yes |
 | <a name="input_engine_version"></a> [engine\_version](#input\_engine\_version) | The SQL Server engine version for the RDS instance. | `string` | `"15.00.4420.2.v1"` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Deployment environment (e.g., dev, test, staging, prod). Used for resource naming, tagging, and conditional settings. | `string` | n/a | yes |
-| <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | The ARN of the KMS key to use for secretes and exported snapshot | `string` | n/a | yes |
-| <a name="input_master_user_secret_id"></a> [master\_user\_secret\_id](#input\_master\_user\_secret\_id) | The ARN of the secret containing the master user password to use for the RDS DB database | `any` | n/a | yes |
+| <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | The ARN of the KMS key to use for secretes and exported snapshot. | `string` | n/a | yes |
+| <a name="input_master_user_secret_id"></a> [master\_user\_secret\_id](#input\_master\_user\_secret\_id) | The ARN of the secret containing the master user password to use for the RDS DB database. | `any` | n/a | yes |
 | <a name="input_max_concurrency"></a> [max\_concurrency](#input\_max\_concurrency) | Maximum number of database-export lambda run in parallel. | `number` | `5` | no |
 | <a name="input_name"></a> [name](#input\_name) | The name of the project. Combined with the environment (<name>-<evironment>) to create the RDS DB instance identifier. | `string` | n/a | yes |
-| <a name="input_output_parquet_file_size"></a> [output\_parquet\_file\_size](#input\_output\_parquet\_file\_size) | Approximate target size (in MiB) for each Parquet file produced by the database-export lambda | `number` | `10` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | Common tags to be used by all resources | `map(string)` | n/a | yes |
-| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | The ID of the VPC | `string` | n/a | yes |
+| <a name="input_output_parquet_file_size"></a> [output\_parquet\_file\_size](#input\_output\_parquet\_file\_size) | Approximate target size (in MiB) for each Parquet file produced by the database-export lambda. | `number` | `10` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | Common tags to be used by all resources. | `map(string)` | n/a | yes |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | The ID of the VPC. | `string` | n/a | yes |
 
 ## Outputs
 
@@ -119,4 +119,9 @@ module "rds_export" {
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 | [aws_secretsmanager_secret_version.master_user_secret](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/secretsmanager_secret_version) | data source |
 | [aws_vpc.vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/vpc) | data source |
+
+# Alerts
+The module sets up status monitoring of the State Machines using EventBridge. If an execution is non-successful, the event is sent to CloudWatch logs.
+SNS publication messaging is also setup. Subscriptions need to be setup outside of the module. This is to allow users the flexibility to choose their protocol and endpoint. 
+The SNS topic_arn is provided as an output and can be used in the [aws_sns_topic_subscription](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_subscription) Terraform resource.
 <!-- END_TF_DOCS -->
