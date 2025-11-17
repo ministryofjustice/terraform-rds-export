@@ -33,7 +33,7 @@ module "upload_checker" {
   handler         = "main.handler"
   runtime         = "python3.12"
   memory_size     = 1024
-  timeout         = 10
+  timeout         = 300
   architectures   = ["x86_64"]
   build_in_docker = false
 
@@ -162,7 +162,7 @@ module "database_restore" {
   handler         = "main.handler"
   runtime         = "python3.12"
   memory_size     = 1024
-  timeout         = 10
+  timeout         = 300
   architectures   = ["x86_64"]
   build_in_docker = false
 
@@ -200,7 +200,7 @@ module "database_restore_status" {
   handler         = "main.handler"
   runtime         = "python3.12"
   memory_size     = 1024
-  timeout         = 10
+  timeout         = 300
   architectures   = ["x86_64"]
   build_in_docker = false
 
