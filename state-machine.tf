@@ -1,6 +1,7 @@
+# Creates RDS DB Instance and restores the .bak file
 resource "aws_sfn_state_machine" "db_restore" {
-  # checkov:skip=CKV_AWS_284: x-ray tracing not required for now
-  # checkov:skip=CKV_AWS_285: Logging not required for now. TODO: Add this in the future
+  # checkov:skip=CKV_AWS_284: X-ray tracing not required for now
+  # checkov:skip=CKV_AWS_285: Logging not required for now. Execution history recorded in Step Function.
   name     = "${var.name}-${var.environment}-database-restore"
   role_arn = aws_iam_role.state_machine.arn
 
@@ -18,9 +19,10 @@ resource "aws_sfn_state_machine" "db_restore" {
   })
 }
 
+# Scans the data, creates metadata in Glue Catalog, exports the data to S3 and row count table
 resource "aws_sfn_state_machine" "db_export" {
   # checkov:skip=CKV_AWS_284: x-ray tracing not required for now
-  # checkov:skip=CKV_AWS_285: Logging not required for now. TODO: Add this in the future
+  # checkov:skip=CKV_AWS_285: Logging not required for now. Execution history recorded in Step Function.
   name     = "${var.name}-${var.environment}-database-export"
   role_arn = aws_iam_role.state_machine.arn
 
@@ -39,9 +41,10 @@ resource "aws_sfn_state_machine" "db_export" {
   })
 }
 
+# Deletes the RDS DB Instance
 resource "aws_sfn_state_machine" "db_delete" {
   # checkov:skip=CKV_AWS_284: x-ray tracing not required for now
-  # checkov:skip=CKV_AWS_285: Logging not required for now. TODO: Add this in the future
+  # checkov:skip=CKV_AWS_285: Logging not required for now. Execution history recorded in Step Function.
   name     = "${var.name}-${var.environment}-database-delete"
   role_arn = aws_iam_role.state_machine.arn
 

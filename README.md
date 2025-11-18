@@ -58,17 +58,17 @@ module "rds_export" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_database_refresh_mode"></a> [database\_refresh\_mode](#input\_database\_refresh\_mode) | Specifies the type of database refresh: 'full' for complete refresh or 'incremental' for partial updates. | `string` | n/a | yes |
-| <a name="input_database_subnet_ids"></a> [database\_subnet\_ids](#input\_database\_subnet\_ids) | The IDs of the subnets in the VPC where the database will be deployed | `list(string)` | n/a | yes |
-| <a name="input_db_name"></a> [db\_name](#input\_db\_name) | The name of the database. Used for Glue, Athena, and restore process in RDS. Only lowercase letters, numbers, and the underscore character | `string` | n/a | yes |
+| <a name="input_database_subnet_ids"></a> [database\_subnet\_ids](#input\_database\_subnet\_ids) | The IDs of the subnets in the VPC where the database will be deployed. | `list(string)` | n/a | yes |
+| <a name="input_db_name"></a> [db\_name](#input\_db\_name) | The name of the database. Used for Glue, Athena, and restore process in RDS. Only lowercase letters, numbers, and the underscore character. | `string` | n/a | yes |
 | <a name="input_engine_version"></a> [engine\_version](#input\_engine\_version) | The SQL Server engine version for the RDS instance. | `string` | `"15.00.4420.2.v1"` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Deployment environment (e.g., dev, test, staging, prod). Used for resource naming, tagging, and conditional settings. | `string` | n/a | yes |
-| <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | The ARN of the KMS key to use for secretes and exported snapshot | `string` | n/a | yes |
-| <a name="input_master_user_secret_id"></a> [master\_user\_secret\_id](#input\_master\_user\_secret\_id) | The ARN of the secret containing the master user password to use for the RDS DB database | `any` | n/a | yes |
+| <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | The ARN of the KMS key to use for secretes and exported snapshot. | `string` | n/a | yes |
+| <a name="input_master_user_secret_id"></a> [master\_user\_secret\_id](#input\_master\_user\_secret\_id) | The ARN of the secret containing the master user password to use for the RDS DB database. | `any` | n/a | yes |
 | <a name="input_max_concurrency"></a> [max\_concurrency](#input\_max\_concurrency) | Maximum number of database-export lambda run in parallel. | `number` | `5` | no |
 | <a name="input_name"></a> [name](#input\_name) | The name of the project. Combined with the environment (<name>-<evironment>) to create the RDS DB instance identifier. | `string` | n/a | yes |
-| <a name="input_output_parquet_file_size"></a> [output\_parquet\_file\_size](#input\_output\_parquet\_file\_size) | Approximate target size (in MiB) for each Parquet file produced by the database-export lambda | `number` | `10` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | Common tags to be used by all resources | `map(string)` | n/a | yes |
-| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | The ID of the VPC | `string` | n/a | yes |
+| <a name="input_output_parquet_file_size"></a> [output\_parquet\_file\_size](#input\_output\_parquet\_file\_size) | Approximate target size (in MiB) for each Parquet file produced by the database-export lambda. | `number` | `10` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | Common tags to be used by all resources. | `map(string)` | n/a | yes |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | The ID of the VPC. | `string` | n/a | yes |
 
 ## Outputs
 
@@ -76,18 +76,27 @@ module "rds_export" {
 |------|-------------|
 | <a name="output_backup_uploads_s3_bucket_arn"></a> [backup\_uploads\_s3\_bucket\_arn](#output\_backup\_uploads\_s3\_bucket\_arn) | ARN of the backup uploads bucket |
 | <a name="output_backup_uploads_s3_bucket_id"></a> [backup\_uploads\_s3\_bucket\_id](#output\_backup\_uploads\_s3\_bucket\_id) | Name of the backup uploads bucket |
+| <a name="output_sns_topic_arn"></a> [sns\_topic\_arn](#output\_sns\_topic\_arn) | ARN of the SNS topic to subscribe to |
 
 ## Resources
 
 | Name | Type |
 |------|------|
+| [aws_cloudwatch_event_rule.sfn_events](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule) | resource |
+| [aws_cloudwatch_event_target.cloudwatch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target) | resource |
+| [aws_cloudwatch_event_target.sns](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target) | resource |
+| [aws_cloudwatch_log_group.eventbridge](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_resource_policy.eventbridge](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_resource_policy) | resource |
 | [aws_db_option_group.database](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_option_group) | resource |
 | [aws_db_parameter_group.database](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_parameter_group) | resource |
 | [aws_db_subnet_group.database](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_subnet_group) | resource |
 | [aws_iam_policy.allow_start_execution](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_role.database_restore](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role.eventbridge](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role.state_machine](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy.database_restore](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.eventbridge_cloudwatch_publish](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.eventbridge_sns_publish](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_iam_role_policy.state_machine](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_iam_role_policy_attachment.attach_start_export](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_lambda_permission.allow_bucket](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
@@ -98,12 +107,21 @@ module "rds_export" {
 | [aws_sfn_state_machine.db_delete](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sfn_state_machine) | resource |
 | [aws_sfn_state_machine.db_export](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sfn_state_machine) | resource |
 | [aws_sfn_state_machine.db_restore](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sfn_state_machine) | resource |
+| [aws_sns_topic.sfn_events](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic) | resource |
+| [aws_sns_topic_policy.sfn_events](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_policy) | resource |
 | [null_resource.validate_engine_version](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_iam_policy_document.data_restore_lambda_function](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.eventbridge](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.sns_topic_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.upload_checker_lambda_function](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_rds_engine_version.selected](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/rds_engine_version) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 | [aws_secretsmanager_secret_version.master_user_secret](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/secretsmanager_secret_version) | data source |
 | [aws_vpc.vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/vpc) | data source |
+
+# Alerts
+The module sets up status monitoring of the State Machines using EventBridge. If an execution is non-successful, the event is sent to CloudWatch logs.
+SNS publication messaging is also setup. Subscriptions need to be setup outside of the module. This is to allow users the flexibility to choose their protocol and endpoint. 
+The SNS topic_arn is provided as an output and can be used in the [aws_sns_topic_subscription](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_subscription) Terraform resource.
 <!-- END_TF_DOCS -->

@@ -12,6 +12,7 @@ logger.setLevel(logging.INFO)
 # AWS clients
 secretmanager = boto3.client("secretsmanager")
 
+# Exports the data to parquet files in S3 
 
 def safe_decode(val):
     """Attempt to decode bytes using CP1252, UTF-8, then Latin-1 as fallback."""

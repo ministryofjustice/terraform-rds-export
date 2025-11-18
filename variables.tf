@@ -4,7 +4,7 @@ variable "name" {
 }
 
 variable "db_name" {
-  description = "The name of the database. Used for Glue, Athena, and restore process in RDS. Only lowercase letters, numbers, and the underscore character"
+  description = "The name of the database. Used for Glue, Athena, and restore process in RDS. Only lowercase letters, numbers, and the underscore character."
   type        = string
 }
 
@@ -14,27 +14,27 @@ variable "database_refresh_mode" {
 }
 
 variable "vpc_id" {
-  description = "The ID of the VPC"
+  description = "The ID of the VPC."
   type        = string
 }
 
 variable "database_subnet_ids" {
-  description = "The IDs of the subnets in the VPC where the database will be deployed"
+  description = "The IDs of the subnets in the VPC where the database will be deployed."
   type        = list(string)
 }
 
 variable "kms_key_arn" {
-  description = "The ARN of the KMS key to use for secretes and exported snapshot"
+  description = "The ARN of the KMS key to use for secretes and exported snapshot."
   type        = string
 }
 
 variable "master_user_secret_id" {
-  description = "The ARN of the secret containing the master user password to use for the RDS DB database"
+  description = "The ARN of the secret containing the master user password to use for the RDS DB database."
 }
 
 variable "tags" {
   type        = map(string)
-  description = "Common tags to be used by all resources"
+  description = "Common tags to be used by all resources."
 }
 
 variable "environment" {
@@ -44,7 +44,7 @@ variable "environment" {
 
 variable "output_parquet_file_size" {
   type        = number
-  description = "Approximate target size (in MiB) for each Parquet file produced by the database-export lambda"
+  description = "Approximate target size (in MiB) for each Parquet file produced by the database-export lambda."
   default     = 10
 }
 
