@@ -303,7 +303,10 @@ def create_glue_table(
     cols = cursor.fetchall()
     # DONE: Fix column types
     columns = [{"Name": cn, "Type": "string"} for cn, dt in cols]
-    # columns = [{"Name": cn, "Type": map_sql_to_glue_type(dt)} for cn, dt in cols]
+
+    # Add extraction_timestamp column for full mode
+    if database_refresh_mode != "incremental":
+        columns.append({"Name": "extraction_timestamp", "Type": "string"})
 
     s3_path = f"s3://{bucket}/{db_name}/{table}/"
     if database_refresh_mode == "incremental":
