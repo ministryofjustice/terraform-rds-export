@@ -40,7 +40,7 @@
         "DbInstanceIdentifier.$": "$.DBDeleteResult.DbInstanceIdentifier"
       },
       "ResultSelector": {
-        "DbInstanceStatus.$": "$.DbInstance.DbInstanceStatus"
+        "DbInstanceStatus.$": "$.DbInstances.DbInstanceStatus"
       },
       "ResultPath": "$.DescribeDBDeleteResult",
       "Catch": [
