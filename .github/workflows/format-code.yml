@@ -19,12 +19,19 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
+      - name: Show git HEAD info 1
+        run: |
+          echo "symbolic-full-name: $(git rev-parse --symbolic-full-name HEAD || echo DETACHED)"
+          echo "HEAD file:"
+          cat .git/HEAD | sed 's/^/    /'
+          git branch -a
+
       - name: format-code
         uses: ministryofjustice/modernisation-platform-github-actions/format-code@4eceb2a416a197e91dc557c2ef0b5dd9afe29e0c # v3.4.6
         with:
           ignore_files: "README.md"
 
-      - name: Show git HEAD info
+      - name: Show git HEAD info 2
         run: |
           echo "symbolic-full-name: $(git rev-parse --symbolic-full-name HEAD || echo DETACHED)"
           echo "HEAD file:"
