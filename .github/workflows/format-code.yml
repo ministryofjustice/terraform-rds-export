@@ -16,7 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
-          fetch-depth: 0
+          ref: ${{ github.head_ref }}
       
       - name: format-code
         uses: ministryofjustice/modernisation-platform-github-actions/format-code@e3ccf33927794ce5350b9211e288ad84e69365a8 # v3.4.4
