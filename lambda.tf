@@ -25,8 +25,8 @@ data "aws_iam_policy_document" "upload_checker_lambda_function" {
 }
 
 module "upload_checker" {
-  # Commit hash for v7.20.1
-  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
+  # Commit hash for v8.1.2
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=a7db1252f2c2048ab9a61254869eea061eae1318"
 
   function_name   = "${var.name}-${var.environment}-upload-checker"
   description     = "Lambda to check if a file has been uploaded to the S3 bucket"
@@ -154,8 +154,8 @@ resource "aws_security_group" "database_restore" {
 }
 
 module "database_restore" {
-  # Commit hash for v7.20.1
-  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
+  # Commit hash for v8.1.2
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=a7db1252f2c2048ab9a61254869eea061eae1318"
 
   function_name   = "${var.name}-${var.environment}-database-restore"
   description     = "Lambda to restore the database from the backup files in the S3 bucket"
@@ -192,8 +192,8 @@ module "database_restore" {
 }
 
 module "database_restore_status" {
-  # Commit hash for v7.20.1
-  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
+  # Commit hash for v8.1.2
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=a7db1252f2c2048ab9a61254869eea061eae1318"
 
   function_name   = "${var.name}-${var.environment}-database-restore-status"
   description     = "Lambda to check the status of the database restore from S3"
@@ -229,8 +229,8 @@ module "database_restore_status" {
 }
 
 module "database_export_scanner" {
-  # Commit hash for v7.20.1
-  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
+  # Commit hash for v8.1.2
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=a7db1252f2c2048ab9a61254869eea061eae1318"
 
   function_name   = "${var.name}-${var.environment}-database-export-scanner"
   description     = "Lambda to gather info for db export ${var.name} ${var.environment}"
@@ -272,8 +272,8 @@ module "database_export_scanner" {
 }
 
 module "database_export_processor" {
-  # Commit hash for v7.20.1
-  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
+  # Commit hash for v8.1.2
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=a7db1252f2c2048ab9a61254869eea061eae1318"
 
   function_name   = "${var.name}-${var.environment}-database-export-processor"
   description     = "Lambda to export data for ${var.name} ${var.environment}"
@@ -315,8 +315,8 @@ module "database_export_processor" {
 }
 
 module "export_validation_rowcount_updater" {
-  # Commit hash for v7.20.1
-  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
+  # Commit hash for v8.1.2
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=a7db1252f2c2048ab9a61254869eea061eae1318"
 
   function_name   = "${var.name}-${var.environment}-export-validation-rowcount-updater"
   description     = "Lambda to update export validation iceberg table"
@@ -354,8 +354,8 @@ module "export_validation_rowcount_updater" {
 }
 
 module "transform_output" {
-  # Commit hash for v7.20.1
-  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=84dfbfddf9483bc56afa0aff516177c03652f0c7"
+  # Commit hash for v8.1.2
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=a7db1252f2c2048ab9a61254869eea061eae1318"
 
   function_name   = "${var.name}-${var.environment}-transform-output"
   description     = "Lambda to transform the output for table validation"
