@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: commit-changes
-        uses: ministryofjustice/modernisation-platform-github-actions/signed-commit@7b8dd97eb5b596a88206805943771ea7ffcde235 # v3.4.8
+        uses: ministryofjustice/modernisation-platform-github-actions/signed-commit@e3ccf33927794ce5350b9211e288ad84e69365a8 # v3.4.8
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           pr_title: "GitHub Actions Code Formatter workflow"
