@@ -13,27 +13,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
-          fetch-depth: 0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
-      - name: format-code
-        uses: ministryofjustice/modernisation-platform-github-actions/format-code@4eceb2a416a197e91dc557c2ef0b5dd9afe29e0c # v3.4.6
+      - name: Run format-code action
+        uses: ministryofjustice/modernisation-platform-github-actions/format-code@7b8dd97eb5b596a88206805943771ea7ffcde235 # v3.4.8
         with:
           ignore_files: "README.md"
+          disable_error: "false"
 
-      - name: Show git HEAD info
-        run: |
-          echo "symbolic-full-name: $(git rev-parse --symbolic-full-name HEAD || echo DETACHED)"
-          echo "HEAD file:"
-          cat .git/HEAD | sed 's/^/    /'
-          git branch -a
-
-      - name: commit-changes
-        uses: ministryofjustice/modernisation-platform-github-actions/signed-commit@4eceb2a416a197e91dc557c2ef0b5dd9afe29e0c # v3.4.6
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          pr_title: "GitHub Actions Code Formatter workflow"
-          pr_body: "This pull request includes updates from the GitHub Actions Code Formatter workflow. Please review the changes and merge if everything looks good."
+      # # Currently doesn't work due to a bug. https://mojdt.slack.com/archives/C01A7QK5VM1/p1764252104497789. 
+      # - name: Run signed-commit action
+      #   uses: ministryofjustice/modernisation-platform-github-actions/signed-commit@4eceb2a416a197e91dc557c2ef0b5dd9afe29e0c # v3.4.6
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     pr_title: "GitHub Actions Code Formatter workflow"
+      #     pr_body: "This pull request includes updates from the GitHub Actions Code Formatter workflow. Please review the changes and merge if everything looks good."
