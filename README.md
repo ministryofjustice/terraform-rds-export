@@ -122,6 +122,6 @@ module "rds_export" {
 
 # Alerts
 The module sets up status monitoring of the State Machines using EventBridge. If an execution is non-successful, the event is sent to CloudWatch logs.
-SNS publication messaging is also setup. Subscriptions need to be setup outside of the module. This is to allow users the flexibility to choose their protocol and endpoint. 
+SNS publication messaging is also setup. Subscriptions need to be setup outside of the module. This is to allow users the flexibility to choose their protocol and endpoint.
 The SNS topic_arn is provided as an output and can be used in the [aws_sns_topic_subscription](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_subscription) Terraform resource.
 <!-- END_TF_DOCS -->
