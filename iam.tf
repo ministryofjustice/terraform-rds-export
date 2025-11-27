@@ -34,10 +34,10 @@ resource "aws_iam_role_policy" "state_machine" {
         ]
         Resource = [
           "arn:aws:rds:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:db:${var.name}-${var.environment}-sql-server-backup-export",
-          "${aws_security_group.database.arn}",
-          "${aws_db_subnet_group.database.arn}",
-          "${aws_db_parameter_group.database.arn}",
-          "${aws_db_option_group.database.arn}"
+          aws_security_group.database.arn,
+          aws_db_subnet_group.database.arn,
+          aws_db_parameter_group.database.arn,
+          aws_db_option_group.database.arn
         ]
       },
       {

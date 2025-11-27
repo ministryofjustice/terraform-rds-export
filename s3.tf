@@ -1,6 +1,6 @@
 # Backup .bak uploads bucket with sensible defaults
 module "s3-bucket-backup-uploads" {
-  source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=v9.0.0"
+  source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=9facf9fc8f8b8e3f93ffbda822028534b9a75399" #v9.0.0
 
   bucket_prefix      = "${var.name}-backup-uploads-${var.environment}-"
   versioning_enabled = true
@@ -67,7 +67,7 @@ resource "aws_s3_object" "backup_uploads_folder" {
 
 # Parquet exports S3 bucket with sensible defaults
 module "s3-bucket-parquet-exports" {
-  source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=v9.0.0"
+  source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=9facf9fc8f8b8e3f93ffbda822028534b9a75399" #v9.0.0
 
   bucket_prefix      = "${var.name}-parquet-exports-${var.environment}-"
   versioning_enabled = true

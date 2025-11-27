@@ -4,7 +4,7 @@ data "aws_rds_engine_version" "selected" {
 }
 
 # Fail early if the engine version is invalid
-resource "null_resource" "validate_engine_version" {
+resource "terraform_data" "validate_engine_version" {
   count = try(data.aws_rds_engine_version.selected.version, null) != null ? 0 : 1
 
   provisioner "local-exec" {
@@ -14,6 +14,7 @@ resource "null_resource" "validate_engine_version" {
 
 
 # Security group for RDS instance
+# checkov:skip=CKV2_AWS_5: Used to allow connection to database and used in state machines
 resource "aws_security_group" "database" {
   name        = "${var.name}-${var.environment}-database"
   description = "Allow inbound traffic to database"
