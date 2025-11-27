@@ -10,9 +10,9 @@ resource "aws_cloudwatch_event_rule" "sfn_events" {
     detail = {
       status = ["FAILED", "TIMED_OUT", "ABORTED"]
       stateMachineArn = [
-        "${aws_sfn_state_machine.db_restore.arn}",
-        "${aws_sfn_state_machine.db_export.arn}",
-        "${aws_sfn_state_machine.db_delete.arn}"
+        "aws_sfn_state_machine.db_restore.arn",
+        "aws_sfn_state_machine.db_export.arn",
+        "aws_sfn_state_machine.db_delete.arn"
       ]
     }
   })
@@ -22,7 +22,8 @@ resource "aws_cloudwatch_event_rule" "sfn_events" {
 # Setting up the publish side
 # Subscription side to be set outside of module
 resource "aws_sns_topic" "sfn_events" {
-  name = "${var.name}-${var.environment}-sfn-events"
+  name              = "${var.name}-${var.environment}-sfn-events"
+  kms_master_key_id = var.kms_key_arn
 }
 
 data "aws_iam_policy_document" "sns_topic_policy" {
@@ -75,7 +76,8 @@ resource "aws_cloudwatch_event_target" "sns" {
 
 # Creating CloudWatch resources
 resource "aws_cloudwatch_log_group" "eventbridge" {
-  name = "${var.name}-${var.environment}-sfn-events-logs"
+  name       = "${var.name}-${var.environment}-sfn-events-logs"
+  kms_key_id = var.kms_key_arn
 
   log_group_class   = "STANDARD"
   retention_in_days = 0

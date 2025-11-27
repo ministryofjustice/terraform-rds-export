@@ -58,6 +58,8 @@ module "upload_checker" {
 }
 
 # IAM policy document for the database restore lambda function - allow get secret value for db password
+# checkov:skip=CKV_AWS_356: Athena workgroup resource name unknown
+# checkov:skip=CKV_AWS_111: Glue write access needed for Data Catalog access
 data "aws_iam_policy_document" "data_restore_lambda_function" {
   statement {
     actions = [
@@ -78,7 +80,7 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
     ]
 
     resources = [
-      "${var.kms_key_arn}"
+      "var.kms_key_arn"
     ]
   }
 
@@ -144,6 +146,7 @@ resource "aws_security_group" "database_restore" {
   vpc_id      = var.vpc_id
 
   # checkov:skip=CKV_AWS_382: Outbound traffic is required for the lambda to access the database and S3 bucket
+  # checkov:skip=CKV2_AWS_5: Security group referenced in lambda modules below
   egress {
     description = "Allow all outbound traffic from database restore lambda function"
     from_port   = 0
