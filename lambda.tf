@@ -84,6 +84,7 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
 
   statement {
     actions = [
+      "lakeformation:GetDataAccess",
       "athena:StartQueryExecution",
       "athena:GetQueryExecution",
       "athena:GetQueryResults",
