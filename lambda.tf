@@ -361,7 +361,7 @@ module "transform_output" {
   description     = "Lambda to transform the output for table validation"
   handler         = "main.handler"
   runtime         = "python3.12"
-  memory_size = 2048
+  memory_size     = 2048
   timeout         = 900
   architectures   = ["x86_64"]
   build_in_docker = false
