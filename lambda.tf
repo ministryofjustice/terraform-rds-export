@@ -80,7 +80,7 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
     ]
 
     resources = [
-      "var.kms_key_arn"
+      var.kms_key_arn
     ]
   }
 
