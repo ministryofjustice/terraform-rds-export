@@ -10,9 +10,9 @@ resource "aws_cloudwatch_event_rule" "sfn_events" {
     detail = {
       status = ["FAILED", "TIMED_OUT", "ABORTED"]
       stateMachineArn = [
-        "${aws_sfn_state_machine.db_restore.arn}",
-        "${aws_sfn_state_machine.db_export.arn}",
-        "${aws_sfn_state_machine.db_delete.arn}"
+        aws_sfn_state_machine.db_restore.arn,
+        aws_sfn_state_machine.db_export.arn,
+        aws_sfn_state_machine.db_delete.arn
       ]
     }
   })

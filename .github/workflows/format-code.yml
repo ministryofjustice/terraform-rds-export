@@ -4,7 +4,7 @@ on:
     types: [opened, edited, reopened, synchronize]
 
 permissions: read-all
-  
+
 jobs:
   format-code:
     permissions:
@@ -13,10 +13,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
-      - name: Run Format Code Action
-        uses: ministryofjustice/modernisation-platform-github-actions/format-code@e3ccf33927794ce5350b9211e288ad84e69365a8 # v3.4.4
+      - name: Run format-code action
+        uses: ministryofjustice/modernisation-platform-github-actions/format-code@7b8dd97eb5b596a88206805943771ea7ffcde235 # v3.4.8
         with:
+          apply_fixes: "none"
           ignore_files: "README.md"
-          apply_fixes: "None"
+          disable_errors: "false"
+
+      # # Currently doesn't work due to a bug. https://mojdt.slack.com/archives/C01A7QK5VM1/p1764252104497789 / https://github.com/ministryofjustice/modernisation-platform/issues/11985
+      # - name: Run signed-commit action
+      #   uses: ministryofjustice/modernisation-platform-github-actions/signed-commit@4eceb2a416a197e91dc557c2ef0b5dd9afe29e0c # v3.4.6
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     pr_title: "GitHub Actions Code Formatter workflow"
+      #     pr_body: "This pull request includes updates from the GitHub Actions Code Formatter workflow. Please review the changes and merge if everything looks good."
