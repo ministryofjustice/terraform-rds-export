@@ -142,7 +142,7 @@
             "Type": "Task",
             "Resource": "arn:aws:states:::lambda:invoke",
             "Parameters": {
-              "FunctionName": "${ExportValidationRowCountUpdaterLambdaArn}",  
+              "FunctionName": "${ExportValidationRowCountUpdaterLambdaArn}",
               "Payload": {
                 "chunk.$": "$.chunk"
               }

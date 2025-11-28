@@ -30,6 +30,7 @@ variable "kms_key_arn" {
 
 variable "master_user_secret_id" {
   description = "The ARN of the secret containing the master user password to use for the RDS DB database."
+  type        = string
 }
 
 variable "tags" {
