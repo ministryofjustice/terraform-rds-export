@@ -1,4 +1,5 @@
 # Backup .bak uploads bucket with sensible defaults
+#trivy:ignore:AVD-AWS-0089 Bucket logging not required.
 module "s3-bucket-backup-uploads" {
   source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=9facf9fc8f8b8e3f93ffbda822028534b9a75399" #v9.0.0
 
@@ -66,6 +67,7 @@ resource "aws_s3_object" "backup_uploads_folder" {
 }
 
 # Parquet exports S3 bucket with sensible defaults
+#trivy:ignore:AVD-AWS-0089 Bucket logging not required.
 module "s3-bucket-parquet-exports" {
   source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=9facf9fc8f8b8e3f93ffbda822028534b9a75399" #v9.0.0
 
