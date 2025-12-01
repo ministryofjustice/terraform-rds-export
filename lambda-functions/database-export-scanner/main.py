@@ -26,6 +26,7 @@ athena = boto3.client("athena")
 # Creates the metadata with data type string
 # Gets the row count and populates this in the row_count_table in Athena
 
+
 def run_athena_query(query, database, bucket):
     response = athena.start_query_execution(
         QueryString=query,

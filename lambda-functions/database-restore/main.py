@@ -10,6 +10,7 @@ logger.setLevel(logging.INFO)
 
 secretmanager = boto3.client("secretsmanager")
 
+
 # Restores the .bak file to the RDS DB Instance
 def handler(event, context):
     # Retrieve configuration from environment variables

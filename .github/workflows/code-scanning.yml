@@ -2,6 +2,7 @@ name: Secure Code Analysis
 on:
   schedule:
     - cron: '35 1 * * *'
+  workflow_dispatch:
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 permissions:

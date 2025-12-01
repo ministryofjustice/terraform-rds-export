@@ -12,6 +12,7 @@ athena = boto3.client("athena")
 # Returns the row count of each table exported
 # Writes the row count to the row_count_table in Athena
 
+
 def run_athena_query(query, database, bucket):
     response = athena.start_query_execution(
         QueryString=query,
@@ -40,6 +41,7 @@ def get_query_result(query_id):
         return result["ResultSet"]["Rows"][1]["Data"][0]["VarCharValue"]
     except (IndexError, KeyError):
         return "0"
+
 
 def handler(event, context):
     chunk = event["chunk"]

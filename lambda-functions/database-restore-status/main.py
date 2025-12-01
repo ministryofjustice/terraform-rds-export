@@ -10,6 +10,7 @@ logger.setLevel(logging.INFO)
 
 secretmanager = boto3.client("secretsmanager")
 
+
 # Retrieves the status of the restore of the .bak file
 def handler(event, context):
     # Retrieve configuration from environment variables
