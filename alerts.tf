@@ -23,7 +23,7 @@ resource "aws_cloudwatch_event_rule" "sfn_events" {
 # Subscription side to be set outside of module
 #trivy:ignore:AVD-AWS-0095 Topic not currently encrypted. TO INVESTIGATE IF REQUIRED.
 resource "aws_sns_topic" "sfn_events" {
-  #checkov:ignore:CKV_AWS_26 Topic not currently encrypted. TO INVESTIGATE IF REQUIRED.
+  #checkov:skip=CKV_AWS_26:Topic not currently encrypted. TO INVESTIGATE IF REQUIRED.
   name = "${var.name}-${var.environment}-sfn-events"
 }
 
@@ -78,7 +78,7 @@ resource "aws_cloudwatch_event_target" "sns" {
 # Creating CloudWatch resources
 #trivy:ignore:AVD-AWS-0017 CloudWatch log groups encrypted by default.
 resource "aws_cloudwatch_log_group" "eventbridge" {
-  #checkov:ignore:CKV_AWS_158 CloudWatch log groups encrypted by default.
+  #checkov:skip=CKV_AWS_158:CloudWatch log groups encrypted by default.
   name = "${var.name}-${var.environment}-sfn-events-logs"
 
   log_group_class   = "STANDARD"

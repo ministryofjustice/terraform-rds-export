@@ -9,7 +9,7 @@ terraform {
 }
 
 module "rds_export" {
-  #checkov:skip=CKV_TF_1,CKV_TF_2: Use commit hash in production
+  #checkov:skip=CKV_TF_1,CKV_TF_2:Use commit hash in production
   source = "github.com/ministryofjustice/terraform-rds-export?ref=<commit-hash>"
 
   providers = {

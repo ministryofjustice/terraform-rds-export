@@ -1,5 +1,5 @@
 resource "aws_iam_role" "state_machine" {
-  #checkov:skip=CKV_AWS_61: See comment below
+  #checkov:skip=CKV_AWS_61:See comment below
   name = "${var.name}-${var.environment}-step-functions-database-export"
 
   assume_role_policy = jsonencode({
@@ -17,8 +17,8 @@ resource "aws_iam_role" "state_machine" {
 }
 
 resource "aws_iam_role_policy" "state_machine" {
-  #checkov:skip=CKV_AWS_288,CKV_AWS_290,CKV_AWS_286,CKV_AWS_287,CKV_AWS_63,CKV_AWS_289,CKV_AWS_61,CKV_AWS_355: Look at comment above
-  #checkov:skip=CKV_AWS_62: See comment above
+  #checkov:skip=CKV_AWS_288,CKV_AWS_290,CKV_AWS_286,CKV_AWS_287,CKV_AWS_63,CKV_AWS_289,CKV_AWS_61,CKV_AWS_355:Look at comment above
+  #checkov:skip=CKV_AWS_62:See comment above
   name = "${var.name}-${var.environment}-step-functions-database-export"
   role = aws_iam_role.state_machine.name
 
@@ -108,7 +108,7 @@ resource "aws_iam_role_policy_attachment" "attach_start_export" {
 }
 
 resource "aws_iam_role" "database_restore" {
-  #checkov:skip=CKV_AWS_61: See comment below
+  #checkov:skip=CKV_AWS_61:See comment below
   name = "${var.name}-${var.environment}-rds-restore"
 
   assume_role_policy = jsonencode({

@@ -60,8 +60,8 @@ module "upload_checker" {
 
 # IAM policy document for the database restore lambda function - allow get secret value for db password
 data "aws_iam_policy_document" "data_restore_lambda_function" {
-  #checkov:skip=CKV_AWS_356: Athena workgroup resource name unknown
-  #checkov:skip=CKV_AWS_111: Glue write access needed for Data Catalog access
+  #checkov:skip=CKV_AWS_356:Athena workgroup resource name unknown
+  #checkov:skip=CKV_AWS_111:Glue write access needed for Data Catalog access
   statement {
     actions = [
       "secretsmanager:GetSecretValue"
@@ -143,13 +143,13 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
 # Security group for database restore lambda function
 #trivy:ignore:AVD-AWS-0104 Attached to Lambda
 resource "aws_security_group" "database_restore" {
-  #checkov:skip=CKV2_AWS_5: Used by Lambda
+  #checkov:skip=CKV2_AWS_5:Used by Lambda
   name        = "${var.name}-${var.environment}-database-restore"
   description = "Allow outbound traffic from database restore lambda function"
   vpc_id      = var.vpc_id
 
-  #checkov:skip=CKV_AWS_382: Outbound traffic is required for the lambda to access the database and S3 bucket
-  #checkov:skip=CKV2_AWS_5: Security group referenced in lambda modules below
+  #checkov:skip=CKV_AWS_382:Outbound traffic is required for the lambda to access the database and S3 bucket
+  #checkov:skip=CKV2_AWS_5:Security group referenced in lambda modules below
   egress {
     description = "Allow all outbound traffic from database restore lambda function"
     from_port   = 0
