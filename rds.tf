@@ -15,7 +15,7 @@ resource "terraform_data" "validate_engine_version" {
 
 # Security group for RDS instance
 resource "aws_security_group" "database" {
-  #checkov:skip=CKV2_AWS_5: Used to allow connection to database and used in state machines
+  #checkov:skip=CKV2_AWS_5:Used to allow connection to database and used in state machines
   name        = "${var.name}-${var.environment}-database"
   description = "Allow inbound traffic to database"
   vpc_id      = data.aws_vpc.vpc.id
