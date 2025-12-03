@@ -73,12 +73,13 @@ def handler(event, context):
     db_pw_secret_arn = os.environ["DATABASE_PW_SECRET_ARN"]
     output_bucket = event["output_bucket"]
     database_refresh_mode = os.environ["DATABASE_REFRESH_MODE"]
+    extraction_timestamp = event["extraction_timestamp"]
+    extract_views = os.environ.get("EXTRACT_VIEWS", "No")
 
     chunk = event["chunk"]
     db_name = chunk["database"]
     db_table = chunk["table"]
     db_query = chunk["query"]
-    extraction_timestamp = chunk["extraction_timestamp"]
 
     # === Get Password ===
     db_password = get_secret_value(db_pw_secret_arn)
@@ -114,6 +115,8 @@ def handler(event, context):
         raise
 
     try:
+        db_table = f"view_{db_table}" if extract_views == "Yes" else db_table
+
         output_path = f"s3://{output_bucket}/{db_name}/{db_table}/"
         logger.info(
             f"Writing to S3: {output_path}"
@@ -126,7 +129,7 @@ def handler(event, context):
             database=db_name,
             table=db_table,
             dataset=True,
-            mode="append",
+            mode=("overwrite" if extract_views == "Yes" else "append"),
             partition_cols=(
                 ["extraction_timestamp"]
                 if database_refresh_mode == "incremental"
