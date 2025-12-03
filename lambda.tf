@@ -428,5 +428,9 @@ module "database_views" {
     ]
   }]
 
+  layers = [
+    "arn:aws:lambda:${data.aws_region.current.id}:336392948345:layer:AWSSDKPandas-Python312:18"
+  ]
+
   tags = var.tags
 }
