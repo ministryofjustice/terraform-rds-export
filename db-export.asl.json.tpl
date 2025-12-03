@@ -39,8 +39,12 @@
       "ResultPath": "$.LambdaResult",
       "Next": "Success State"
     },
+    "Fail State": {
+      "Type": "Fail",
+      "Cause": "Error with getting views."
+    },
     "Success State": {
-    "Type": "Succeed"
+      "Type": "Succeed"
     }
   }
 }
