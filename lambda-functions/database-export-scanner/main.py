@@ -359,6 +359,9 @@ def create_glue_table(
         old_columns = response["Table"]["StorageDescriptor"]["Columns"]
         if sorted(columns, "Name") != sorted(old_columns, "Name"):
             glue.update_table(DatabaseName=glue_db, TableInput=table_input)
+            logger.info(
+                "Glue table already exists: %s.%s. Metadata updated.", glue_db, table
+            )
         else:
             logger.info("Glue table already exists: %s.%s", glue_db, table)
     except Exception as e:

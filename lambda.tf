@@ -392,3 +392,41 @@ module "transform_output" {
 
   tags = var.tags
 }
+
+#trivy:ignore:AVD-AWS-0066 X-Ray tracing not currently required. Logs sent to CloudWatch.
+module "database_views" {
+  # Commit hash for v8.1.2
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=a7db1252f2c2048ab9a61254869eea061eae1318"
+
+  function_name   = "${var.name}-${var.environment}-database-views"
+  description     = "Lambda to get the views from the database"
+  handler         = "main.handler"
+  runtime         = "python3.12"
+  memory_size     = 2048
+  timeout         = 900
+  architectures   = ["x86_64"]
+  build_in_docker = false
+
+  # VPC Config - Lambda function needs to be in the same VPC as the RDS instance
+  vpc_subnet_ids         = var.database_subnet_ids
+  vpc_security_group_ids = [aws_security_group.database_restore.id]
+  attach_network_policy  = true
+
+  attach_policy_json = true
+  policy_json        = data.aws_iam_policy_document.data_restore_lambda_function.json
+
+  environment_variables = {
+    DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
+    DATABASE_REFRESH_MODE  = var.database_refresh_mode
+  }
+
+  source_path = [{
+    path = "${path.module}/lambda-functions/database-views/main.py"
+  }]
+
+  layers = [
+    "arn:aws:lambda:${data.aws_region.current.id}:336392948345:layer:AWSSDKPandas-Python312:18"
+  ]
+
+  tags = var.tags
+}
