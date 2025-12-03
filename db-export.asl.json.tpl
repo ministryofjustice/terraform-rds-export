@@ -37,7 +37,10 @@
         "Payload.$": "$.Payload"
       },
       "ResultPath": "$.LambdaResult",
-      "End": true
+      "Next": "Success State",
+    },
+    "Success State": {
+    "Type": "Succeed"
     }
   }
 }
