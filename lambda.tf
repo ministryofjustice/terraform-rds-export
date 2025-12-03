@@ -421,12 +421,12 @@ module "database_views" {
   }
 
   source_path = [{
-    path = "${path.module}/lambda-functions/database-views/main.py"
+    path = "${path.module}/lambda-functions/database-views/"
+    commands = [
+      "pip3.12 install --platform=manylinux2014_x86_64 --only-binary=:all: --no-compile --target=. -r requirements.txt",
+      ":zip",
+    ]
   }]
-
-  layers = [
-    "arn:aws:lambda:${data.aws_region.current.id}:336392948345:layer:AWSSDKPandas-Python312:18"
-  ]
 
   tags = var.tags
 }
