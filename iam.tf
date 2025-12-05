@@ -229,7 +229,7 @@ resource "aws_iam_role_policy" "eventbridge_sns_publish" {
     Statement = [
       {
         Effect   = "Allow",
-        Action   = "sns:Publish"
+        Action   =    "sns:Publish"
         Resource = aws_sns_topic.sfn_events.arn
       }
     ]
