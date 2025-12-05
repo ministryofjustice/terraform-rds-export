@@ -28,22 +28,30 @@ def handler(event, context):
     db_endpoint = event["db_endpoint"]
     db_username = event["db_username"]
     db_pw_secret_arn = os.environ["DATABASE_PW_SECRET_ARN"]
-    output_bucket = event["output_bucket"]
-    extraction_timestamp = event["extraction_timestamp"]
     db_name = event["db_name"]
-    database_refresh_mode = os.environ["DATABASE_REFRESH_MODE"]
+    extraction_timestamp = event["extraction_timestamp"]
+    output_bucket = event["output_bucket"]
 
     # === Get Password ===
     db_password = get_secret_value(db_pw_secret_arn)
 
     # === Db_query ===
+    db_query_views = """
+    SELECT
+        s.name AS schema_name,
+        v.name AS view_name
+    FROM sys.views v
+    JOIN sys.schemas s ON v.schema_id = s.schema_id
+    WHERE v.name not like 'vw_aspnet%';
+    """
 
-    db_query = """
+    db_query_views_description = """
     SELECT
         v.name AS view_name,
         sm.definition AS view_definition
     FROM sys.views v
     JOIN sys.sql_modules sm ON v.object_id = sm.object_id
+    WHERE v.name not like 'vw_aspnet%'
     ORDER BY v.name;
     """
 
@@ -57,10 +65,19 @@ def handler(event, context):
             database=db_name,
             tds_version="7.4",
         )
-        df = pd.read_sql_query(db_query, conn)
-        logger.info(f"Fetched {len(df)} rows from {db_name}")
+
+        df = pd.read_sql_query(db_query_views_description, conn)
+        logger.info("Fetched view descriptions")
+
+        cursor = conn.cursor(as_dict=True)
+        cursor.excute(db_query_views)
+        views_result = cursor.fetchall()
+        logger.info(
+            f"Query ran successfully. ({len(views_result)} views in database {db_name}."
+        )
+
     except Exception as e:
-        logger.exception(f"Failed to fetch data from SQL Server: {e}")
+        logger.exception(f"Failed to get view information: {e}")
         raise
 
     # === Decode and Clean Data ===
@@ -73,10 +90,7 @@ def handler(event, context):
 
     try:
         output_path = f"s3://{output_bucket}/{db_name}/view_definitions/"
-        logger.info(
-            f"Writing to S3: {output_path}"
-            f"{' partitioned by extraction_timestamp' if database_refresh_mode == 'incremental' else ''}"
-        )
+        logger.info(f"Writing to S3: {output_path}")
 
         wr.s3.to_parquet(
             df=df,
@@ -84,20 +98,28 @@ def handler(event, context):
             database=db_name,
             table="view_definitions",
             dataset=True,
-            mode="append",
-            partition_cols=(
-                ["extraction_timestamp"]
-                if database_refresh_mode == "incremental"
-                else None
-            ),
+            mode="overwrite",
         )
 
-        logger.info(f"Data export for views completed: {db_name}. ({len(df)} rows)")
-        return {
-            "database": db_name,
-            "table": "view_definitions",
-            "s3_output_path": output_path,
-        }
+        logger.info(
+            f"Database view description table written successfully to {output_path}."
+        )
+
+        views = []
+        for row in views_result:
+            schema_name = row["schema_name"]
+            view_name = row["view_name"]
+
+            view_info = {
+                "schema_name": schema_name,
+                "view_name": view_name,
+            }
+            views.append(view_info)
+
+        cursor.close()
+        logger.info("View informatione extracted successfully.")
+
+        return {"views": views}
 
     except Exception as e:
         logger.exception(f"Failed to write view_definitions to S3 for {db_name}: {e}")

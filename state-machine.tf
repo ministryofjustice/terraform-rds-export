@@ -37,8 +37,28 @@ resource "aws_sfn_state_machine" "db_export" {
     OptionGroupName                          = resource.aws_db_option_group.database.name
     VpcSecurityGroupIds                      = [resource.aws_security_group.database.id]
     DbSubnetGroupName                        = resource.aws_db_subnet_group.database.name
-    DatabaseDeleteStateMachineArn            = resource.aws_sfn_state_machine.db_delete.arn
+    DatabaseExportViewsStateMachineArn       = resource.aws_sfn_state_machine.db_export_views.arn
     max_concurrency                          = var.max_concurrency
+  })
+}
+
+# Gets view definitions and data
+resource "aws_sfn_state_machine" "db_export_views" {
+  #checkov:skip=CKV_AWS_284:x-ray tracing not required for now
+  #checkov:skip=CKV_AWS_285:Logging not required for now. Execution history recorded in Step Function.
+  name     = "${var.name}-${var.environment}-database-export-views"
+  role_arn = aws_iam_role.state_machine.arn
+
+  definition = templatefile("${path.module}/db-export-views.asl.json.tpl", {
+    DatabaseViewsLambdaArn        = module.database_views.lambda_function_arn
+    TransformOutputLambdaArn      = module.transform_output.lambda_function_arn
+    MasterUserPassword            = data.aws_secretsmanager_secret_version.master_user_secret.secret_string
+    ParameterGroupName            = resource.aws_db_parameter_group.database.name
+    OptionGroupName               = resource.aws_db_option_group.database.name
+    VpcSecurityGroupIds           = [resource.aws_security_group.database.id]
+    DbSubnetGroupName             = resource.aws_db_subnet_group.database.name
+    DatabaseDeleteStateMachineArn = resource.aws_sfn_state_machine.db_delete.arn
+    max_concurrency               = var.max_concurrency
   })
 }
 

@@ -86,6 +86,7 @@ resource "aws_iam_policy" "allow_start_execution" {
         ],
         Resource = [
           "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-${var.environment}-database-export",
+          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-${var.environment}-database-export-views",
           "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-${var.environment}-database-delete"
         ]
       },
@@ -96,6 +97,7 @@ resource "aws_iam_policy" "allow_start_execution" {
         ],
         Resource = [
           "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-${var.environment}-database-export",
+          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-${var.environment}-database-export-views",
           "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-${var.environment}-database-delete"
         ]
       }
