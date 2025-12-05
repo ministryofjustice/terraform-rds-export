@@ -1,0 +1,20 @@
+Results of terraform-fmt linter (version 1.12.2)
+See documentation on https://megalinter.io/8.8.0/descriptors/terraform_terraform_fmt/
+-----------------------------------------------
+
+❌ [ERROR] iam.tf
+    iam.tf
+    --- old/iam.tf
+    +++ new/iam.tf
+    @@ -229,7 +229,7 @@
+         Statement = [
+           {
+             Effect   = "Allow",
+    -        Action   =    "sns:Publish"
+    +        Action   = "sns:Publish"
+             Resource = aws_sns_topic.sfn_events.arn
+           }
+         ]
+
+✅ [SUCCESS] lambda.tf
+✅ [SUCCESS] state-machine.tf

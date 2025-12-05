@@ -1,0 +1,82 @@
+----------------------------------------------------------------------------------------------------
+------------------------------------ MegaLinter, by OX Security ------------------------------------
+----------------------------------------------------------------------------------------------------
+ - Image Creation Date: 2025-06-15T16:22:24Z
+ - Image Revision: e08c2b05e3dbc40af4c23f41172ef1e068a7d651
+ - Image Version: v8.8.0
+----------------------------------------------------------------------------------------------------
+The MegaLinter documentation can be found at:
+ - https://megalinter.io/8.8.0
+----------------------------------------------------------------------------------------------------
+::group::MegaLinter initialization (expand for details)
+MegaLinter will analyze workspace [/github/workspace]
+GITHUB_REPOSITORY: ministryofjustice/terraform-rds-export
+GITHUB_REF: refs/pull/128/merge
+GITHUB_RUN_ID: 19961283377
+
+
+JSON_ESLINT_PLUGIN_JSONC has been disabled in MegaLinter for the following reason: Bug in eslint-plugin-jsonc: https://github.com/ota-meshi/eslint-plugin-jsonc/issues/328
+MAKEFILE_CHECKMAKE has been disabled in MegaLinter for the following reason: Security issues: https://github.com/mrtazz/checkmake/issues/99
+MARKDOWN_REMARK_LINT has been disabled in MegaLinter for the following reason: Bug in remark-lint: https://github.com/remarkjs/remark-lint/issues/322
+Skipped linters: ACTION_ACTIONLINT, ANSIBLE_ANSIBLE_LINT, API_SPECTRAL, ARM_ARM_TTK, BASH_EXEC, BASH_SHELLCHECK, BASH_SHFMT, BICEP_BICEP_LINTER, CLOJURE_CLJSTYLE, CLOJURE_CLJ_KONDO, CLOUDFORMATION_CFN_LINT, COFFEE_COFFEELINT, COPYPASTE_JSCPD, CPP_CLANG_FORMAT, CPP_CPPCHECK, CPP_CPPLINT, CSHARP_CSHARPIER, CSHARP_DOTNET_FORMAT, CSHARP_ROSLYNATOR, CSS_STYLELINT, C_CLANG_FORMAT, C_CPPCHECK, C_CPPLINT, DART_DARTANALYZER, DOCKERFILE_HADOLINT, EDITORCONFIG_EDITORCONFIG_CHECKER, ENV_DOTENV_LINTER, GHERKIN_GHERKIN_LINT, GO_GOLANGCI_LINT, GO_REVIVE, GRAPHQL_GRAPHQL_SCHEMA_LINTER, GROOVY_NPM_GROOVY_LINT, HTML_DJLINT, HTML_HTMLHINT, JAVASCRIPT_ES, JAVASCRIPT_PRETTIER, JAVASCRIPT_STANDARD, JAVA_CHECKSTYLE, JAVA_PMD, JSON_ESLINT_PLUGIN_JSONC, JSON_JSONLINT, JSON_NPM_PACKAGE_JSON_LINT, JSON_V8R, JSX_ESLINT, KOTLIN_DETEKT, KOTLIN_KTLINT, KUBERNETES_HELM, KUBERNETES_KUBECONFORM, KUBERNETES_KUBESCAPE, LATEX_CHKTEX, LUA_LUACHECK, LUA_SELENE, LUA_STYLUA, MAKEFILE_CHECKMAKE, MARKDOWN_MARKDOWN_LINK_CHECK, MARKDOWN_MARKDOWN_TABLE_FORMATTER, MARKDOWN_REMARK_LINT, PERL_PERLCRITIC, PHP_PHPCS, PHP_PHPCSFIXER, PHP_PHPLINT, PHP_PHPSTAN, PHP_PSALM, POWERSHELL_POWERSHELL, POWERSHELL_POWERSHELL_FORMATTER, PROTOBUF_PROTOLINT, PUPPET_PUPPET_LINT, PYTHON_BANDIT, PYTHON_BLACK, PYTHON_FLAKE8, PYTHON_ISORT, PYTHON_MYPY, PYTHON_PYLINT, PYTHON_PYRIGHT, PYTHON_RUFF, PYTHON_RUFF_FORMAT, RAKU_RAKU, REPOSITORY_CHECKOV, REPOSITORY_DEVSKIM, REPOSITORY_DUSTILOCK, REPOSITORY_GITLEAKS, REPOSITORY_GIT_DIFF, REPOSITORY_GRYPE, REPOSITORY_KICS, REPOSITORY_LS_LINT, REPOSITORY_SECRETLINT, REPOSITORY_SEMGREP, REPOSITORY_SYFT, REPOSITORY_TRIVY, REPOSITORY_TRIVY_SBOM, REPOSITORY_TRUFFLEHOG, RST_RSTCHECK, RST_RSTFMT, RST_RST_LINT, RUBY_RUBOCOP, RUST_CLIPPY, R_LINTR, SALESFORCE_LIGHTNING_FLOW_SCANNER, SALESFORCE_SFDX_SCANNER_APEX, SALESFORCE_SFDX_SCANNER_AURA, SALESFORCE_SFDX_SCANNER_LWC, SCALA_SCALAFIX, SNAKEMAKE_LINT, SNAKEMAKE_SNAKEFMT, SPELL_CSPELL, SPELL_LYCHEE, SPELL_PROSELINT, SPELL_VALE, SQL_SQLFLUFF, SQL_TSQLLINT, SWIFT_SWIFTLINT, TEKTON_TEKTON_LINT, TERRAFORM_TERRAGRUNT, TERRAFORM_TERRASCAN, TERRAFORM_TFLINT, TSX_ESLINT, TYPESCRIPT_ES, TYPESCRIPT_PRETTIER, TYPESCRIPT_STANDARD, VBDOTNET_DOTNET_FORMAT, XML_XMLLINT, YAML_V8R, YAML_YAMLLINT
+[ApiReporter] Not enabled as API_REPORTER is not defined to true
+::endgroup::
+::group::MegaLinter now collects the files to analyse (expand for details)
+Listing updated files in [/github/workspace] using git diff.
+Modified files:
+.github/workflows/format-code.yml
+.pre-commit-config.yaml
+.terraform.lock.hcl
+db-export.asl.json.tpl
+iam.tf
+lambda-functions/database-export-scanner/main.py
+lambda-functions/database-views/main.py
+lambda-functions/database-views/requirements.txt
+lambda-functions/transform-output/main.py
+lambda.tf
+state-machine.tf
+- File extensions: .json, .md, .tf, .yaml, .yml
+- Excluding regex: README.md
+- Excluding .gitignored files [0]: 
+Kept [5] files on [11] found files
+
++----MATCHING LINTERS--------+----------+----------------+------------+
+| Descriptor | Linter        | Criteria | Matching files | Format/Fix |
++------------+---------------+----------+----------------+------------+
+| TERRAFORM  | terraform-fmt | .tf      | 3              | no         |
++------------+---------------+----------+----------------+------------+
+::endgroup::
+::group::[33m⚠️ Linted [TERRAFORM] files with [terraform-fmt]: Found 1 non blocking error(s) and 0 non blocking warning(s) - (0.08s)[0m (expand for details)
+- Using [terraform-fmt v1.12.2] https://megalinter.io/8.8.0/descriptors/terraform_terraform_fmt
+- MegaLinter key: [TERRAFORM_TERRAFORM_FMT]
+- Rules config: identified by [terraform-fmt]
+- Number of files analyzed: [3]
+- Commands:
+  [terraform fmt --diff --check iam.tf]
+  [terraform fmt --diff --check lambda.tf]
+  [terraform fmt --diff --check state-machine.tf]
+[31m[terraform-fmt] iam.tf - ERROR - 1 error(s) and 0 warning(s)[0m
+[31m--Error detail:
+iam.tf
+--- old/iam.tf
++++ new/iam.tf
+@@ -229,7 +229,7 @@
+     Statement = [
+       {
+         Effect   = "Allow",
+-        Action   =    "sns:Publish"
++        Action   = "sns:Publish"
+         Resource = aws_sns_topic.sfn_events.arn
+       }
+     ]
+[0m
+::endgroup::
+[Updated Sources Reporter] No source file has been formatted or fixed
+
++----SUMMARY---+---------------+------+-------+-------+--------+----------+--------------+
+| Descriptor   | Linter        | Mode | Files | Fixed | Errors | Warnings | Elapsed time |
++--------------+---------------+------+-------+-------+--------+----------+--------------+
+| ⚠️ TERRAFORM | terraform-fmt | file |     3 |       |      1 |        0 | 0.08s        |
++--------------+---------------+------+-------+-------+--------+----------+--------------+
+
+[33m⚠️ Successfully linted all files, but with ignored errors[0m
