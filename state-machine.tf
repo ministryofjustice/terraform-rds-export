@@ -52,8 +52,8 @@ resource "aws_sfn_state_machine" "db_export_views" {
   role_arn = aws_iam_role.state_machine.arn
 
   definition = templatefile("${path.module}/db-export-views.asl.json.tpl", {
-    DatabaseViewsScannerLambdaArn   = module.database_views_scanner.lambda_function_arn
-    DatabaseViewsProcessorLambdaArn = module.database_views_processor.lambda_function_arn
+    DatabaseViewsScannerLambdaArn   = module.database_views_scanner[0].lambda_function_arn
+    DatabaseViewsProcessorLambdaArn = module.database_views_processor[0].lambda_function_arn
     TransformOutputLambdaArn        = module.transform_output.lambda_function_arn
     MasterUserPassword              = data.aws_secretsmanager_secret_version.master_user_secret.secret_string
     ParameterGroupName              = aws_db_parameter_group.database.name

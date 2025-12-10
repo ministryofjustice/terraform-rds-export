@@ -396,6 +396,8 @@ module "transform_output" {
 #trivy:ignore:AVD-AWS-0066 X-Ray tracing not currently required. Logs sent to CloudWatch.
 module "database_views_scanner" {
   # Commit hash for v8.1.2
+  count = var.get_views ? 1 : 0
+
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=a7db1252f2c2048ab9a61254869eea061eae1318"
 
   function_name   = "${var.name}-${var.environment}-database-views-scanner"
@@ -437,6 +439,8 @@ module "database_views_scanner" {
 #trivy:ignore:AVD-AWS-0066 X-Ray tracing not currently required. Logs sent to CloudWatch.
 module "database_views_processor" {
   # Commit hash for v8.1.2
+  count = var.get_views ? 1 : 0
+
   source          = "git::https://github.com/terraform-aws-modules/terraform-aws-lambda?ref=a7db1252f2c2048ab9a61254869eea061eae1318"
   function_name   = "${var.name}-${var.environment}-database-views-processor"
   description     = "Lambda to export views for ${var.name} ${var.environment}"

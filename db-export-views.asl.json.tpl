@@ -1,5 +1,5 @@
 {
-  "Comment": "All about the database views",
+  "Comment": "For views: creates metadata in Glue Catalog, exports data to S3, then triggers a state machine to delete the RDS DB instance.",
   "StartAt": "Run Database Views Lambda",
   "TimeoutSeconds": 7200,
   "States": {

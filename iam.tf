@@ -45,16 +45,18 @@ resource "aws_iam_role_policy" "state_machine" {
         Action = [
           "lambda:InvokeFunction"
         ]
-        Resource = [
-          module.database_restore.lambda_function_arn,
-          module.database_restore_status.lambda_function_arn,
-          module.database_export_scanner.lambda_function_arn,
-          module.database_export_processor.lambda_function_arn,
-          module.export_validation_rowcount_updater.lambda_function_arn,
-          module.transform_output.lambda_function_arn,
-          module.database_views_scanner.lambda_function_arn,
-          module.database_views_processor.lambda_function_arn
-        ]
+        Resource = concat(
+          [
+            module.database_restore.lambda_function_arn,
+            module.database_restore_status.lambda_function_arn,
+            module.database_export_scanner.lambda_function_arn,
+            module.database_export_processor.lambda_function_arn,
+            module.export_validation_rowcount_updater.lambda_function_arn,
+            module.transform_output.lambda_function_arn
+          ],
+          var.get_views ? [module.database_views_scanner[0].lambda_function_arn,
+          module.database_views_processor[0].lambda_function_arn] : []
+        )
       },
       {
         Effect = "Allow",
