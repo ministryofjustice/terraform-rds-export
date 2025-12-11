@@ -56,6 +56,7 @@ def decode_columns(df: pd.DataFrame, rowversion_cols: set) -> pd.DataFrame:
     """Decode binary columns to string."""
     for col in df.columns:
         non_nulls = df[col].dropna()
+
         if col in rowversion_cols:
             df[col] = df[col].map(lambda v: v.hex())
         elif not non_nulls.empty and isinstance(non_nulls.iloc[0], (bytes, bytearray)):
@@ -63,6 +64,14 @@ def decode_columns(df: pd.DataFrame, rowversion_cols: set) -> pd.DataFrame:
             df[col] = df[col].apply(
                 lambda x: safe_decode(x) if isinstance(x, (bytes, bytearray)) else x
             )
+
+        if df[col].dtype == "object" and df[col].isna().all():
+            logger.info(
+                f"Column '{col}' is empty object; casting to string"
+                "for deterministic Athena schema"
+            )
+            df[col] = df[col].astype("string")
+
     return df
 
 
