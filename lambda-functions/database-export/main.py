@@ -65,13 +65,6 @@ def decode_columns(df: pd.DataFrame, rowversion_cols: set) -> pd.DataFrame:
                 lambda x: safe_decode(x) if isinstance(x, (bytes, bytearray)) else x
             )
 
-        if df[col].dtype == "object" and df[col].isna().all():
-            logger.info(
-                f"Column '{col}' is empty object; casting to string"
-                "for deterministic Athena schema"
-            )
-            df[col] = df[col].astype("string")
-
     return df
 
 

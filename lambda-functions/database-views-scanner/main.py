@@ -78,22 +78,29 @@ def handler(event, context):
 
         views = []
         failed_views = []
+        empty_views = []
         for row in views_result:
             try:
                 schema_name = row["schema_name"]
                 view_name = row["view_name"]
 
-                db_query = f"SELECT TOP 5 * FROM [{schema_name}].[{view_name}]"
-                cursor.execute(db_query)
+                db_query = f"SELECT TOP 1 * FROM [{schema_name}].[{view_name}]"
+                query_result = cursor.execute(db_query)
 
-                view_info = {
-                    "database": db_name,
-                    "table": view_name,
-                    "query": db_query,
-                }
+                if len(query_result) == 1:
+                    view_info = {
+                        "database": db_name,
+                        "table": view_name,
+                        "query": db_query,
+                    }
 
-                views.append(view_info)
-                logger.info(f"VIEW: {view_name} details appended to view_info")
+                    views.append(view_info)
+                    logger.info(f"VIEW: {view_name} details appended to view_info")
+                else:
+                    empty_views.append(
+                        {"schema": schema_name, "database": db_name, "table": view_name}
+                    )
+                    logger.info(f"Empty view: {view_name}")
 
             except Exception as e:
                 failed_views.append(
