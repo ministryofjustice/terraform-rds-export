@@ -36,15 +36,6 @@ def handler(event, context):
     db_password = get_secret_value(db_pw_secret_arn)
 
     # === Db_query ===
-    db_query_views = """
-    SELECT
-        s.name AS schema_name,
-        v.name AS view_name
-    FROM sys.views v
-    JOIN sys.schemas s ON v.schema_id = s.schema_id
-    WHERE v.name not like 'vw_aspnet%';
-    """
-
     db_query_views_description = """
     SELECT
         v.name AS view_name,
@@ -67,48 +58,8 @@ def handler(event, context):
         )
 
         df = pd.read_sql_query(db_query_views_description, conn)
-        logger.info(f"Fetched {len(df)} view descriptions from {db_name}")
-
-        cursor = conn.cursor(as_dict=True)
-        cursor.execute(db_query_views)
-        views_result = cursor.fetchall()
-        logger.info(
-            f"Query ran successfully. {len(views_result)} views in database {db_name}"
-        )
-
-        views = []
-        failed_views = []
-        empty_views = []
-        for row in views_result:
-            try:
-                schema_name = row["schema_name"]
-                view_name = row["view_name"]
-
-                db_query = f"SELECT TOP 1 * FROM [{schema_name}].[{view_name}]"
-                query_result = cursor.execute(db_query)
-
-                if len(query_result) == 1:
-                    view_info = {
-                        "database": db_name,
-                        "table": view_name,
-                        "query": db_query,
-                    }
-
-                    views.append(view_info)
-                    logger.info(f"VIEW: {view_name} details appended to view_info")
-                else:
-                    empty_views.append(
-                        {"schema": schema_name, "database": db_name, "table": view_name}
-                    )
-                    logger.info(f"Empty view: {view_name}")
-
-            except Exception as e:
-                failed_views.append(
-                    {"schema": schema_name, "database": db_name, "table": view_name}
-                )
-                logger.info(f"Failed view: {view_name} with error: {e}")
-
-        cursor.close()
+        view_count = len(df)
+        logger.info(f"Fetched {view_count} view descriptions from {db_name}")
 
     except Exception as e:
         logger.exception(f"Failed to get view information: {e}")
@@ -140,9 +91,9 @@ def handler(event, context):
             f"Database view descriptions table written successfully to {output_path}"
         )
 
+        logger.info("View information extracted successfully")
+        return {"view_count_descriptio": view_count}
+
     except Exception as e:
         logger.exception(f"Failed to write {table_name} table for {db_name}: {e}")
         raise
-
-    logger.info("View information extracted successfully")
-    return {"failed_views": failed_views, "chunks": views}

@@ -52,16 +52,15 @@ resource "aws_sfn_state_machine" "db_export_views" {
   role_arn = aws_iam_role.state_machine.arn
 
   definition = templatefile("${path.module}/db-export-views.asl.json.tpl", {
-    DatabaseViewsScannerLambdaArn   = module.database_views_scanner[0].lambda_function_arn
-    DatabaseViewsProcessorLambdaArn = module.database_views_processor[0].lambda_function_arn
-    TransformOutputLambdaArn        = module.transform_output.lambda_function_arn
-    MasterUserPassword              = data.aws_secretsmanager_secret_version.master_user_secret.secret_string
-    ParameterGroupName              = aws_db_parameter_group.database.name
-    OptionGroupName                 = aws_db_option_group.database.name
-    VpcSecurityGroupIds             = [aws_security_group.database.id]
-    DbSubnetGroupName               = aws_db_subnet_group.database.name
-    DatabaseDeleteStateMachineArn   = aws_sfn_state_machine.db_delete.arn
-    max_concurrency                 = var.max_concurrency
+    DatabaseViewsScannerLambdaArn = module.database_views_scanner[0].lambda_function_arn
+    TransformOutputLambdaArn      = module.transform_output.lambda_function_arn
+    MasterUserPassword            = data.aws_secretsmanager_secret_version.master_user_secret.secret_string
+    ParameterGroupName            = aws_db_parameter_group.database.name
+    OptionGroupName               = aws_db_option_group.database.name
+    VpcSecurityGroupIds           = [aws_security_group.database.id]
+    DbSubnetGroupName             = aws_db_subnet_group.database.name
+    DatabaseDeleteStateMachineArn = aws_sfn_state_machine.db_delete.arn
+    max_concurrency               = var.max_concurrency
   })
 }
 

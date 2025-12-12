@@ -1,5 +1,5 @@
 {
-  "Comment": "For views: creates metadata in Glue Catalog, exports data to S3, then triggers a state machine to delete the RDS DB instance.",
+  "Comment": "For views: creates a table containing views and their definitions.",
   "StartAt": "Run Database Views Lambda",
   "TimeoutSeconds": 7200,
   "States": {
@@ -33,67 +33,10 @@
           "Next": "Fail State"
         }
       ],
-      "Next": "Export Views",
+      "Next": "Prepare Input for Delete",
       "ResultSelector": {
         "Payload.$": "$.Payload"
       },
-      "ResultPath": "$.LambdaResult"
-    },
-    "Export Views": {
-      "Type": "Map",
-      "ItemsPath": "$.LambdaResult.Payload.chunks",
-      "ItemSelector": {
-        "chunk": {
-          "table.$": "$$.Map.Item.Value.table",
-          "query.$": "$$.Map.Item.Value.query",
-          "database.$": "$$.Map.Item.Value.database"
-        },
-        "db_endpoint.$": "$.db_endpoint",
-        "db_username.$": "$.db_username",
-        "db_name.$": "$.db_name",
-        "output_bucket.$": "$.output_bucket",
-        "name.$": "$.name",
-        "extraction_timestamp.$": "$.extraction_timestamp"
-      },
-      "MaxConcurrency": ${max_concurrency},
-      "ItemProcessor": {
-        "ProcessorConfig": {
-          "Mode": "INLINE"
-        },
-        "StartAt": "Invoke Export Processor - Chunk Export",
-        "States": {
-          "Invoke Export Processor - Chunk Export": {
-            "Type": "Task",
-            "Resource": "arn:aws:states:::lambda:invoke",
-            "OutputPath": "$.Payload",
-            "Parameters": {
-              "FunctionName": "${DatabaseViewsProcessorLambdaArn}",
-              "Payload": {
-                "chunk.$": "$.chunk",
-                "db_endpoint.$": "$.db_endpoint",
-                "db_name.$": "$.db_name",
-                "db_username.$": "$.db_username",
-                "output_bucket.$": "$.output_bucket",
-                "name.$": "$.name",
-                "extraction_timestamp.$": "$.extraction_timestamp"
-              }
-            },
-            "Retry": [
-              {
-                "ErrorEquals": [
-                  "States.ALL"
-                ],
-                "IntervalSeconds": 5,
-                "MaxAttempts": 3,
-                "BackoffRate": 1,
-                "JitterStrategy": "NONE"
-              }
-            ],
-            "End": true
-          }
-        }
-      },
-      "Next": "Prepare Input for Delete",
       "ResultPath": "$.LambdaResult"
     },
   "Prepare Input for Delete": {
