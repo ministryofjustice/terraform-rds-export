@@ -6,7 +6,6 @@ import logging
 import pymssql
 import pandas as pd
 import warnings
-import uuid
 import awswrangler as wr
 from urllib.parse import urlparse
 
@@ -282,6 +281,11 @@ def delete_glue_table(
         return {"status": "ERROR", "message": str(e)}
 
 
+def sort_cols(cols: list[dict], field: str):
+    cols_conv = [{k.capitalize(): v.lower() for k, v in col.items()} for col in cols]
+    return sorted(cols_conv, key=lambda c: c[field.capitalize()])
+
+
 def create_glue_table(
     database_refresh_mode: str,
     db_name: str,
@@ -352,7 +356,17 @@ def create_glue_table(
         glue.create_table(DatabaseName=glue_db, TableInput=table_input)
         logger.info("Created Glue table %s.%s", glue_db, table)
     except glue.exceptions.AlreadyExistsException:
-        logger.info("Glue table already exists: %s.%s", glue_db, table)
+        response = glue.get_table(DatabaseName=glue_db, Name=table)
+        old_columns = response["Table"]["StorageDescriptor"]["Columns"]
+        if sort_cols(columns, "Name") != sort_cols(old_columns, "Name"):
+            logger.info(sort_cols(columns, "Name"))
+            logger.info(sort_cols(old_columns, "Name"))
+            glue.update_table(DatabaseName=glue_db, TableInput=table_input)
+            logger.info(
+                "Glue table already exists: %s.%s. Metadata updated.", glue_db, table
+            )
+        else:
+            logger.info("Glue table already exists: %s.%s", glue_db, table)
     except Exception as e:
         logger.error("Error creating Glue table %s.%s: %s", glue_db, table, e)
 
@@ -451,7 +465,7 @@ def handler(event, context):
             staging_path = f"s3://{output_bucket}/staging_table_export_validation/"
 
             logger.info(
-                f"Processing batch {i+1}/{num_batches}: {len(batch_tables)} tables"
+                f"Processing batch {i + 1}/{num_batches}: {len(batch_tables)} tables"
             )
 
             # 2. Write batch to S3
@@ -475,7 +489,7 @@ def handler(event, context):
             """
             run_athena_query(insert_query, db_name, output_bucket)
 
-            logger.info(f"Inserted batch {i+1} successfully")
+            logger.info(f"Inserted batch {i + 1} successfully")
 
         conn = pymssql.connect(
             server=db_endpoint, user=db_username, password=db_password, database=db_name
@@ -600,7 +614,6 @@ def handler(event, context):
                 chunk_info = {
                     "database": db_name,
                     "table": table,
-                    "extraction_timestamp": extraction_timestamp,
                     "query": query,
                 }
                 chunks.append(chunk_info)

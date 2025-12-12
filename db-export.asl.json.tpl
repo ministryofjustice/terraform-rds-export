@@ -1,5 +1,5 @@
 {
-  "Comment": "Creates metadata in Glue Catalog, exports data to S3, returns row count table, then triggers a state machine to deletes the RDS DB instance.",
+  "Comment": "For tables: creates metadata in Glue Catalog, exports data to S3, returns row count table, then triggers a state machine to export view definitions or to delete the RDS DB instance.",
   "StartAt": "Run Export Scanner Lambda",
   "TimeoutSeconds": 7200,
   "States": {
@@ -46,14 +46,14 @@
         "chunk": {
           "table.$": "$$.Map.Item.Value.table",
           "query.$": "$$.Map.Item.Value.query",
-          "database.$": "$$.Map.Item.Value.database",
-          "extraction_timestamp.$": "$.extraction_timestamp"
+          "database.$": "$$.Map.Item.Value.database"
         },
         "db_endpoint.$": "$.db_endpoint",
         "db_username.$": "$.db_username",
         "db_name.$": "$.db_name",
         "output_bucket.$": "$.output_bucket",
-        "name.$": "$.name"
+        "name.$": "$.name",
+        "extraction_timestamp.$": "$.extraction_timestamp"
       },
       "MaxConcurrency": ${max_concurrency},
       "ItemProcessor": {
@@ -74,7 +74,8 @@
                 "db_name.$": "$.db_name",
                 "db_username.$": "$.db_username",
                 "output_bucket.$": "$.output_bucket",
-                "name.$": "$.name"
+                "name.$": "$.name",
+                "extraction_timestamp.$": "$.extraction_timestamp"
               }
             },
             "Retry": [
@@ -163,28 +164,30 @@
           }
         }
       },
-      "Next": "Prepare Input for Delete",
+      "Next": "Prepare Input",
       "ResultPath": "$.LambdaResult"
     },
-    "Prepare Input for Delete": {
+    "Prepare Input": {
       "Type": "Pass",
       "Parameters": {
-        "DbInstanceIdentifier.$": "$.DbInstanceIdentifier",
         "db_name.$": "$.db_name",
         "extraction_timestamp.$": "$.extraction_timestamp",
         "output_bucket.$": "$.output_bucket",
         "name.$": "$.name",
+        "db_endpoint.$": "$.db_endpoint",
+        "db_username.$": "$.db_username",
         "tables_to_export": [],
         "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id",
-        "environment.$": "$.environment"
+        "environment.$": "$.environment",
+        "DbInstanceIdentifier.$": "$.DbInstanceIdentifier"
       },
-      "Next": "call database-delete Step Functions"
+      "Next": "Call Next Step Function"
     },
-    "call database-delete Step Functions": {
+    "Call Next Step Function": {
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync",
       "Parameters": {
-        "StateMachineArn": "${DatabaseDeleteStateMachineArn}",
+        "StateMachineArn": "${LambdaArn}",
         "Input.$": "$"
       },
       "Next": "Success State",
@@ -192,7 +195,7 @@
     },
     "Fail State": {
       "Type": "Fail",
-      "Cause": "Export failed !!"
+      "Cause": "Database export process failed. See previous state for details."
     },
     "Success State": {
       "Type": "Succeed"

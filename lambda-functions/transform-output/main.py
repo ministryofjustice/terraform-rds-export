@@ -1,9 +1,15 @@
-import json
 import logging
 import os
 
 logger = logging.getLogger()
 logger.setLevel(os.getenv("LOG_LEVEL", "INFO"))
+
+
+# Filter and deduplicate data
+def get_unique(data: list[dict], keys_to_keep: list):
+    unique_tuples = {tuple((k, d[k]) for k in keys_to_keep) for d in data}
+
+    return [dict(t) for t in unique_tuples]
 
 
 # Transforms the output to keep minimal info as input for next step
@@ -13,11 +19,6 @@ def handler(event, context):
     # Choose which keys to keep
     keys_to_keep = ["database", "table"]
 
-    # Lambda to filter and deduplicate
-    get_unique = lambda lst: [
-        dict(t) for t in {tuple((k, d[k]) for k in keys_to_keep) for d in lst}
-    ]
-
-    result = get_unique(data)
+    result = get_unique(data=data, keys_to_keep=keys_to_keep)
 
     return {"tables": result}

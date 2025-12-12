@@ -45,14 +45,17 @@ resource "aws_iam_role_policy" "state_machine" {
         Action = [
           "lambda:InvokeFunction"
         ]
-        Resource = [
-          module.database_restore.lambda_function_arn,
-          module.database_restore_status.lambda_function_arn,
-          module.database_export_scanner.lambda_function_arn,
-          module.database_export_processor.lambda_function_arn,
-          module.export_validation_rowcount_updater.lambda_function_arn,
-          module.transform_output.lambda_function_arn
-        ]
+        Resource = concat(
+          [
+            module.database_restore.lambda_function_arn,
+            module.database_restore_status.lambda_function_arn,
+            module.database_export_scanner.lambda_function_arn,
+            module.database_export_processor.lambda_function_arn,
+            module.export_validation_rowcount_updater.lambda_function_arn,
+            module.transform_output.lambda_function_arn
+          ],
+          var.get_views ? [module.database_views_scanner[0].lambda_function_arn] : []
+        )
       },
       {
         Effect = "Allow",
@@ -83,20 +86,26 @@ resource "aws_iam_policy" "allow_start_execution" {
           "states:DescribeStateMachine",
           "states:ListExecutions"
         ],
-        Resource = [
-          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-${var.environment}-database-export",
-          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-${var.environment}-database-delete"
-        ]
+        Resource = concat(
+          [
+            "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-${var.environment}-database-export",
+            "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-${var.environment}-database-delete"
+          ],
+          var.get_views ? ["arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:stateMachine:${var.name}-${var.environment}-database-export-views"] : []
+        )
       },
       {
         Effect = "Allow",
         Action = [
           "states:DescribeExecution",
         ],
-        Resource = [
-          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-${var.environment}-database-export",
-          "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-${var.environment}-database-delete"
-        ]
+        Resource = concat(
+          [
+            "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-${var.environment}-database-export",
+            "arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-${var.environment}-database-delete"
+          ],
+          var.get_views ? ["arn:aws:states:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:execution:${var.name}-${var.environment}-database-export-views"] : []
+        )
       }
     ]
   })
