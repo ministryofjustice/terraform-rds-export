@@ -56,6 +56,7 @@ def decode_columns(df: pd.DataFrame, rowversion_cols: set) -> pd.DataFrame:
     """Decode binary columns to string."""
     for col in df.columns:
         non_nulls = df[col].dropna()
+
         if col in rowversion_cols:
             df[col] = df[col].map(lambda v: v.hex())
         elif not non_nulls.empty and isinstance(non_nulls.iloc[0], (bytes, bytearray)):
@@ -63,6 +64,7 @@ def decode_columns(df: pd.DataFrame, rowversion_cols: set) -> pd.DataFrame:
             df[col] = df[col].apply(
                 lambda x: safe_decode(x) if isinstance(x, (bytes, bytearray)) else x
             )
+
     return df
 
 
@@ -73,12 +75,12 @@ def handler(event, context):
     db_pw_secret_arn = os.environ["DATABASE_PW_SECRET_ARN"]
     output_bucket = event["output_bucket"]
     database_refresh_mode = os.environ["DATABASE_REFRESH_MODE"]
+    extraction_timestamp = event["extraction_timestamp"]
 
     chunk = event["chunk"]
     db_name = chunk["database"]
     db_table = chunk["table"]
     db_query = chunk["query"]
-    extraction_timestamp = chunk["extraction_timestamp"]
 
     # === Get Password ===
     db_password = get_secret_value(db_pw_secret_arn)

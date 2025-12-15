@@ -9,11 +9,14 @@ resource "aws_cloudwatch_event_rule" "sfn_events" {
     detail-type = ["Step Functions Execution Status Change"],
     detail = {
       status = ["FAILED", "TIMED_OUT", "ABORTED"]
-      stateMachineArn = [
-        aws_sfn_state_machine.db_restore.arn,
-        aws_sfn_state_machine.db_export.arn,
-        aws_sfn_state_machine.db_delete.arn
-      ]
+      stateMachineArn = concat(
+        [
+          aws_sfn_state_machine.db_restore.arn,
+          aws_sfn_state_machine.db_export.arn,
+          aws_sfn_state_machine.db_delete.arn
+        ],
+        var.get_views ? [aws_sfn_state_machine.db_export_views[0].arn] : []
+      )
     }
   })
 }
@@ -55,20 +58,18 @@ resource "aws_cloudwatch_event_target" "sns" {
   input_transformer {
     input_paths = {
       stateMachineArn = "$.detail.stateMachineArn"
+      executionArn    = "$.detail.executionArn"
       executionName   = "$.detail.name"
       status          = "$.detail.status"
-      error           = "$.detail.error"
-      cause           = "$.detail.cause"
       time            = "$.time"
     }
 
     input_template = <<EOF
     {
         "StateMachineARN": <stateMachineArn>,
+        "ExecutionARN": <executionArn>,
         "ExecutionName": <executionName>,
         "Status": <status>,
-        "Error": <error>,
-        "Cause": <cause>,
         "Time": <time>
     }
     EOF

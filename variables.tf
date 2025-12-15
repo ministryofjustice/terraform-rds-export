@@ -60,3 +60,9 @@ variable "engine_version" {
   type        = string
   default     = "15.00.4420.2.v1"
 }
+
+variable "get_views" {
+  description = "Whether to extract views from the database backup."
+  type        = bool
+  default     = false
+}
