@@ -92,7 +92,9 @@ def handler(event, context):
         )
 
         logger.info("View information extracted successfully")
-        return {f"view_count_description: {view_count} definitions extracted"}
+        return {
+            "export_view_status": f"{view_count} definitions extracted to {output_path}"
+        }
 
     except Exception as e:
         logger.exception(f"Failed to write {table_name} table for {db_name}: {e}")
