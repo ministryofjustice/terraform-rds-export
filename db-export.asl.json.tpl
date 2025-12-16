@@ -80,16 +80,62 @@
             },
             "Retry": [
               {
+                "ErrorEquals" : [
+                  "Sandbox.Timedout"
+                ],
+                "MaxAttempts": 0
+              },
+              {
                 "ErrorEquals": [
                   "States.ALL"
                 ],
                 "IntervalSeconds": 5,
-                "MaxAttempts": 3,
+                "MaxAttempts": 2,
                 "BackoffRate": 1,
                 "JitterStrategy": "NONE"
               }
             ],
-            "End": true
+            "Catch": [
+              {
+                "ErrorEquals": ["Sandbox.Timedout"],
+                "Next": "Send EventBridge Event"
+              }
+            ],
+            "Next": "Chunk Succeeded"
+          },
+          "Send EventBridge Event": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::aws-sdk:eventbridge:putEvents",
+            "Parameters": {
+              "Entries": [
+                {
+                  "Source": "aws.states",
+                  "DetailType": "Step Functions Execution Status Change",
+                  "Detail": {
+                    "executionArn.$": "$$.Execution.Id",
+                    "stateMachineArn.$": "$$.StateMachine.Id",
+                    "executionName.$": "States.Format('Failed to extract data for {} table.', $.chunk.table)",
+                    "status": "TIMED_OUT",
+                    "time.$":  "$$.State.EnteredTime",
+                    "table.$": "$.chunk.table"
+                  }
+                }
+              ]
+            },
+            "ResultPath": null,
+            "Next": "Timeout Output"
+          },
+          "Timeout Output": {
+            "Type": "Pass",
+            "Parameters": {
+                  "database.$": "$.chunk.database",
+                  "table.$": "$.chunk.table",
+                  "status": "TIMED_OUT"
+            },
+            "Next": "Chunk Succeeded"
+          },
+          "Chunk Succeeded": {
+            "Type": "Succeed"
           }
         }
       },
