@@ -112,7 +112,14 @@
                 {
                   "Source": "database.export",
                   "DetailType": "Step Functions Execution Status Change",
-                  "Detail.$": "States.JsonToString({\"executionArn\": $$.Execution.Id, \"stateMachineArn\": $$.StateMachine.Id, \"executionName\": States.Format(\"Failed to extract data for {} table.\", $.chunk.table), \"status\": \"TIMED_OUT\", \"time\": $$.State.EnteredTime, \"table\": $.chunk.table})"
+                  "Detail": {
+                    "executionArn.$": "$$.Execution.Id",
+                    "stateMachineArn.$": "$$.StateMachine.Id",
+                    "executionName.$": "States.Format('Failed to extract data for {} table.', $.chunk.table)",
+                    "status": "TIMED_OUT",
+                    "time.$": "$$.State.EnteredTime",
+                    "table.$": "$.chunk.table"
+                  }
                 }
               ]
             },
