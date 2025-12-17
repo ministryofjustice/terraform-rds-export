@@ -110,16 +110,16 @@
             "Parameters": {
               "Entries": [
                 {
-                  "Source": "aws.states",
+                  "Source": "database.export",
                   "DetailType": "Step Functions Execution Status Change",
-                  "Detail": {
-                    "executionArn.$": "$$.Execution.Id",
-                    "stateMachineArn.$": "$$.StateMachine.Id",
-                    "executionName.$": "States.Format('Failed to extract data for {} table.', $.chunk.table)",
-                    "status": "TIMED_OUT",
-                    "time.$":  "$$.State.EnteredTime",
-                    "table.$": "$.chunk.table"
-                  }
+                  "Detail.$": "States.JsonToString({
+                    \"executionArn\": $$.Execution.Id,
+                    \"stateMachineArn\": $$.StateMachine.Id,
+                    \"executionName\": States.Format(\"Failed to extract data for {} table.\", $.chunk.table),
+                    \"status\": \"TIMED_OUT\",
+                    \"time\": $$.State.EnteredTime,
+                    \"table\": $.chunk.table
+                  })"
                 }
               ]
             },
@@ -223,7 +223,6 @@
         "name.$": "$.name",
         "db_endpoint.$": "$.db_endpoint",
         "db_username.$": "$.db_username",
-        "tables_to_export": [],
         "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id",
         "environment.$": "$.environment",
         "DbInstanceIdentifier.$": "$.DbInstanceIdentifier"

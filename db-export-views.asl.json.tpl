@@ -47,7 +47,6 @@
         "extraction_timestamp.$": "$.extraction_timestamp",
         "output_bucket.$": "$.output_bucket",
         "name.$": "$.name",
-        "tables_to_export": [],
         "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id",
         "environment.$": "$.environment"
       },
