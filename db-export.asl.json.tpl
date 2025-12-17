@@ -98,6 +98,7 @@
             "Catch": [
               {
                 "ErrorEquals": ["Sandbox.Timedout"],
+                "ResultPath": "$.error",
                 "Next": "Send EventBridge Event"
               }
             ],
