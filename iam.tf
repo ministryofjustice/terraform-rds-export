@@ -68,6 +68,15 @@ resource "aws_iam_role_policy" "state_machine" {
         Resource = [
           "arn:aws:events:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:rule/StepFunctionsGetEventsForStepFunctionsExecutionRule"
         ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "events:PutEvents"
+        ],
+        Resource = [
+          "arn:aws:events:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:event-bus/default"
+        ]
       }
     ]
   })

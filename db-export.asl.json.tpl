@@ -80,16 +80,63 @@
             },
             "Retry": [
               {
+                "ErrorEquals" : [
+                  "Sandbox.Timedout"
+                ],
+                "MaxAttempts": 0
+              },
+              {
                 "ErrorEquals": [
                   "States.ALL"
                 ],
                 "IntervalSeconds": 5,
-                "MaxAttempts": 3,
+                "MaxAttempts": 2,
                 "BackoffRate": 1,
                 "JitterStrategy": "NONE"
               }
             ],
-            "End": true
+            "Catch": [
+              {
+                "ErrorEquals": ["Sandbox.Timedout"],
+                "ResultPath": "$.error",
+                "Next": "Send EventBridge Event"
+              }
+            ],
+            "Next": "Chunk Succeeded"
+          },
+          "Send EventBridge Event": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::aws-sdk:eventbridge:putEvents",
+            "Parameters": {
+              "Entries": [
+                {
+                  "Source": "database.export",
+                  "DetailType": "Step Functions Execution Status Change",
+                  "Detail": {
+                    "executionArn.$": "$$.Execution.Id",
+                    "stateMachineArn.$": "$$.StateMachine.Id",
+                    "name.$": "States.Format('Failed to extract data for {} table.', $.chunk.table)",
+                    "status": "TIMED_OUT",
+                    "time.$": "$$.State.EnteredTime",
+                    "table.$": "$.chunk.table"
+                  }
+                }
+              ]
+            },
+            "ResultPath": null,
+            "Next": "Timeout Output"
+          },
+          "Timeout Output": {
+            "Type": "Pass",
+            "Parameters": {
+                  "database.$": "$.chunk.database",
+                  "table.$": "$.chunk.table",
+                  "status": "TIMED_OUT"
+            },
+            "Next": "Chunk Succeeded"
+          },
+          "Chunk Succeeded": {
+            "Type": "Succeed"
           }
         }
       },
@@ -176,7 +223,6 @@
         "name.$": "$.name",
         "db_endpoint.$": "$.db_endpoint",
         "db_username.$": "$.db_username",
-        "tables_to_export": [],
         "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id",
         "environment.$": "$.environment",
         "DbInstanceIdentifier.$": "$.DbInstanceIdentifier"
