@@ -66,3 +66,79 @@ variable "get_views" {
   type        = bool
   default     = false
 }
+
+variable "lifecycle_rule_parquet_exports" {
+  description = "List of maps containing configuration of object lifecycle management for the parquet_exports S3 bucketes."
+  type        = any
+  default = [{
+    id      = "main"
+    enabled = "Enabled"
+    prefix  = ""
+    tags = {
+      rule      = "log"
+      autoclean = "true"
+    }
+    transition = [
+      {
+        days          = 90
+        storage_class = "STANDARD_IA"
+        }, {
+        days          = 365
+        storage_class = "GLACIER"
+      }
+    ]
+    expiration = {
+      days = 730
+    }
+    noncurrent_version_transition = [
+      {
+        days          = 90
+        storage_class = "STANDARD_IA"
+        }, {
+        days          = 365
+        storage_class = "GLACIER"
+      }
+    ]
+    noncurrent_version_expiration = {
+      days = 730
+    }
+  }]
+}
+
+variable "lifecycle_rule_backup_uploads" {
+  description = "List of maps containing configuration of object lifecycle management for the backup_uploads S3 bucket."
+  type        = any
+  default = [{
+    id      = "main"
+    enabled = "Enabled"
+    prefix  = ""
+    tags = {
+      rule      = "log"
+      autoclean = "true"
+    }
+    transition = [
+      {
+        days          = 90
+        storage_class = "STANDARD_IA"
+        }, {
+        days          = 365
+        storage_class = "GLACIER"
+      }
+    ]
+    expiration = {
+      days = 730
+    }
+    noncurrent_version_transition = [
+      {
+        days          = 90
+        storage_class = "STANDARD_IA"
+        }, {
+        days          = 365
+        storage_class = "GLACIER"
+      }
+    ]
+    noncurrent_version_expiration = {
+      days = 730
+    }
+  }]
+}

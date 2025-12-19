@@ -15,48 +15,8 @@ module "s3-bucket-backup-uploads" {
 
   sse_algorithm = "AES256"
 
-  lifecycle_rule = [
-    {
-      id      = "main"
-      enabled = "Enabled"
-      prefix  = ""
-
-      tags = {
-        rule      = "log"
-        autoclean = "true"
-      }
-
-      transition = [
-        {
-          days          = 90
-          storage_class = "STANDARD_IA"
-          }, {
-          days          = 365
-          storage_class = "GLACIER"
-        }
-      ]
-
-      expiration = {
-        days = 730
-      }
-
-      noncurrent_version_transition = [
-        {
-          days          = 90
-          storage_class = "STANDARD_IA"
-          }, {
-          days          = 365
-          storage_class = "GLACIER"
-        }
-      ]
-
-      noncurrent_version_expiration = {
-        days = 730
-      }
-    }
-  ]
-
-  tags = var.tags
+  lifecycle_rule = var.lifecycle_rule_backup_uploads
+  tags           = var.tags
 }
 
 
@@ -83,46 +43,7 @@ module "s3-bucket-parquet-exports" {
 
   sse_algorithm = "AES256"
 
-  lifecycle_rule = [
-    {
-      id      = "main"
-      enabled = "Enabled"
-      prefix  = ""
-
-      tags = {
-        rule      = "log"
-        autoclean = "true"
-      }
-
-      transition = [
-        {
-          days          = 90
-          storage_class = "STANDARD_IA"
-          }, {
-          days          = 365
-          storage_class = "GLACIER"
-        }
-      ]
-
-      expiration = {
-        days = 730
-      }
-
-      noncurrent_version_transition = [
-        {
-          days          = 90
-          storage_class = "STANDARD_IA"
-          }, {
-          days          = 365
-          storage_class = "GLACIER"
-        }
-      ]
-
-      noncurrent_version_expiration = {
-        days = 730
-      }
-    }
-  ]
+  lifecycle_rule = var.lifecycle_rule_parquet_exports
 
   tags = var.tags
 }
