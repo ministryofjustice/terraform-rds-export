@@ -1,7 +1,7 @@
 {
   "Comment": "Creates a RDS DB Instance to restore a .bak file, and triggers a state machine to export the data.",
   "StartAt": "Delete DB Instance If Exists",
-  "TimeoutSeconds": 14400,
+  "TimeoutSeconds": 18000,
   "States": {
     "Delete DB Instance If Exists": {
       "Type": "Task",
