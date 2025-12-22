@@ -1,7 +1,7 @@
 {
   "Comment": "Deletes the RDS DB Instance if it exists. Succeeds if the DB is deleted or already absent.",
   "StartAt": "Delete DB Instance",
-  "TimeoutSeconds": 1800,
+  "TimeoutSeconds": 3600,
   "States": {
     "Delete DB Instance": {
       "Type": "Task",
