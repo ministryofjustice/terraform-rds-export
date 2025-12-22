@@ -1,7 +1,7 @@
 {
   "Comment": "For views: creates a table containing views and their definitions.",
   "StartAt": "Run Database Views Lambda",
-  "TimeoutSeconds": 7200,
+  "TimeoutSeconds": 3600,
   "States": {
     "Run Database Views Lambda": {
       "Type": "Task",

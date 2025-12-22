@@ -1,7 +1,7 @@
 {
   "Comment": "For tables: creates metadata in Glue Catalog, exports data to S3, returns row count table, then triggers a state machine to export view definitions or to delete the RDS DB instance.",
   "StartAt": "Run Export Scanner Lambda",
-  "TimeoutSeconds": 7200,
+  "TimeoutSeconds": 10800,
   "States": {
     "Run Export Scanner Lambda": {
       "Type": "Task",
