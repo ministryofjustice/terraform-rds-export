@@ -7,9 +7,9 @@ repos:
       - id: terraform_fmt
       - id: terraform_tflint
       - id: terraform_validate
-        exclude: >
-          ^examples/ |^\.terraform\.lock\.hcl$
-
+        args:
+          - --tf-init-args=-upgrade
+        exclude: '^examples/'
       - id: terraform_trivy
         args:
           - --args=--skip-dirs=**.terraform
