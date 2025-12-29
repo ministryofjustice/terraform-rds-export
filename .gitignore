@@ -12,3 +12,4 @@ env/
 terraform.tfstate
 terraform.tfstate.backup
 megalinter-reports/*
+.ruff*/
