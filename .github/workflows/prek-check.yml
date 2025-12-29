@@ -13,8 +13,6 @@ jobs:
         uses: aquasecurity/setup-trivy@v0.2.3
       - name: Setup Python
         uses: actions/setup-python@v5
-      - name: Install uv
-        run: pip install uv
-      - name: Install Python tools from pyproject
-        run: uv sync
+      - name: Install Checkov
+        run: pipx install checkov
       - uses: j178/prek-action@v1.0.11
