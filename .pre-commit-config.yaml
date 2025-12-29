@@ -7,8 +7,6 @@ repos:
       - id: terraform_fmt
       - id: terraform_tflint
       - id: terraform_validate
-        args:
-          - --tf-init-args=-lockfile=readonly
         exclude: '^examples/'
       - id: terraform_trivy
         args:

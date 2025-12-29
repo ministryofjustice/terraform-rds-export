@@ -19,3 +19,5 @@ jobs:
       - name: Install Checkov
         run: pipx install checkov
       - uses: j178/prek-action@v1.0.11
+        with:
+          args: run
