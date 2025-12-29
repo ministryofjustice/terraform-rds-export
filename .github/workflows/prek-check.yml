@@ -8,6 +8,8 @@ jobs:
       - uses: actions/checkout@v6
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
+      - name: Terraform init
+        run: terraform init -input=false -upgrade
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v6
       - name: Install Trivy
@@ -19,5 +21,3 @@ jobs:
       - name: Install Checkov
         run: pipx install checkov
       - uses: j178/prek-action@v1.0.11
-        with:
-          extra-args: ''
