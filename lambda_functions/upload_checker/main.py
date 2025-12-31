@@ -7,13 +7,13 @@ from datetime import datetime, timezone
 logger = logging.getLogger()
 logger.setLevel(os.getenv("LOG_LEVEL", "INFO"))
 
-stepfunctions = boto3.client("stepfunctions")
-state_machine_arn = os.environ["STATE_MACHINE_ARN"]
-
 
 # Checks the file ends with a .bak prefix before triggering the database restore process
 def handler(event, context):
     try:
+        stepfunctions = boto3.client("stepfunctions")
+        state_machine_arn = os.environ["STATE_MACHINE_ARN"]
+
         record = event["Records"][0]
         bucket = record["s3"]["bucket"]["name"]
         key = record["s3"]["object"]["key"]
@@ -21,7 +21,7 @@ def handler(event, context):
         # S3 key should end in .bak
         file_type = key[-4:]
         if file_type.lower() != ".bak":
-            error_msg = f"Invalid file format: {file_type}. Expected a .bak file."
+            error_msg = "Invalid file format. Expected a .bak file."
             logger.error(error_msg)
             raise ValueError(error_msg)
 
