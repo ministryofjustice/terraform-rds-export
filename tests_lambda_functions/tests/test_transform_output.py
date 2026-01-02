@@ -82,7 +82,7 @@ def test_handler_valid():
     ]
 
     assert {
-        json.dumps(d, sort_keys=True) for d in handler(event, context="")["tables"]
+        json.dumps(d, sort_keys=True) for d in handler(event, context=None)["tables"]
     } == {json.dumps(d, sort_keys=True) for d in expected}
 
 
@@ -98,4 +98,4 @@ def test_handler_key_error():
     }
 
     with pytest.raises(KeyError, match="One or more required keys missing"):
-        handler(event, context="")
+        handler(event, context=None)

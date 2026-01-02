@@ -19,7 +19,7 @@ def test_raises_value_error(monkeypatch):
     }
 
     with pytest.raises(ValueError, match="Invalid file format. Expected a .bak file."):
-        handler(event, context="")
+        handler(event, context=None)
 
 
 def test_raises_exception(monkeypatch):
@@ -32,7 +32,7 @@ def test_raises_exception(monkeypatch):
     }
 
     with pytest.raises(Exception):
-        handler(event, context="")
+        handler(event, context=None)
 
 
 def test_successful_run(monkeypatch, mocker):
@@ -49,9 +49,7 @@ def test_successful_run(monkeypatch, mocker):
         "executionArn": "arn:aws:states:execution:test"
     }
 
-    mocker.patch(
-        "lambda_functions.upload_checker.main.boto3.client", return_value=mock_sf
-    )
+    mocker.patch("lambda_functions.upload_checker.main.stepfunctions", new=mock_sf)
 
     event = {
         "Records": [
@@ -59,7 +57,7 @@ def test_successful_run(monkeypatch, mocker):
         ]
     }
 
-    handler(event, context="")
+    handler(event, context=None)
 
     mock_sf.start_execution.assert_called_once()
     kwargs = mock_sf.start_execution.call_args.kwargs

@@ -6,11 +6,11 @@ authors = [
     {name = "lalithanagarur",email = "lalitha.nagarur3@justice.gov.uk"}
 ]
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = "==3.12.*"
 dependencies = [
   "SQLAlchemy==2.0.39",
-  "pymssql==2.3.2",
   "python-tds==1.16.0",
+  "pymssql==2.3.2",
   "boto3==1.42.19",
   "pandas==2.3.3",
   "awswrangler==3.14.0",

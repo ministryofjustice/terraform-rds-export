@@ -7,11 +7,12 @@ from datetime import datetime, timezone
 logger = logging.getLogger()
 logger.setLevel(os.getenv("LOG_LEVEL", "INFO"))
 
+stepfunctions = boto3.client("stepfunctions")
+
 
 # Checks the file ends with a .bak prefix before triggering the database restore process
 def handler(event, context):
     try:
-        stepfunctions = boto3.client("stepfunctions")
         state_machine_arn = os.environ["STATE_MACHINE_ARN"]
 
         record = event["Records"][0]
