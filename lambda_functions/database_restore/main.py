@@ -2,7 +2,7 @@ import os
 import boto3
 import pytds
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Configure logging
 logger = logging.getLogger()
@@ -109,7 +109,7 @@ def handler(event, context):
         return {
             "status": "FAILED",
             "error": str(e),
-            "timestamp": datetime.now(datetime.timezone.utc).isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             "db_identifier": db_endpoint.split(".")[0],
         }
     finally:

@@ -52,7 +52,7 @@ module "upload_checker" {
   }
 
   source_path = [{
-    path = "${path.module}/lambda-functions/upload-checker/main.py"
+    path = "${path.module}/lambda_functions/upload_checker/main.py"
   }]
 
   tags = var.tags
@@ -188,7 +188,7 @@ module "database_restore" {
   }
 
   source_path = [{
-    path = "${path.module}/lambda-functions/database-restore/"
+    path = "${path.module}/lambda_functions/database_restore/"
     commands = [
       "pip3.12 install --platform=manylinux2014_x86_64 --only-binary=:all: --no-compile --target=. -r requirements.txt",
       ":zip",
@@ -226,7 +226,7 @@ module "database_restore_status" {
   }
 
   source_path = [{
-    path = "${path.module}/lambda-functions/database-restore-status/"
+    path = "${path.module}/lambda_functions/database_restore_status/"
     commands = [
       "pip3.12 install --platform=manylinux2014_x86_64 --only-binary=:all: --no-compile --target=. -r requirements.txt",
       ":zip",
@@ -266,7 +266,7 @@ module "database_export_scanner" {
   }
 
   source_path = [{
-    path = "${path.module}/lambda-functions/database-export-scanner/"
+    path = "${path.module}/lambda_functions/database_export_scanner/"
     commands = [
       "pip3.12 install --platform=manylinux2014_x86_64 --only-binary=:all: --no-compile --target=. -r requirements.txt",
       ":zip",
@@ -309,7 +309,7 @@ module "database_export_processor" {
   }
 
   source_path = [{
-    path = "${path.module}/lambda-functions/database-export/"
+    path = "${path.module}/lambda_functions/database_export/"
     commands = [
       "pip3.12 install --platform=manylinux2014_x86_64 --only-binary=:all: --no-compile --target=. -r requirements.txt",
       ":zip",
@@ -353,7 +353,7 @@ module "export_validation_rowcount_updater" {
   }
 
   source_path = [{
-    path = "${path.module}/lambda-functions/export-validation-rowcount-updater/main.py"
+    path = "${path.module}/lambda_functions/export_validation_rowcount_updater/main.py"
   }]
 
   layers = [
@@ -383,7 +383,7 @@ module "transform_output" {
   attach_network_policy  = true
 
   source_path = [{
-    path = "${path.module}/lambda-functions/transform-output/main.py"
+    path = "${path.module}/lambda_functions/transform_output/main.py"
   }]
 
   layers = [
@@ -422,7 +422,7 @@ module "database_views_scanner" {
   }
 
   source_path = [{
-    path = "${path.module}/lambda-functions/database-views-scanner/"
+    path = "${path.module}/lambda_functions/database_views_scanner/"
     commands = [
       "pip3.12 install --platform=manylinux2014_x86_64 --only-binary=:all: --no-compile --target=. -r requirements.txt",
       ":zip",
