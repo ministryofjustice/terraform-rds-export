@@ -22,4 +22,4 @@ jobs:
       - name: Run lambda tests
         env:
           AWS_DEFAULT_REGION: eu-west-2
-        run: uv run pytest tests_lambda_functions/
+        run: uv run pytest tests_lambda_functions/ -vv
