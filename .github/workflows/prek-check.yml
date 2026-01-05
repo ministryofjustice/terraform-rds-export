@@ -1,0 +1,24 @@
+name: Prek checks
+on: pull_request
+permissions: read-all
+jobs:
+  prek:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Terraform init
+        run: terraform init -input=false -upgrade
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v6
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@v0.2.3
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install Checkov
+        run: pipx install checkov
+      - name: Run prek
+        uses: j178/prek-action@v1.0.11

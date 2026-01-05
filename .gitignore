@@ -18,3 +18,4 @@ megalinter-reports/*
 .ruff*
 *pycache*
 .coverage*
+.ruff*/
