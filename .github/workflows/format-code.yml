@@ -2,24 +2,20 @@ name: "Format Code: ensure code formatting guidelines are met"
 on:
   pull_request:
     types: [opened, edited, reopened, synchronize]
-
 permissions: read-all
-
 jobs:
   format-code:
     permissions:
       contents: write
-      security-events: write  # needed for SARIF upload
+      security-events: write # needed for SARIF upload
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
       - name: Run format-code action
         uses: ministryofjustice/modernisation-platform-github-actions/format-code@0c879ebf9183dd7e47d3fe9c961afa3271843b8b # v3.6.0
         with:
           ignore_files: "README.md"
-
       - name: Run signed-commit action
         uses: ministryofjustice/modernisation-platform-github-actions/signed-commit@0c879ebf9183dd7e47d3fe9c961afa3271843b8b # v3.6.0
         with:
