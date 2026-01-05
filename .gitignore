@@ -12,4 +12,10 @@ env/
 terraform.tfstate
 terraform.tfstate.backup
 megalinter-reports/*
+.venv*
+*.egg-info/
+.pytest*
+.ruff*
+*pycache*
+.coverage*
 .ruff*/

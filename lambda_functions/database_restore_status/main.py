@@ -80,7 +80,12 @@ def handler(event, context):
         raise
 
     finally:
-        cursor.close()
-        conn.close()
+        try:
+            if "cursor" in locals():
+                cursor.close()
+            if "conn" in locals():
+                conn.close()
+        except Exception as cleanup_error:
+            logger.warning("Error during cleanup: %s", cleanup_error)
 
     return {"restore_status": restore_status}
