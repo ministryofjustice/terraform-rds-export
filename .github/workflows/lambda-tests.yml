@@ -1,9 +1,9 @@
 name: Lambda tests
 on:
-    pull_request:
-        paths:
-            - lambda-functions/**
-            - tests_lambda_functions/**
+  pull_request:
+    paths:
+      - lambda-functions/**
+      - tests_lambda_functions/**
 permissions: read-all
 jobs:
   lambda-tests:
