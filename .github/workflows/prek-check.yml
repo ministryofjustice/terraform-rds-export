@@ -13,7 +13,7 @@ jobs:
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v6
       - name: Install Trivy
-        uses: aquasecurity/setup-trivy@v0.2.3
+        uses: aquasecurity/setup-trivy@v0.2.4
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
