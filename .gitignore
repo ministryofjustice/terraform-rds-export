@@ -13,3 +13,4 @@ terraform.tfstate
 terraform.tfstate.backup
 megalinter-reports/*
 .ruff*/
+*__pycache__
