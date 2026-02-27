@@ -20,4 +20,4 @@ jobs:
           python-version: '3.13'
       - name: Install Checkov
         run: pipx install checkov
-      - uses: j178/prek-action@v1.0.11
+      - uses: j178/prek-action@v1.1.1
