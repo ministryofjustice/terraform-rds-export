@@ -286,6 +286,10 @@ def sort_cols(cols: list[dict], field: str):
     return sorted(cols_conv, key=lambda c: c[field.capitalize()])
 
 
+def is_not_rn(column):
+    return column.get("Name", "").lower() != "rn"
+
+
 def create_glue_table(
     database_refresh_mode: str,
     db_name: str,
@@ -357,7 +361,8 @@ def create_glue_table(
         logger.info("Created Glue table %s.%s", glue_db, table)
     except glue.exceptions.AlreadyExistsException:
         response = glue.get_table(DatabaseName=glue_db, Name=table)
-        old_columns = response["Table"]["StorageDescriptor"]["Columns"]
+        old_columns_glue = response["Table"]["StorageDescriptor"]["Columns"]
+        old_columns = [col for col in old_columns_glue if is_not_rn(col)]
         if sort_cols(columns, "Name") != sort_cols(old_columns, "Name"):
             logger.info(sort_cols(columns, "Name"))
             logger.info(sort_cols(old_columns, "Name"))
