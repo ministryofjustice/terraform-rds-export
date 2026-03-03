@@ -1,16 +1,23 @@
 from lambda_functions.upload_checker.main import handler
 import pytest
 import json
+import boto3
+import os
 
 
-def test_raises_value_error(monkeypatch):
-    monkeypatch.setenv(
-        "STATE_MACHINE_ARN", "arn:aws:states:eu-west-2:123456789012:stateMachine:test"
+@pytest.fixture
+def restore_env():
+    os.environ["STATE_MACHINE_ARN"] = (
+        "arn:aws:states:eu-west-2:123456789012:stateMachine:test"
     )
-    monkeypatch.setenv("DB_NAME", "test_db_name")
-    monkeypatch.setenv("OUTPUT_BUCKET", "test-output-bucket")
-    monkeypatch.setenv("NAME", "test-name")
-    monkeypatch.setenv("ENVIRONMENT", "test")
+    os.environ["DB_NAME"] = "test_db_name"
+    os.environ["OUTPUT_BUCKET"] = "test-output-bucket"
+    os.environ["NAME"] = "test-name"
+    os.environ["ENVIRONMENT"] = "test"
+
+
+def test_raises_value_error(restore_env):
+    """Raises when uploaded file is not a .bak backup file."""
 
     event = {
         "Records": [
@@ -22,34 +29,39 @@ def test_raises_value_error(monkeypatch):
         handler(event, context=None)
 
 
-def test_raises_exception(monkeypatch):
-    monkeypatch.delenv("STATE_MACHINE_ARN", raising=False)
+def test_raises_exception(restore_env):
+    """Raises when required environment variables are missing."""
+
+    os.environ.pop("STATE_MACHINE_ARN", None)
 
     event = {
         "Records": [
-            {"s3": {"bucket": {"name": "test"}, "object": {"key": "test_object.csv"}}}
+            {"s3": {"bucket": {"name": "test"}, "object": {"key": "test_object.bak"}}}
         ]
     }
 
-    with pytest.raises(Exception):
+    with pytest.raises(KeyError):
         handler(event, context=None)
 
 
-def test_successful_run(monkeypatch, mocker):
-    monkeypatch.setenv(
-        "STATE_MACHINE_ARN", "arn:aws:states:eu-west-2:123456789012:stateMachine:test"
+def test_successful_run(restore_env):
+    """Starts Step Functions execution with expected payload fields."""
+
+    stepfunctions = boto3.client("stepfunctions", region_name="eu-west-2")
+
+    state_machine = stepfunctions.create_state_machine(
+        name="test-upload-checker-state-machine",
+        definition=json.dumps(
+            {
+                "StartAt": "PassState",
+                "States": {"PassState": {"Type": "Pass", "End": True}},
+            }
+        ),
+        roleArn="arn:aws:iam::123456789012:role/DummyRole",
     )
-    monkeypatch.setenv("DB_NAME", "test_db_name")
-    monkeypatch.setenv("OUTPUT_BUCKET", "test-output-bucket")
-    monkeypatch.setenv("NAME", "test-name")
-    monkeypatch.setenv("ENVIRONMENT", "test")
 
-    mock_sf = mocker.Mock()
-    mock_sf.start_execution.return_value = {
-        "executionArn": "arn:aws:states:execution:test"
-    }
-
-    mocker.patch("lambda_functions.upload_checker.main.stepfunctions", new=mock_sf)
+    state_machine_arn = state_machine["stateMachineArn"]
+    os.environ["STATE_MACHINE_ARN"] = state_machine_arn
 
     event = {
         "Records": [
@@ -59,15 +71,13 @@ def test_successful_run(monkeypatch, mocker):
 
     handler(event, context=None)
 
-    mock_sf.start_execution.assert_called_once()
-    kwargs = mock_sf.start_execution.call_args.kwargs
+    executions = stepfunctions.list_executions(stateMachineArn=state_machine_arn)
+    assert len(executions["executions"]) == 1
 
-    assert (
-        kwargs["stateMachineArn"]
-        == "arn:aws:states:eu-west-2:123456789012:stateMachine:test"
+    execution = stepfunctions.describe_execution(
+        executionArn=executions["executions"][0]["executionArn"]
     )
-
-    payload = json.loads(kwargs["input"])
+    payload = json.loads(execution["input"])
     assert payload["bak_upload_bucket"] == "test"
     assert payload["bak_upload_key"] == "test_object.bak"
     assert payload["db_name"] == "test_db_name"

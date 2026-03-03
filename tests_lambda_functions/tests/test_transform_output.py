@@ -54,6 +54,8 @@ test_data_get_unique_key_error = [
 
 @pytest.mark.parametrize("data,keys_to_keep,expected", test_data_get_unique_valid)
 def test_get_unique(data, keys_to_keep, expected):
+    """Returns unique records for requested key subsets."""
+
     assert {json.dumps(d, sort_keys=True) for d in get_unique(data, keys_to_keep)} == {
         json.dumps(d, sort_keys=True) for d in expected
     }
@@ -61,11 +63,15 @@ def test_get_unique(data, keys_to_keep, expected):
 
 @pytest.mark.parametrize("data,keys_to_keep", test_data_get_unique_key_error)
 def test_get_unique_key_error(data, keys_to_keep):
+    """Raises when any required key is missing in input data."""
+
     with pytest.raises(KeyError, match="One or more required keys missing"):
         get_unique(data, keys_to_keep)
 
 
 def test_handler_valid():
+    """Returns unique database/table combinations from chunk input."""
+
     event = {
         "chunks": [
             {"database": "db_1", "table": "tb_1", "a": 1},
@@ -87,6 +93,8 @@ def test_handler_valid():
 
 
 def test_handler_key_error():
+    """Raises when chunk items do not include required keys."""
+
     event = {
         "chunks": [
             {"a": "db_1", "b": "tb_1", "c": 1},
