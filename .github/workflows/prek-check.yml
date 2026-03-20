@@ -12,8 +12,6 @@ jobs:
         run: terraform init -input=false -upgrade
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v6
-      - name: Install Trivy
-        uses: aquasecurity/setup-trivy@v0.2.4
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
