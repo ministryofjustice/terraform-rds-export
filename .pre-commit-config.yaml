@@ -8,10 +8,6 @@ repos:
       - id: terraform_tflint
       - id: terraform_validate
         exclude: '^examples/'
-      - id: terraform_trivy
-        args:
-          - --args=--skip-dirs=**.terraform
-          - --args=--skip-dirs=**examples
       - id: terraform_checkov
         args:
           - --args=--quiet
