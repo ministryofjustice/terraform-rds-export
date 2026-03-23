@@ -212,17 +212,7 @@
         "environment.$": "$.environment",
         "DbInstanceIdentifier.$": "$.CreateDBResult.DbInstanceIdentifier"
       },
-      "Next": "call database-export Step Functions"
-    },
-    "call database-export Step Functions": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::states:startExecution.sync",
-      "Parameters": {
-        "StateMachineArn": "${DatabaseExportStateMachineArn}",
-        "Input.$": "$"
-      },
-      "Next": "Success State",
-      "ResultPath": null
+      "Next": "Success State"
     },
     "Wait For Restore Completion": {
       "Type": "Wait",
