@@ -19,5 +19,5 @@ jobs:
       - name: SLSA
         uses: ministryofjustice/devsecops-actions/sca/slsa@4cd163be7859cd130800d6719d925318826038ea
       - name: Install Checkov
-        run: pipx install checkov --pip-args="--uploaded-prior-to=$(date -u -d '72 hours ago' +%Y-%m-%dT%H:%M:%SZ)"
+        run: pipx install checkov "git+https://github.com/bridgecrewio/checkov.git@06eee8f8d272856217e5f982011e3a42b39aba62" # v3.2.513
       - uses: j178/prek-action@53276d8b0d10f8b6672aa85b4588c6921d0370cc # v2.0.1
