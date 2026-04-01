@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: '3.13'
       - name: SLSA
-        uses: ministryofjustice/devsecops-actions/sca/slsa@f965eb1771ec66cfc41d7d57dc607fa6dfbc10ed # v1.4.0
+        uses: ministryofjustice/devsecops-actions/sca/slsa@4cd163be7859cd130800d6719d925318826038ea
       - name: Install Checkov
         run: pipx install checkov
       - uses: j178/prek-action@53276d8b0d10f8b6672aa85b4588c6921d0370cc # v2.0.1
