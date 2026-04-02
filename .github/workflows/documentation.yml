@@ -25,6 +25,6 @@ jobs:
       - name: Fix Git permissions
         run: sudo chown -R $(whoami) .git/
       - name: Run Signed Commit Action
-        uses: ministryofjustice/modernisation-platform-github-actions/signed-commit@5c713c93eea694829b1bd3f410d0b235053318ce # v4.0.0
+        uses: ministryofjustice/modernisation-platform-github-actions/signed-commit@5b44b387694dfa249cfa2dcf289ca871abe9e3e2 # v5.0.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
