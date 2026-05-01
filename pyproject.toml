@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "checkov>=3.2.496",
+    "mypy>=1.20.2"
 ]
 
 [tool.uv]

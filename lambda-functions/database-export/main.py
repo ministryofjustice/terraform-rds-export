@@ -29,7 +29,7 @@ def safe_decode(val):
 
 
 def get_rowversion_cols(conn, table, schema="dbo"):
-    """Return a set of colum names that are rowversion/timestamp for a given table."""
+    """Return a set of column names that are rowversion/timestamp for a given table."""
     sql = """
     SELECT COLUMN_NAME
     FROM INFORMATION_SCHEMA.COLUMNS

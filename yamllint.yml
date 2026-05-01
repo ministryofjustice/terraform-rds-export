@@ -1,0 +1,11 @@
+---
+extends: default
+ignore: .github/CODEOWNERS
+
+
+rules:
+  line-length:
+    max: 110
+
+  truthy:
+    allowed-values: ["true", "false", "on"]
