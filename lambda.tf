@@ -52,7 +52,7 @@ module "upload_checker" {
   }
 
   source_path = [{
-    path = "${path.module}/lambda-functions/upload-checker/main.py"
+    path = "${path.module}/lambda_functions/upload_checker/main.py"
   }]
 
   tags = var.tags
@@ -353,7 +353,7 @@ module "export_validation_rowcount_updater" {
   }
 
   source_path = [{
-    path = "${path.module}/lambda-functions/export-validation-rowcount-updater/main.py"
+    path = "${path.module}/lambda_functions/export_validation_rowcount_updater/main.py"
   }]
 
   layers = [
@@ -383,7 +383,7 @@ module "transform_output" {
   attach_network_policy  = true
 
   source_path = [{
-    path = "${path.module}/lambda-functions/transform-output/main.py"
+    path = "${path.module}/lambda_functions/transform_output/main.py"
   }]
 
   layers = [
