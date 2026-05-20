@@ -329,7 +329,7 @@ def create_glue_table(
                 "OutputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
                 "Compressed": False,
                 "SerdeInfo": {
-                    "SerializationLibrary": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe",
+                    "SerializationLibrary": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSetDe",
                     "Parameters": {},
                 },
             },
@@ -348,7 +348,7 @@ def create_glue_table(
                 "OutputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
                 "Compressed": False,
                 "SerdeInfo": {
-                    "SerializationLibrary": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe",
+                    "SerializationLibrary": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSetDe",
                     "Parameters": {},
                 },
             },

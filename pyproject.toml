@@ -4,7 +4,12 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "checkov>=3.2.496",
+    "mypy>=1.11.0",
 ]
 
 [tool.uv]
 exclude-newer = "7 days"
+
+[tool.mypy]
+explicit_package_bases = true
+disable_error_code = ["import-untyped", "import-not-found"]

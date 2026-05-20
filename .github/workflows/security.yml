@@ -1,0 +1,14 @@
+---
+name: Security
+on:
+  pull_request:
+    types: [edited, opened, reopened, synchronize]
+jobs:
+  security:
+    name: Security
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    uses:
+      ministryofjustice/data-engineering-github-actions/.github/workflows/reusable-security.yml@bc3387b3bdd728d1c7e26e7f576929e4957507be  # v1.1.0
