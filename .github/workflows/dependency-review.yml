@@ -1,0 +1,17 @@
+---
+name: Dependency Review
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  dependency-review:
+    name: Dependency Review
+    permissions:
+      contents: read
+    uses:
+      ministryofjustice/data-engineering-github-actions/.github/workflows/reusable-dependency-review.yml@bc3387b3bdd728d1c7e26e7f576929e4957507be  # v1.1.0
