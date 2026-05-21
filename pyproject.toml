@@ -13,3 +13,8 @@ exclude-newer = "7 days"
 [tool.mypy]
 explicit_package_bases = true
 disable_error_code = ["import-untyped", "import-not-found"]
+
+[tool.typos.default]
+extend-ignore-identifiers-re = [
+  "ParquetHiveSerDe",
+]
