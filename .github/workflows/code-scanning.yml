@@ -1,3 +1,4 @@
+---
 name: Secure Code Analysis
 on:
   schedule:
