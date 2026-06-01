@@ -14,4 +14,4 @@ jobs:
     permissions:
       contents: read
     uses:
-      ministryofjustice/data-engineering-github-actions/.github/workflows/reusable-dependency-review.yml@bc3387b3bdd728d1c7e26e7f576929e4957507be  # v1.1.0
+      ministryofjustice/data-engineering-github-actions/.github/workflows/reusable-dependency-review.yml@a069b8db6abf405bbdc97e045ec9b47376aabc23  # v1.1.1
