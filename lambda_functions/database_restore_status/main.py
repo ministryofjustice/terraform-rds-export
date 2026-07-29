@@ -1,86 +1,137 @@
-import os
-import boto3
-import pytds
+"""Lambda function to check the status of an RDS database restore task."""
+
 import time
-import logging
+from typing import Any
 
-# Configure logging
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+import pytds
 
-secretmanager = boto3.client("secretsmanager")
+from shared.constants import (
+    ENV_DATABASE_PW_SECRET_ARN,
+    SQL_SERVER_MASTER_DB,
+    TDS_TIMEOUT,
+)
+from shared.utils import (
+    configure_logging,
+    get_secret_value,
+    validate_env_vars,
+    validate_event_keys,
+)
+
+logger = configure_logging()
+
+# Restore task status values
+RESTORE_STATUS_UNKNOWN = "UNKNOWN"
+RESTORE_STATUS_ERROR = "ERROR"
 
 
-# Retrieves the status of the restore of the .bak file
-def handler(event, context):
-    # Retrieve configuration from environment variables
+def handler(event: dict[str, Any], context: Any) -> dict[str, str]:
+    """
+    Lambda handler to check the status of an RDS database restore task.
+
+    Queries the RDS task status command to retrieve the lifecycle status
+    of an ongoing database restore operation.
+
+    Args:
+        event: Lambda event containing:
+            - db_endpoint: RDS endpoint address
+            - db_username: Database username
+            - db_name: Name of database being restored
+            - task_id: Task ID returned from restore command
+        context: Lambda context object.
+
+    Returns:
+        Dict with restore_status (e.g., 'DONE', 'IN_PROGRESS', 'ERROR').
+
+    Raises:
+        ValueError: If required event keys or environment variables are missing.
+        Exception: If task status cannot be determined.
+    """
+    # Validate required event keys
+    try:
+        validate_event_keys(event, ["db_endpoint", "db_username", "db_name", "task_id"])
+    except ValueError as e:
+        logger.error(f"Invalid event structure: {e}")
+        raise
+
+    # Validate required environment variables
+    try:
+        env_vars = validate_env_vars([ENV_DATABASE_PW_SECRET_ARN])
+    except ValueError as e:
+        logger.error(f"Configuration error: {e}")
+        raise
+
+    # Extract parameters
     db_endpoint = event["db_endpoint"]
-    db_pw_secret_arn = os.environ["DATABASE_PW_SECRET_ARN"]
     db_username = event["db_username"]
     restore_db_name = event["db_name"]
     task_id = event["task_id"]
+    db_pw_secret_arn = env_vars[ENV_DATABASE_PW_SECRET_ARN]
 
-    # Fetch credentials from AWS Secrets Manager
+    # Fetch database password
     try:
-        secret_response = secretmanager.get_secret_value(SecretId=db_pw_secret_arn)
-        db_password = secret_response["SecretString"]
+        db_password = get_secret_value(db_pw_secret_arn)
     except Exception as e:
-        logger.error("Error fetching secret: %s", e)
-        return
+        logger.error(f"Failed to retrieve database credentials: {e}")
+        raise
 
+    # Allow brief delay for task status to be available
     time.sleep(0.5)
 
+    cursor = None
+    conn = None
+
     try:
-        # Connect to the MS SQL Server database using python-tds
+        # Connect to MS SQL Server
         conn = pytds.connect(
             server=db_endpoint,
-            database="master",
+            database=SQL_SERVER_MASTER_DB,
             user=db_username,
             password=db_password,
-            timeout=5,
+            timeout=TDS_TIMEOUT,
         )
         cursor = conn.cursor()
-        logger.info("Connected to MS SQL Server successfully!")
+        logger.info("Connected to MS SQL Server successfully")
 
-        # Run the restore status command.
+        # Query restore task status
         restore_status_command = (
             "exec msdb.dbo.rds_task_status "
             f"@db_name='{restore_db_name}', "
             f"@task_id='{task_id}';"
         )
-        logger.info("Executing task status command: %s", restore_status_command)
+        logger.info(f"Executing task status command for task_id: {task_id}")
         cursor.execute(restore_status_command)
 
-        restore_status = "UNKNOWN"
-        # Iterate through the result sets to retrieve the task status.
+        restore_status = RESTORE_STATUS_UNKNOWN
+
+        # Iterate through result sets to extract task status
         while True:
             try:
                 row = cursor.fetchone()
                 if row and len(row) >= 6:
-                    logger.info("Received row: %s", row)
-                    # Retrieve the lifecycle status from column index 5.
+                    logger.info(f"Received status row: {row}")
+                    # Lifecycle status is at column index 5
                     restore_status = row[5]
-                    logger.info("Task lifecycle from database: %s", restore_status)
+                    logger.info(f"Task lifecycle status: {restore_status}")
 
-                    if restore_status == "ERROR":
-                        logger.error("Fatal error fetching row: %s", row[6])
+                    if restore_status == RESTORE_STATUS_ERROR and len(row) > 6:
+                        logger.error(f"Database restore error: {row[6]}")
 
                     break
             except Exception as fetch_error:
-                logger.debug("Error fetching row: %s", fetch_error)
+                logger.debug(f"Error fetching status row: {fetch_error}")
 
             if not cursor.nextset():
-                logger.error(
-                    "No further result sets available; status could not be determined."
-                )
+                logger.error("No further result sets; status could not be determined")
                 break
 
     except Exception as e:
-        logger.error("Error executing restore_status_command: %s", e)
+        logger.exception(f"Error executing restore status command: {e}")
         raise
 
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
     return {"restore_status": restore_status}

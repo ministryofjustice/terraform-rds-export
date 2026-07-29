@@ -1,1 +1,3 @@
+# Database restore status Lambda function dependencies
+# Minimal dependencies - boto3 and botocore are pre-installed in Lambda
 python-tds==1.16.0

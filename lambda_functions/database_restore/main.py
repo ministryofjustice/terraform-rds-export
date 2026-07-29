@@ -1,55 +1,104 @@
-import os
-import boto3
-import pytds
-import logging
+"""Lambda function to restore an RDS database from a .bak backup file."""
+
 from datetime import datetime
+from typing import Any
 
-# Configure logging
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+import pytds
 
-secretmanager = boto3.client("secretsmanager")
+from shared.constants import (
+    ENV_DATABASE_PW_SECRET_ARN,
+    SQL_SERVER_MASTER_DB,
+    TDS_TIMEOUT,
+)
+from shared.utils import (
+    configure_logging,
+    get_secret_value,
+    validate_env_vars,
+    validate_event_keys,
+)
+
+logger = configure_logging()
 
 
-# Restores the .bak file to the RDS DB Instance
-def handler(event, context):
-    # Retrieve configuration from environment variables
-    db_endpoint = event["DescribeDBResult"]["DbInstanceDetails"]["Endpoint"]["Address"]
-    db_pw_secret_arn = os.environ["DATABASE_PW_SECRET_ARN"]
-    bak_upload_bucket = event.get("bak_upload_bucket")
-    bak_upload_key = event.get("bak_upload_key")
-    db_name = event.get("db_name")
-    db_username = event["DescribeDBResult"]["DbInstanceDetails"]["MasterUsername"]
+def handler(event: dict[str, Any], context: Any) -> dict[str, str]:
+    """
+    Lambda handler to restore an RDS database from a .bak backup file.
 
-    if not bak_upload_bucket or not bak_upload_key or not db_name:
-        logger.error(
-            "Missing 'bak_upload_bucket' or 'bak_upload_key' or 'db_name' in event."
+    Drops the existing database if present, executes the RDS restore command
+    using the S3 backup location, and returns the task ID for status monitoring.
+
+    Args:
+        event: Lambda event containing:
+            - DescribeDBResult: Dict with DbInstanceDetails including Endpoint
+              and MasterUsername
+            - bak_upload_bucket: S3 bucket containing backup file
+            - bak_upload_key: S3 key path to backup file
+            - db_name: Database name to restore
+        context: Lambda context object.
+
+    Returns:
+        Dict with task_id for status monitoring and db_name.
+
+    Raises:
+        ValueError: If required event keys or environment variables are missing.
+        Exception: If database restore command fails.
+    """
+    # Validate required event keys
+    try:
+        validate_event_keys(
+            event,
+            [
+                "DescribeDBResult",
+                "bak_upload_bucket",
+                "bak_upload_key",
+                "db_name",
+            ],
         )
-        raise ValueError("Required parameters are missing in the event.")
+    except ValueError as e:
+        logger.error(f"Invalid event structure: {e}")
+        raise
+
+    # Validate required environment variables
+    try:
+        env_vars = validate_env_vars([ENV_DATABASE_PW_SECRET_ARN])
+    except ValueError as e:
+        logger.error(f"Configuration error: {e}")
+        raise
+
+    # Extract database connection details
+    db_details = event["DescribeDBResult"]["DbInstanceDetails"]
+    db_endpoint = db_details["Endpoint"]["Address"]
+    db_username = db_details["MasterUsername"]
+    bak_upload_bucket = event["bak_upload_bucket"]
+    bak_upload_key = event["bak_upload_key"]
+    db_name = event["db_name"]
 
     s3_arn_to_restore_from = f"arn:aws:s3:::{bak_upload_bucket}/{bak_upload_key}"
 
-    # Fetch credentials from AWS Secrets Manager
+    # Fetch database password from Secrets Manager
     try:
-        secret_response = secretmanager.get_secret_value(SecretId=db_pw_secret_arn)
-        db_password = secret_response["SecretString"]
+        db_password = get_secret_value(env_vars[ENV_DATABASE_PW_SECRET_ARN])
     except Exception as e:
-        logger.error("Error fetching secret: %s", e)
+        logger.error(f"Failed to retrieve database credentials: {e}")
         raise Exception("Error fetching database credentials from Secrets Manager.")
 
+    cursor = None
+    conn = None
+
     try:
-        # Connect to the MS SQL Server database using python-tds
+        # Connect to MS SQL Server
         conn = pytds.connect(
             server=db_endpoint,
-            database="master",
+            database=SQL_SERVER_MASTER_DB,
             user=db_username,
             password=db_password,
-            timeout=5,
+            timeout=TDS_TIMEOUT,
             autocommit=True,
         )
         cursor = conn.cursor()
-        logger.info("Connected to MS SQL Server successfully!")
+        logger.info("Connected to MS SQL Server successfully")
 
+        # Drop existing database if present
         drop_command = (
             f"IF DB_ID(N'{db_name}') IS NOT NULL "
             "BEGIN "
@@ -57,66 +106,58 @@ def handler(event, context):
             f"DROP DATABASE [{db_name}]; "
             "END"
         )
-        logger.info("Executing drop-if-exists command: %s", drop_command)
+        logger.info(f"Executing drop-if-exists command for database: {db_name}")
         cursor.execute(drop_command)
         conn.commit()
 
-        now = datetime.now()
-        now = now.strftime("%Y%m%d%H%M%S")
-
-        # Run the restore command with the S3 ARN from the environment variable.
+        # Execute restore command
         restore_command = (
             "exec msdb.dbo.rds_restore_database "
             f"@restore_db_name='{db_name}', "
             f"@s3_arn_to_restore_from='{s3_arn_to_restore_from}';"
         )
-        logger.info("Executing restore command: %s", restore_command)
+        logger.info(f"Executing restore command for database: {db_name}")
         cursor.execute(restore_command)
 
-        # Loop through result sets until we find one with data.
-        result = None
+        # Extract task ID from result sets
         task_id = None
         while True:
             try:
                 result = cursor.fetchone()
                 if result:
-                    task_id = result[
-                        0
-                    ]  # task_id is the first column in the result row.
-                    logger.info("Task ID returned: %s", task_id)
+                    task_id = result[0]  # task_id is first column
+                    logger.info(f"Task ID returned: {task_id}")
                     break
             except Exception as fetch_error:
-                # If the current result set has no rows, move to the next one.
-                logger.debug("No results in current result set: %s", fetch_error)
+                logger.debug(f"No results in current result set: {fetch_error}")
 
-            # Move to the next result set; if there are none, exit the loop.
             if not cursor.nextset():
-                logger.error("No further result sets available; task_id not found.")
+                logger.error("No further result sets; task_id not found")
                 raise Exception("No result returned from restore command.")
 
         conn.commit()
-        logger.info("Restore command executed successfully!")
+        logger.info(f"Restore command executed successfully for database: {db_name}")
 
-        # Information to return to the state machine
+        logger.info("Database restore initiated successfully")
         return {
             "task_id": task_id,
             "current_time": datetime.now().replace(microsecond=0).isoformat(),
             "db_name": db_name,
             "db_identifier": db_endpoint.split(".")[0],
         }
+
     except Exception as e:
         logger.exception("Error connecting to MS SQL Server or executing command")
+        from datetime import timezone
+
         return {
             "status": "FAILED",
             "error": str(e),
-            "timestamp": datetime.now(datetime.timezone.utc).isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             "db_identifier": db_endpoint.split(".")[0],
         }
     finally:
-        try:
-            if "cursor" in locals():
-                cursor.close()
-            if "conn" in locals():
-                conn.close()
-        except Exception as cleanup_error:
-            logger.warning("Error during cleanup: %s", cleanup_error)
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
