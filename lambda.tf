@@ -322,6 +322,10 @@ module "database_export_processor" {
   architectures   = ["x86_64"]
   build_in_docker = false
 
+  store_on_s3 = true
+  s3_bucket   = module.s3-bucket-parquet-exports.bucket.id
+  s3_prefix   = "lambda-artifacts/database-export-processor"
+
   # VPC Config - Lambda function needs to be in the same VPC as the RDS instance
   vpc_subnet_ids         = var.database_subnet_ids
   vpc_security_group_ids = [aws_security_group.database_restore.id]
