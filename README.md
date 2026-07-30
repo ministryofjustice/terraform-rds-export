@@ -51,7 +51,7 @@ module "rds_export" {
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.1 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | 6.56.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 6.0, != 6.57.0 |
 
 ## Inputs
 
@@ -85,44 +85,44 @@ module "rds_export" {
 
 | Name | Type |
 |------|------|
-| [aws_cloudwatch_event_rule.sfn_events](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/cloudwatch_event_rule) | resource |
-| [aws_cloudwatch_event_target.cloudwatch](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/cloudwatch_event_target) | resource |
-| [aws_cloudwatch_event_target.sns](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/cloudwatch_event_target) | resource |
-| [aws_cloudwatch_log_group.eventbridge](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/cloudwatch_log_group) | resource |
-| [aws_cloudwatch_log_resource_policy.eventbridge](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/cloudwatch_log_resource_policy) | resource |
-| [aws_db_option_group.database](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/db_option_group) | resource |
-| [aws_db_parameter_group.database](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/db_parameter_group) | resource |
-| [aws_db_subnet_group.database](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/db_subnet_group) | resource |
-| [aws_iam_policy.allow_start_execution](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/iam_policy) | resource |
-| [aws_iam_role.database_restore](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/iam_role) | resource |
-| [aws_iam_role.eventbridge](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/iam_role) | resource |
-| [aws_iam_role.state_machine](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/iam_role) | resource |
-| [aws_iam_role_policy.database_restore](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/iam_role_policy) | resource |
-| [aws_iam_role_policy.eventbridge_cloudwatch_publish](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/iam_role_policy) | resource |
-| [aws_iam_role_policy.eventbridge_sns_publish](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/iam_role_policy) | resource |
-| [aws_iam_role_policy.state_machine](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/iam_role_policy) | resource |
-| [aws_iam_role_policy_attachment.attach_start_export](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/iam_role_policy_attachment) | resource |
-| [aws_lambda_permission.allow_bucket](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/lambda_permission) | resource |
-| [aws_s3_bucket_notification.backup_uploads](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/s3_bucket_notification) | resource |
-| [aws_s3_object.backup_uploads_folder](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/s3_object) | resource |
-| [aws_security_group.database](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/security_group) | resource |
-| [aws_security_group.database_restore](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/security_group) | resource |
-| [aws_sfn_state_machine.db_delete](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/sfn_state_machine) | resource |
-| [aws_sfn_state_machine.db_export](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/sfn_state_machine) | resource |
-| [aws_sfn_state_machine.db_export_views](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/sfn_state_machine) | resource |
-| [aws_sfn_state_machine.db_restore](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/sfn_state_machine) | resource |
-| [aws_sns_topic.sfn_events](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/sns_topic) | resource |
-| [aws_sns_topic_policy.sfn_events](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/resources/sns_topic_policy) | resource |
+| [aws_cloudwatch_event_rule.sfn_events](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule) | resource |
+| [aws_cloudwatch_event_target.cloudwatch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target) | resource |
+| [aws_cloudwatch_event_target.sns](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target) | resource |
+| [aws_cloudwatch_log_group.eventbridge](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_resource_policy.eventbridge](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_resource_policy) | resource |
+| [aws_db_option_group.database](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_option_group) | resource |
+| [aws_db_parameter_group.database](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_parameter_group) | resource |
+| [aws_db_subnet_group.database](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_subnet_group) | resource |
+| [aws_iam_policy.allow_start_execution](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_role.database_restore](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role.eventbridge](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role.state_machine](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy.database_restore](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.eventbridge_cloudwatch_publish](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.eventbridge_sns_publish](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.state_machine](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy_attachment.attach_start_export](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_lambda_permission.allow_bucket](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_s3_bucket_notification.backup_uploads](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_notification) | resource |
+| [aws_s3_object.backup_uploads_folder](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_object) | resource |
+| [aws_security_group.database](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_security_group.database_restore](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_sfn_state_machine.db_delete](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sfn_state_machine) | resource |
+| [aws_sfn_state_machine.db_export](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sfn_state_machine) | resource |
+| [aws_sfn_state_machine.db_export_views](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sfn_state_machine) | resource |
+| [aws_sfn_state_machine.db_restore](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sfn_state_machine) | resource |
+| [aws_sns_topic.sfn_events](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic) | resource |
+| [aws_sns_topic_policy.sfn_events](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_policy) | resource |
 | [terraform_data.validate_engine_version](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
-| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/data-sources/caller_identity) | data source |
-| [aws_iam_policy_document.data_restore_lambda_function](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/data-sources/iam_policy_document) | data source |
-| [aws_iam_policy_document.eventbridge](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/data-sources/iam_policy_document) | data source |
-| [aws_iam_policy_document.sns_topic_policy](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/data-sources/iam_policy_document) | data source |
-| [aws_iam_policy_document.upload_checker_lambda_function](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/data-sources/iam_policy_document) | data source |
-| [aws_rds_engine_version.selected](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/data-sources/rds_engine_version) | data source |
-| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/data-sources/region) | data source |
-| [aws_secretsmanager_secret_version.master_user_secret](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/data-sources/secretsmanager_secret_version) | data source |
-| [aws_vpc.vpc](https://registry.terraform.io/providers/hashicorp/aws/6.56.0/docs/data-sources/vpc) | data source |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_iam_policy_document.data_restore_lambda_function](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.eventbridge](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.sns_topic_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.upload_checker_lambda_function](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_rds_engine_version.selected](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/rds_engine_version) | data source |
+| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
+| [aws_secretsmanager_secret_version.master_user_secret](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/secretsmanager_secret_version) | data source |
+| [aws_vpc.vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/vpc) | data source |
 
 # Alerts
 The module sets up status monitoring of the State Machines using EventBridge. If an execution is non-successful, the event is sent to CloudWatch logs.
