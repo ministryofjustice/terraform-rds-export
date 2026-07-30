@@ -1,3 +1,21 @@
+#trivy:ignore:AVD-AWS-0066 X-Ray tracing not currently required. Logs sent to CloudWatch.
+resource "aws_lambda_layer_version" "shared" {
+  filename            = data.archive_file.shared_layer.output_path
+  layer_name          = "${var.name}-${var.environment}-shared"
+  source_code_hash    = data.archive_file.shared_layer.output_base64sha256
+  compatible_runtimes = ["python3.12"]
+
+  depends_on = [
+    data.archive_file.shared_layer
+  ]
+}
+
+data "archive_file" "shared_layer" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda_functions/shared_layer/python"
+  output_path = "${path.module}/.terraform/shared_layer.zip"
+}
+
 data "aws_iam_policy_document" "upload_checker_lambda_function" {
   statement {
     // Allow the lambda to read the uploaded .bak files from the S3 bucket
@@ -54,6 +72,8 @@ module "upload_checker" {
   source_path = [{
     path = "${path.module}/lambda_functions/upload_checker/main.py"
   }]
+
+  layers = [aws_lambda_layer_version.shared.arn]
 
   tags = var.tags
 }
@@ -195,6 +215,8 @@ module "database_restore" {
     ]
   }]
 
+  layers = [aws_lambda_layer_version.shared.arn]
+
   tags = var.tags
 }
 
@@ -232,6 +254,8 @@ module "database_restore_status" {
       ":zip",
     ]
   }]
+
+  layers = [aws_lambda_layer_version.shared.arn]
 
   tags = var.tags
 }
@@ -274,6 +298,7 @@ module "database_export_scanner" {
   }]
 
   layers = [
+    aws_lambda_layer_version.shared.arn,
     "arn:aws:lambda:${data.aws_region.current.id}:336392948345:layer:AWSSDKPandas-Python312:18"
   ]
 
@@ -317,6 +342,7 @@ module "database_export_processor" {
   }]
 
   layers = [
+    aws_lambda_layer_version.shared.arn,
     "arn:aws:lambda:${data.aws_region.current.id}:336392948345:layer:AWSSDKPandas-Python312:18"
   ]
 
@@ -357,6 +383,7 @@ module "export_validation_rowcount_updater" {
   }]
 
   layers = [
+    aws_lambda_layer_version.shared.arn,
     "arn:aws:lambda:${data.aws_region.current.id}:336392948345:layer:AWSSDKPandas-Python312:18"
   ]
 
@@ -387,6 +414,7 @@ module "transform_output" {
   }]
 
   layers = [
+    aws_lambda_layer_version.shared.arn,
     "arn:aws:lambda:${data.aws_region.current.id}:336392948345:layer:AWSSDKPandas-Python312:18"
   ]
 
@@ -430,6 +458,7 @@ module "database_views_scanner" {
   }]
 
   layers = [
+    aws_lambda_layer_version.shared.arn,
     "arn:aws:lambda:${data.aws_region.current.id}:336392948345:layer:AWSSDKPandas-Python312:18"
   ]
 
