@@ -12,7 +12,7 @@ resource "aws_lambda_layer_version" "shared" {
 
 data "archive_file" "shared_layer" {
   type        = "zip"
-  source_dir  = "${path.module}/lambda_functions/shared_layer/python"
+  source_dir  = "${path.module}/lambda_functions/shared_layer/"
   output_path = "${path.module}/.terraform/shared_layer.zip"
 }
 
