@@ -142,3 +142,14 @@ variable "lifecycle_rule_backup_uploads" {
     }
   }]
 }
+
+variable "bucket_namespace" {
+  description = "Whether to use global or account-regional for bucket_namespace"
+  type        = string
+  default     = "global"
+
+  validation {
+    condition     = contains(["global", "account-regional"], var.bucket_namespace)
+    error_message = "The value for bucket_namespace needs to be one of 'global' or 'account-regional'"
+  }
+}

@@ -1,9 +1,10 @@
 # Backup .bak uploads bucket with sensible defaults
 #trivy:ignore:AVD-AWS-0089 Bucket logging not required.
 module "s3-bucket-backup-uploads" {
-  source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=9facf9fc8f8b8e3f93ffbda822028534b9a75399" #v9.0.0
+  source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=109f3c18df15f2064bc222d5bed5a3e41c365bb8" #v11.0.0
 
   bucket_prefix      = "${var.name}-backup-uploads-${var.environment}-"
+  bucket_namespace   = var.bucket_namespace
   versioning_enabled = true
 
   ownership_controls = "BucketOwnerEnforced"
@@ -19,19 +20,13 @@ module "s3-bucket-backup-uploads" {
   tags           = var.tags
 }
 
-
-# Creating folder in backup uploads bucket
-resource "aws_s3_object" "backup_uploads_folder" {
-  bucket = module.s3-bucket-backup-uploads.bucket.id
-  key    = "${var.name}-${var.environment}/"
-}
-
 # Parquet exports S3 bucket with sensible defaults
 #trivy:ignore:AVD-AWS-0089 Bucket logging not required.
 module "s3-bucket-parquet-exports" {
-  source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=9facf9fc8f8b8e3f93ffbda822028534b9a75399" #v9.0.0
+  source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=109f3c18df15f2064bc222d5bed5a3e41c365bb8" #v11.0.0
 
   bucket_prefix      = "${var.name}-parquet-exports-${var.environment}-"
+  bucket_namespace   = var.bucket_namespace
   versioning_enabled = true
 
   ownership_controls = "BucketOwnerEnforced"
