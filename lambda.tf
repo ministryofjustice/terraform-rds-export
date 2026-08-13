@@ -68,7 +68,7 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
     ]
 
     resources = [
-      data.aws_secretsmanager_secret_version.master_user_secret.arn
+      data.aws_secretsmanager_secret_version.master_user_secret.secret_arn
     ]
   }
 
@@ -133,9 +133,9 @@ data "aws_iam_policy_document" "data_restore_lambda_function" {
     ]
 
     resources = [
-      "arn:aws:glue:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:catalog",
-      "arn:aws:glue:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:database/*",
-      "arn:aws:glue:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:table/*/*"
+      "arn:aws:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:catalog",
+      "arn:aws:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:database/*",
+      "arn:aws:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:table/*/*"
     ]
   }
 }
@@ -183,7 +183,7 @@ module "database_restore" {
 
   environment_variables = {
     UPLOADS_BUCKET         = module.s3-bucket-backup-uploads.bucket.id
-    DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
+    DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.secret_arn
     ENVIRONMENT            = var.environment
   }
 
@@ -221,7 +221,7 @@ module "database_restore_status" {
   policy_json        = data.aws_iam_policy_document.data_restore_lambda_function.json
 
   environment_variables = {
-    DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
+    DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.secret_arn
     ENVIRONMENT            = var.environment
   }
 
@@ -259,7 +259,7 @@ module "database_export_scanner" {
   policy_json        = data.aws_iam_policy_document.data_restore_lambda_function.json
 
   environment_variables = {
-    DATABASE_PW_SECRET_ARN   = data.aws_secretsmanager_secret_version.master_user_secret.arn
+    DATABASE_PW_SECRET_ARN   = data.aws_secretsmanager_secret_version.master_user_secret.secret_arn
     DATABASE_REFRESH_MODE    = var.database_refresh_mode
     OUTPUT_PARQUET_FILE_SIZE = var.output_parquet_file_size
     ENVIRONMENT              = var.environment
@@ -274,7 +274,7 @@ module "database_export_scanner" {
   }]
 
   layers = [
-    "arn:aws:lambda:${data.aws_region.current.id}:336392948345:layer:AWSSDKPandas-Python312:18"
+    "arn:aws:lambda:${data.aws_region.current.region}:336392948345:layer:AWSSDKPandas-Python312:18"
   ]
 
   tags = var.tags
@@ -302,7 +302,7 @@ module "database_export_processor" {
   policy_json        = data.aws_iam_policy_document.data_restore_lambda_function.json
 
   environment_variables = {
-    DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
+    DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.secret_arn
     OUTPUT_BUCKET          = module.s3-bucket-parquet-exports.bucket.id
     DATABASE_REFRESH_MODE  = var.database_refresh_mode
     ENVIRONMENT            = var.environment
@@ -317,7 +317,7 @@ module "database_export_processor" {
   }]
 
   layers = [
-    "arn:aws:lambda:${data.aws_region.current.id}:336392948345:layer:AWSSDKPandas-Python312:18"
+    "arn:aws:lambda:${data.aws_region.current.region}:336392948345:layer:AWSSDKPandas-Python312:18"
   ]
 
   tags = var.tags
@@ -346,7 +346,7 @@ module "export_validation_rowcount_updater" {
   policy_json        = data.aws_iam_policy_document.data_restore_lambda_function.json
 
   environment_variables = {
-    DATABASE_PW_SECRET_ARN   = data.aws_secretsmanager_secret_version.master_user_secret.arn
+    DATABASE_PW_SECRET_ARN   = data.aws_secretsmanager_secret_version.master_user_secret.secret_arn
     DATABASE_REFRESH_MODE    = var.database_refresh_mode
     OUTPUT_PARQUET_FILE_SIZE = var.output_parquet_file_size
     OUTPUT_BUCKET            = module.s3-bucket-parquet-exports.bucket.id
@@ -357,7 +357,7 @@ module "export_validation_rowcount_updater" {
   }]
 
   layers = [
-    "arn:aws:lambda:${data.aws_region.current.id}:336392948345:layer:AWSSDKPandas-Python312:18"
+    "arn:aws:lambda:${data.aws_region.current.region}:336392948345:layer:AWSSDKPandas-Python312:18"
   ]
 
   tags = var.tags
@@ -387,7 +387,7 @@ module "transform_output" {
   }]
 
   layers = [
-    "arn:aws:lambda:${data.aws_region.current.id}:336392948345:layer:AWSSDKPandas-Python312:18"
+    "arn:aws:lambda:${data.aws_region.current.region}:336392948345:layer:AWSSDKPandas-Python312:18"
   ]
 
   tags = var.tags
@@ -418,7 +418,7 @@ module "database_views_scanner" {
   policy_json        = data.aws_iam_policy_document.data_restore_lambda_function.json
 
   environment_variables = {
-    DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.arn
+    DATABASE_PW_SECRET_ARN = data.aws_secretsmanager_secret_version.master_user_secret.secret_arn
   }
 
   source_path = [{
@@ -430,7 +430,7 @@ module "database_views_scanner" {
   }]
 
   layers = [
-    "arn:aws:lambda:${data.aws_region.current.id}:336392948345:layer:AWSSDKPandas-Python312:18"
+    "arn:aws:lambda:${data.aws_region.current.region}:336392948345:layer:AWSSDKPandas-Python312:18"
   ]
 
   tags = var.tags
