@@ -102,7 +102,7 @@ data "aws_iam_policy_document" "eventbridge" {
       ]
     }
     resources = [
-      "arn:aws:logs:${data.aws_region.current.id}:${data.aws_caller_identity.current.id}:log-group:${aws_cloudwatch_log_group.eventbridge.name}:*"
+      "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.id}:log-group:${aws_cloudwatch_log_group.eventbridge.name}:*"
     ]
   }
 }
