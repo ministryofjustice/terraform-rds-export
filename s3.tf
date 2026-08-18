@@ -3,7 +3,7 @@
 module "s3-bucket-backup-uploads" {
   source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=109f3c18df15f2064bc222d5bed5a3e41c365bb8" #v11.0.0
 
-  bucket_prefix      = "${var.name}-backup-uploads-${var.environment}-"
+  bucket_prefix      = "${var.name}-backup-uploads-${var.environment}"
   bucket_namespace   = var.bucket_namespace
   versioning_enabled = true
 
@@ -25,7 +25,7 @@ module "s3-bucket-backup-uploads" {
 module "s3-bucket-parquet-exports" {
   source = "github.com/ministryofjustice/modernisation-platform-terraform-s3-bucket?ref=109f3c18df15f2064bc222d5bed5a3e41c365bb8" #v11.0.0
 
-  bucket_prefix      = "${var.name}-parquet-exports-${var.environment}-"
+  bucket_prefix      = "${var.name}-parquet-exports-${var.environment}"
   bucket_namespace   = var.bucket_namespace
   versioning_enabled = true
 
