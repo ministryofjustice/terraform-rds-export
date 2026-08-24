@@ -153,3 +153,29 @@ variable "bucket_namespace" {
     error_message = "The value for bucket_namespace needs to be one of 'global' or 'account-regional'"
   }
 }
+
+variable "migration_replication_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "migration_replication_destination_arn" {
+  type    = string
+  default = null
+}
+
+variable "migration_replication_cutoff_date" {
+  type    = string
+  default = null
+}
+
+variable "migration_replication_rule_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "migration_replication_trigger_schedule_expression" {
+  description = "Optional EventBridge schedule expression (for example, rate(1 day) or cron(0 2 * * ? *)) to invoke the migration replication trigger Lambda. Set to null to disable scheduled invocation."
+  type        = string
+  default     = null
+}
