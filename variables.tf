@@ -153,3 +153,8 @@ variable "bucket_namespace" {
     error_message = "The value for bucket_namespace needs to be one of 'global' or 'account-regional'"
   }
 }
+
+variable "batch_replication_source_role_arn" {
+  description = "ARN of the source account's replication IAM role that is allowed to replicate objects into the parquet exports bucket."
+  type        = string
+}
