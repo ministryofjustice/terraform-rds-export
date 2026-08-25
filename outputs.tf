@@ -12,3 +12,13 @@ output "sns_topic_arn" {
   description = "ARN of the SNS topic to subscribe to"
   value       = aws_sns_topic.sfn_events.arn
 }
+
+output "parquet_exports_bucket_arn" {
+  description = "ARN of the parquet exports bucket"
+  value       = module.s3-bucket-parquet-exports.bucket.arn
+}
+
+output "parquet_exports_bucket_id" {
+  description = "Name of the parquet exports bucket"
+  value       = module.s3-bucket-parquet-exports.bucket.id
+}
