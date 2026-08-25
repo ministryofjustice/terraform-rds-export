@@ -80,6 +80,8 @@ module "rds_export" {
 |------|-------------|
 | <a name="output_backup_uploads_s3_bucket_arn"></a> [backup\_uploads\_s3\_bucket\_arn](#output\_backup\_uploads\_s3\_bucket\_arn) | ARN of the backup uploads bucket |
 | <a name="output_backup_uploads_s3_bucket_id"></a> [backup\_uploads\_s3\_bucket\_id](#output\_backup\_uploads\_s3\_bucket\_id) | Name of the backup uploads bucket |
+| <a name="output_parquet_exports_bucket_arn"></a> [parquet\_exports\_bucket\_arn](#output\_parquet\_exports\_bucket\_arn) | ARN of the parquet exports bucket |
+| <a name="output_parquet_exports_bucket_id"></a> [parquet\_exports\_bucket\_id](#output\_parquet\_exports\_bucket\_id) | Name of the parquet exports bucket |
 | <a name="output_sns_topic_arn"></a> [sns\_topic\_arn](#output\_sns\_topic\_arn) | ARN of the SNS topic to subscribe to |
 
 ## Resources
