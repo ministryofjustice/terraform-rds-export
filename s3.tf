@@ -14,6 +14,8 @@ module "s3-bucket-backup-uploads" {
     aws.bucket-replication = aws
   }
 
+  bucket_policy = var.backup_uploads_bucket_policy
+
   sse_algorithm = "AES256"
 
   lifecycle_rule = var.lifecycle_rule_backup_uploads
@@ -35,6 +37,8 @@ module "s3-bucket-parquet-exports" {
   providers = {
     aws.bucket-replication = aws
   }
+
+  bucket_policy = var.parquet_exports_bucket_policy
 
   sse_algorithm = "AES256"
 

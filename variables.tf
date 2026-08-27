@@ -153,3 +153,15 @@ variable "bucket_namespace" {
     error_message = "The value for bucket_namespace needs to be one of 'global' or 'account-regional'"
   }
 }
+
+variable "backup_uploads_bucket_policy" {
+  description = "Bucket policy for the backup uploads S3 bucket"
+  type        = list(string)
+  default     = ["{}"]
+}
+
+variable "parquet_exports_bucket_policy" {
+  description = "Bucket policy for the backup uploads S3 bucket"
+  type        = list(string)
+  default     = ["{}"]
+}

@@ -57,6 +57,7 @@ module "rds_export" {
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_backup_uploads_bucket_policy"></a> [backup\_uploads\_bucket\_policy](#input\_backup\_uploads\_bucket\_policy) | Bucket policy for the backup uploads S3 bucket | `list(string)` | <pre>[<br/>  "{}"<br/>]</pre> | no |
 | <a name="input_bucket_namespace"></a> [bucket\_namespace](#input\_bucket\_namespace) | Whether to use global or account-regional for bucket\_namespace | `string` | `"global"` | no |
 | <a name="input_database_refresh_mode"></a> [database\_refresh\_mode](#input\_database\_refresh\_mode) | Specifies the type of database refresh: 'full' for complete refresh or 'incremental' for partial updates. | `string` | n/a | yes |
 | <a name="input_database_subnet_ids"></a> [database\_subnet\_ids](#input\_database\_subnet\_ids) | The IDs of the subnets in the VPC where the database will be deployed. | `list(string)` | n/a | yes |
@@ -71,6 +72,7 @@ module "rds_export" {
 | <a name="input_max_concurrency"></a> [max\_concurrency](#input\_max\_concurrency) | Maximum number of database\_export lambda run in parallel. | `number` | `5` | no |
 | <a name="input_name"></a> [name](#input\_name) | The name of the project. Combined with the environment (<name>-<environment>) to create the RDS DB instance identifier. | `string` | n/a | yes |
 | <a name="input_output_parquet_file_size"></a> [output\_parquet\_file\_size](#input\_output\_parquet\_file\_size) | Approximate target size (in MiB) for each Parquet file produced by the database-export lambda. | `number` | `10` | no |
+| <a name="input_parquet_exports_bucket_policy"></a> [parquet\_exports\_bucket\_policy](#input\_parquet\_exports\_bucket\_policy) | Bucket policy for the backup uploads S3 bucket | `list(string)` | <pre>[<br/>  "{}"<br/>]</pre> | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Common tags to be used by all resources. | `map(string)` | n/a | yes |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | The ID of the VPC. | `string` | n/a | yes |
 
