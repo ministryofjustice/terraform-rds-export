@@ -59,6 +59,7 @@ module "rds_export" {
 |------|-------------|------|---------|:--------:|
 | <a name="input_backup_uploads_bucket_policy"></a> [backup\_uploads\_bucket\_policy](#input\_backup\_uploads\_bucket\_policy) | Bucket policy for the backup uploads S3 bucket | `list(string)` | <pre>[<br/>  "{}"<br/>]</pre> | no |
 | <a name="input_bucket_namespace"></a> [bucket\_namespace](#input\_bucket\_namespace) | Whether to use global or account-regional for bucket\_namespace | `string` | `"global"` | no |
+| <a name="input_database_export_processor_memory_size"></a> [database\_export\_processor\_memory\_size](#input\_database\_export\_processor\_memory\_size) | Memory allocated to the database export processor Lambda in MB. | `number` | `4096` | no |
 | <a name="input_database_refresh_mode"></a> [database\_refresh\_mode](#input\_database\_refresh\_mode) | Specifies the type of database refresh: 'full' for complete refresh or 'incremental' for partial updates. | `string` | n/a | yes |
 | <a name="input_database_subnet_ids"></a> [database\_subnet\_ids](#input\_database\_subnet\_ids) | The IDs of the subnets in the VPC where the database will be deployed. | `list(string)` | n/a | yes |
 | <a name="input_db_name"></a> [db\_name](#input\_db\_name) | The name of the database. Used for Glue, Athena, and restore process in RDS. Only lowercase letters, numbers, and the underscore character. | `string` | n/a | yes |

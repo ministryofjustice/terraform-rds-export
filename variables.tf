@@ -49,6 +49,17 @@ variable "output_parquet_file_size" {
   default     = 10
 }
 
+variable "database_export_processor_memory_size" {
+  type        = number
+  description = "Memory allocated to the database export processor Lambda in MB."
+  default     = 4096
+
+  validation {
+    condition     = var.database_export_processor_memory_size >= 128 && var.database_export_processor_memory_size <= 10240
+    error_message = "The database export processor Lambda memory size must be between 128 MB and 10240 MB."
+  }
+}
+
 variable "max_concurrency" {
   type        = number
   description = "Maximum number of database_export lambda run in parallel."
