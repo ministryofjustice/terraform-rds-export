@@ -14,7 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Run format-code action
-        uses: ministryofjustice/modernisation-platform-github-actions/format-code@2988728879704953e739f82ac926d37931c6d01b # v6.1.9
+        uses: ministryofjustice/modernisation-platform-github-actions/format-code@e49ac27b104b38bac12fc1e3257a13be6289a59c # v6.2.2
         with:
           ignore_files: "README.md"
       - name: Run signed-commit action
