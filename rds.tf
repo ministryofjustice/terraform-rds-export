@@ -37,14 +37,20 @@ resource "aws_db_subnet_group" "database" {
 
 # Create parameter group for database
 resource "aws_db_parameter_group" "database" {
-  name        = "${var.name}-${var.environment}-backup-export"
+  # Major version in the name so an engine upgrade creates a new group instead of clashing with the old one
+  name        = "${var.name}-${var.environment}-backup-export-${substr(var.engine_version, 0, 2)}"
   family      = "sqlserver-se-${substr(var.engine_version, 0, 2)}.0"
   description = "Parameter group for SQL Server Standard Edition"
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Create option group for database
 resource "aws_db_option_group" "database" {
-  name                     = "${var.name}-${var.environment}-backup-export"
+  # Major version in the name so an engine upgrade creates a new group instead of clashing with the old one
+  name                     = "${var.name}-${var.environment}-backup-export-${substr(var.engine_version, 0, 2)}"
   engine_name              = "sqlserver-se"
   major_engine_version     = substr(var.engine_version, 0, 5)
   option_group_description = "Used by the database for loading backups and exporting to S3"
@@ -56,5 +62,9 @@ resource "aws_db_option_group" "database" {
       name  = "IAM_ROLE_ARN"
       value = aws_iam_role.database_restore.arn
     }
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
