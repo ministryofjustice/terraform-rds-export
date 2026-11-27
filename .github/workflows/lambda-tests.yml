@@ -19,10 +19,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
-      - name: Install dependencies
-        run: |
-          uv venv
-          uv pip install .
       - name: Run tests
         run: |
-          if [ -d tests ]; then uv run -m pytest -vv tests; fi
+          if [ -d tests ]; then uv run --no-project --with pytest --with pandas python -m pytest -vv tests; fi
