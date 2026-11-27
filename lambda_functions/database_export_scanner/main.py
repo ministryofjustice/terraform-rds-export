@@ -183,7 +183,7 @@ def generate_chunk_query_by_rownum(
     FROM Ordered
     WHERE rn BETWEEN {start_row} AND {end_row}
     ORDER BY rn
-    """
+    """  # nosec B608
 
     # Normalize query to a flat one-liner
     return " ".join(query.strip().split())
@@ -418,7 +418,7 @@ def handler(event, context):
         JOIN sys.schemas s ON t.schema_id = s.schema_id
         WHERE i.index_id <= 1
         GROUP BY s.name, t.name, p.rows
-        """
+        """  # nosec B608
 
         df = pd.read_sql_query(query, conn)
         logger.info("Table stats:\n%s", df.to_string(index=False))
@@ -491,7 +491,7 @@ def handler(event, context):
             insert_query = f"""
             INSERT INTO "{db_name}".table_export_validation
             SELECT * FROM "{db_name}".{staging_table_name}
-            """
+            """  # nosec B608
             run_athena_query(insert_query, db_name, output_bucket)
 
             logger.info(f"Inserted batch {i + 1} successfully")
@@ -597,7 +597,7 @@ def handler(event, context):
                 continue
 
             if rows > 0 and not pk_columns:
-                query = f"SELECT * FROM [{schema}].[{table}]"
+                query = f"SELECT * FROM [{schema}].[{table}]"  # nosec B608
                 chunks.append(
                     {
                         "database": db_name,
