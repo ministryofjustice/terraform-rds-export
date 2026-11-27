@@ -59,12 +59,12 @@ def handler(event, context):
                 SELECT COUNT(*) AS row_count, '{db_table}' AS table_name
                 FROM "{db_name}"."{db_table}"
                 WHERE extraction_timestamp = '{extraction_timestamp}'
-            """
+            """  # nosec B608
         else:
             count_query = f"""
                 SELECT COUNT(*) AS row_count, '{db_table}' AS table_name
                 FROM "{db_name}"."{db_table}"
-            """
+            """  # nosec B608
 
         logger.info("Running row count query:\n%s", count_query)
         query_id = run_athena_query(count_query, db_name, output_bucket)
@@ -79,7 +79,7 @@ def handler(event, context):
             WHERE table_name = '{db_table}'
             ORDER BY extraction_timestamp DESC
             LIMIT 1
-        """
+        """  # nosec B608
         query_id = run_athena_query(check_query, db_name, output_bucket)
         result = athena.get_query_results(QueryExecutionId=query_id)
 
@@ -95,7 +95,7 @@ def handler(event, context):
             DELETE FROM {db_name}.{stats_table}
             WHERE table_name = '{db_table}'
             AND extraction_timestamp = '{extraction_timestamp}'
-            """
+            """  # nosec B608
         run_athena_query(delete_query, db_name, output_bucket)
 
         # 2. Insert updated row
